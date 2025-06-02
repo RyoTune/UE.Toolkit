@@ -13,8 +13,9 @@ public interface IGameConfig
     string UStruct_IsChildOf { get; }
     string GFNamePool { get; }
     string FNameHelper_FindOrStoreString { get; }
-    string FMemory_Malloc { get; }
-    string FMemory_Free { get; }
+    //string FMemory_Malloc { get; }
+    //string FMemory_Free { get; }
+    string GMalloc { get; }
     string UDataTable_HandleDataTableChanged { get; }
     string UEnum_GetDisplayNameTextByIndex { get; }
     IUnrealFactory Factory { get; }

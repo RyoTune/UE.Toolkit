@@ -89,9 +89,9 @@ public unsafe class UnrealObjects : IUnrealObjects
     public FText* CreateFText(string content)
     {
         var fstring = CreateFString(content);
-        var ftext = (FText*)UnrealMemory._FMemory_Malloc!.Wrapper(sizeof(FText));
+        var ftext = (FText*)UnrealMemory._FMemory!.Malloc(sizeof(FText));
         _FText_FromString!.Wrapper(ftext, fstring);
-        UnrealMemory._FMemory_Free!.Wrapper((nint)fstring);
+        UnrealMemory._FMemory!.Free((nint)fstring);
         
         return ftext;
     }
@@ -102,12 +102,12 @@ public unsafe class UnrealObjects : IUnrealObjects
     {
         content += '\0';
         
-        var fstring = (FString*)UnrealMemory._FMemory_Malloc!.Wrapper(sizeof(FString));
+        var fstring = (FString*)UnrealMemory._FMemory!.Malloc(sizeof(FString));
         fstring->Data.ArrayNum = content.Length;
         fstring->Data.ArrayMax = content.Length;
         
         var strBytes = Encoding.Unicode.GetBytes(content);
-        fstring->Data.AllocatorInstance = (char*)UnrealMemory._FMemory_Malloc.Wrapper(strBytes.Length);
+        fstring->Data.AllocatorInstance = (char*)UnrealMemory._FMemory.Malloc(strBytes.Length);
         Marshal.Copy(strBytes, 0, (nint)fstring->Data.AllocatorInstance, strBytes.Length);
         
         return fstring;

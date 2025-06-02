@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PackageProjectUrl>https://github.com/RyoTune/UE.Toolkit</PackageProjectUrl>
-        <Version>1.3.0</Version>
+        <Version>1.4.0</Version>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

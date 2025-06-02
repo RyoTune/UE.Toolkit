@@ -2,7 +2,7 @@
   "ModId": "UE.Toolkit.Reloaded",
   "ModName": "UE Toolkit",
   "ModAuthor": "RyoTune",
-  "ModVersion": "1.3.0",
+  "ModVersion": "1.4.0",
   "ModDescription": "Modding toolkit for Unreal Engine games.\r\n\r\nSupported:\r\n- UE 5.4.4 (Clair Obscur)\r\n- UE 4.27.2 (P3R)",
   "ModDll": "UE.Toolkit.Reloaded.dll",
   "ModIcon": "Preview.png",
