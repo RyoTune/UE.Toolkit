@@ -8,15 +8,35 @@
 
 ## Features
 - `UObject` and `UDataTable` logging.
+- **Edit object data (numbers and text) [with just XML text files](#editing-objects-with-xml)**.
 - Simplified `UObject` and `UDataTable` editing at runtime.
-- Access to `FMemory` functions (currently just `Malloc` and `Free`).
-- Mod for dumping game types to C# types.
+- Access to `FMemory` functions ([supported functions](#using-unreals-memory-allocator-fmemory)).
+- Mod for [dumping game types to C# types](#ue-toolkit-dumper).
 - Methods for creating `FString` and `FText`.
-- Edit object data (numbers and text) with just XML text files.
+- Get type information from a class or struct.
+- Extend the length of a type and add custom constructor code.
+- Add new properties to a class/struct's type information.
+- Register a new struct into the type information system.
 
-## Supported
-- UE 5.4.4 (Clair Obscur)
-- UE 4.27.2 (P3R)
+## Supported Engine Version and Games
+
+Object XML requires game-specific support with an extension mod. Supported games [are listed here](#installing-the-ue-toolkit-extension-mod).
+
+| Feature | UE 4.27.2 | UE 5.4.4 |
+| - | - | - |
+| Object Logging | ✅| ✅
+| Object Editing | ✅| ✅
+| `FMemory` Functions | ✅| ✅
+| Dumper | ✅| ✅
+| Property Editing (Object XML) | ✅| ✅
+| Add List Entry (Object XML) | ✅| ❔
+| Add Map Entry (Object XML) | ✅| ❔
+| Type Information | ✅| ✅
+| Custom Constructor | ✅| ❔
+| Add Properties | ✅| ❌
+| Register Struct | ✅| ❌
+
+Features marked with ❔ are currently untested.
 
 ## Installation
 ### Setup Reloaded and Add Your Game
@@ -181,6 +201,90 @@ For enum properties (stuff like `EDataLayerType::Runtime`, where it starts with 
 Some Unreal types may not be generated and need to be supplied. `UE.Toolkit.Core` includes any types
 that were missing in my testing. Add it to your project using **NuGet** and add `UE.Toolkit.Core.Types.Unreal;`
 in the `File Usings` config before dumping.
+
+## Code Only Features
+
+### Using Unreal's Memory Allocator `FMemory`
+
+When writing code mods that interact with objects allocated by Unreal, allocation must be handled on the mod's side by the
+same allocator that created it in the game's code. `IUnrealMemory` contains the following methods for interacting with
+Unreal's memory allocator:
+
+- `nint Malloc(nint count, int alignment = Default)`: Allocates a block of memory with the global `FMemory`.
+- `void Free(nint original)`: Deallocates a block of memory allocated with the global `FMemory`.
+- `nint Realloc(nint ptr, nint count, int alignment = Default)`: Reallocates a block of memory with a new size using the global `FMemory`
+- `bool GetAllocSize(nint ptr, ref nint size)`: Queries the global `FMemory` to get the size of an allocation created using it.
+- `nint MallocZeroed(nint count, int alignment = Default)`: Allocates and clears a block of memory with the global `FMemory`
+- `nint QuantizeSize(nint count, int alignment = Default)`: For some allocators this will return the actual size that should be requested to eliminate internal fragmentation.
+
+(If alignment is not specified, Default will be 16 bytes for blocks 16 bytes or larger, and 8 bytes if it's smaller)
+
+### Extending an Object's Size and Adding a Custom Constructor
+
+`IUnrealClasses` contains the methods `AddConstructor`, which passes in a custom callback that executes after the original constructor has run. `AddExtension` additionally allows for increasing the size of the object by `ExtraSize` bytes. Do note that this should only be used on types that don't have any subtypes (no type has it at the beginning as a "Super" property).
+
+### Adding New Properties
+
+It's possible to add new properties into the property list for a given object in code using the `Add[Type]Property` methods in `IUnrealClasses`. This allows that field to be readable from Object XML and blueprints:
+```c#
+// UGlobalWork is P3R's game instance class
+_context._toolkitClasses.AddConstructor<UGlobalWork>(obj => 
+{
+    if (!CreatedFields) 
+    {        
+		_context._toolkitClasses.AddU32Property<UFldManagerSubsystem>("CurrFieldMajor", 0x54, out _);
+        _context._toolkitClasses.AddU32Property<UFldManagerSubsystem>("CurrFieldMinor", 0x58, out _);
+        _context._toolkitClasses.AddU32Property<UFldManagerSubsystem>("CurrFieldSub", 0x5c, out _);
+        CreatedFields = true;
+    }
+});
+```
+When using the dumper, these fields will appear in the generated file:
+
+#### Before
+```c#
+[StructLayout(LayoutKind.Explicit, Pack = 16, Size = 0x400)]
+public unsafe struct UFldManagerSubsystem
+{
+    [FieldOffset(0x0)] public UGameInstanceSubsystem Super; // Size: 0x30
+    [FieldOffset(0x30)] public FMulticastScriptDelegate mOnEventCallField_; // Size: 0x10
+    [FieldOffset(0xB8)] public AFldLevelManager* mLevelManager_; // Size: 0x8
+    [FieldOffset(0xC8)] public UAppCharacterComp* mPlayerComp_; // Size: 0x8
+	// Other fields ...
+}
+```
+#### After
+```c#
+[StructLayout(LayoutKind.Explicit, Pack = 16, Size = 0x400)]
+public unsafe struct UFldManagerSubsystem
+{
+    [FieldOffset(0x0)] public UGameInstanceSubsystem Super; // Size: 0x30
+    [FieldOffset(0x30)] public FMulticastScriptDelegate mOnEventCallField_; // Size: 0x10
+    [FieldOffset(0x54)] public uint CurrFieldMajor; // Size: 0x4
+    [FieldOffset(0x58)] public uint CurrFieldMinor; // Size: 0x4
+    [FieldOffset(0x5C)] public uint CurrFieldSub; // Size: 0x4
+    [FieldOffset(0xB8)] public AFldLevelManager* mLevelManager_; // Size: 0x8
+    [FieldOffset(0xC8)] public UAppCharacterComp* mPlayerComp_; // Size: 0x8
+	// Other fields ...
+}
+```
+
+### Registering New Struct Types `F[TypeName]`
+
+A new struct can be registered into UE's type reflection. `IUnrealClasses` contains methods `(Create[Type]Param)` to build a list of property params to pass into `CreateScriptStruct`:
+
+```c#
+TryCreateScriptStruct("AgePanelSection", 0x30, new List<IFPropertyParams>
+{
+    _context._toolkitClasses.CreateF32Param("X1", 0),
+    _context._toolkitClasses.CreateF32Param("X2", 4),
+    _context._toolkitClasses.CreateF32Param("Y1", 8),
+    _context._toolkitClasses.CreateF32Param("Y2", 0xc),
+    _context._toolkitClasses.CreateF32Param("Field28", 0x28),
+});
+```
+
+Much like adding new fields, this is viewable in Object XML and blueprints.
 
 ## Special Thanks
 - UE4SS team, for object dumping reference.
