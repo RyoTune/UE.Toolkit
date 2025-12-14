@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Xml;
 using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
-using UE.Toolkit.Interfaces;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
@@ -17,7 +16,7 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
         
         // DataTable map type is always FName + Pointer, can just use UObject.
         // var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
-        var tempTable = new UDataTableManaged<Ptr<UObjectBase>>((UDataTable<Ptr<UObjectBase>>*)fieldPtr, nodeFactory.Memory);
+        var tempTable = new UDataTableManaged<Ptr<byte>>((UDataTable<Ptr<byte>>*)fieldPtr, nodeFactory.Memory);
         
         // Get any item nodes.
         using var subReader = reader.ReadSubtree();
@@ -38,8 +37,7 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
             var Key = new FName(id);
             if (!tempTable.ContainsKey(Key))
             {
-                tempTable.AddRow(Key, new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
-                // tempTable.Add(Key, new Ptr<UObjectBase>((UObjectBase*)nodeFactory.Memory.MallocZeroed(itemSize)));
+                tempTable.AddRow(Key, new Ptr<byte>((byte*)nodeFactory.Memory.MallocZeroed(itemSize)));
                 Log.Debug($"{nameof(DataTableFieldNode)} || Added row with ID '{id}' into '{fieldName}'.");   
             }
             

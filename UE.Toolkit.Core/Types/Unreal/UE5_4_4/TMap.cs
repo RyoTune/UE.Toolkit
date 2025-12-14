@@ -517,9 +517,9 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         get
         {
             ICollection<TElemKey> Keys = new List<TElemKey>();
-            for (int i = 0; i < Elements.Size; i++)
+            for (var i = 0; i < Elements.Size; i++)
             {
-                //if (BitAllocator[i])
+                if (BitAllocator[i])
                 {
                     Keys.Add(Elements.GetKey(i));
                 }
@@ -533,11 +533,11 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         get
         {
             ICollection<Ptr<TElemValue>> Values = new List<Ptr<TElemValue>>();
-            for (int i = 0; i < Elements.Size; i++)
+            for (var i = 0; i < Elements.Size; i++)
             {
-                //if (BitAllocator[i])
+                if (BitAllocator[i])
                 {
-                    Keys.Add(Elements.GetKey(i));
+                    Values.Add(new(Elements[i]));
                 }
             }
             return Values;

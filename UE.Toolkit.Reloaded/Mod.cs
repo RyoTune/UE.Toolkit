@@ -71,14 +71,14 @@ public class Mod : ModBase, IExports
         _objects = new(_factory);
         _tables = new();
         _typeRegistry = new();
-        _writer = new(_typeRegistry, _objects, _tables, _memory);
-        _toolkit = new(_writer);
         _strings = new();
         _address = new();
-        _classes = new(_factory, _memory, _hooks, _address);
+        _classes = new(_factory, _memory, _objects, _hooks, _address);
         _methods = new(_factory, _memory, _classes, _objects, _hooks);
         _state = new(_factory, _classes);
         _spawning = new(_classes, _factory, _state);
+        _writer = new(_typeRegistry, _objects, _tables, _memory);
+        _toolkit = new(_writer);
         
         _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);

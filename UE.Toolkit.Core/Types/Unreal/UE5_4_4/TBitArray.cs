@@ -82,7 +82,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
 
     protected byte* Data
     {
-        get => (Allocation != null) ? Allocation : Inline;
+        get => ArrayNum > InlineBits ? Allocation : Inline;
         set
         {
             if (Allocation != null)
@@ -104,7 +104,7 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         protected set => *(int*)(Self + InlineAllocatorSize + sizeof(nint) + sizeof(int)) = value;
     }
 
-    bool InBounds(int index) => index >= 0 && index < ArrayNum;
+    bool InBounds(int index) => index is >= 0 && index < ArrayNum;
     bool InBoundsForInsertion(int index) => index >= 0 && index <= ArrayNum;
     /// <summary>
     /// Relinquish ownership of this <c>TArray</c>. This is used in cases where you know that Unreal will deallocate it or it otherwise
@@ -182,11 +182,9 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         {
             if (InBounds(index))
             {
-                return (Data[index / TBitArrayConstants.BITS_PER_BYTE] & (1 << (index % TBitArrayConstants.BITS_PER_BYTE))) != 0 ? true : false;
-            } else
-            {
-                throw new IndexOutOfRangeException();
+                return (Data[index / TBitArrayConstants.BITS_PER_BYTE] & (1 << (index % TBitArrayConstants.BITS_PER_BYTE))) != 0;
             }
+            throw new IndexOutOfRangeException();
         }
         set => InsertInner(index, value, false);
     }

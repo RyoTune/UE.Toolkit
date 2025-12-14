@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using Reloaded.Hooks.Definitions;
+using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
@@ -80,7 +81,6 @@ public unsafe class UnrealClasses : IUnrealClasses
     private void TryExtendClass(nint pClassName, nint classCtor, ref uint Size)
     {
         var ClassName = Marshal.PtrToStringUni(pClassName);
-        if (ClassName == null) return;
         if (ClassName == null || !ClassExtensions.TryGetValue(ClassName, out var Extension)) return;
         var OldSize = Size;
         Size += Extension.ExtraSize;
@@ -222,6 +222,10 @@ public unsafe class UnrealClasses : IUnrealClasses
         }
         _ConstructUScriptStruct!.Hook!.OriginalFunction(ppScriptStruct, pStructParams);
     }
+    
+    private delegate Guid* UUserDefinedStruct_GetCustomGuid(nint self, Guid* __return_storage_ptr__);
+
+    private int UUserDefinedStruct_GetCustomGuid_Offset;
     
     #region IUnrealClasses implementation
 
@@ -432,19 +436,22 @@ public unsafe class UnrealClasses : IUnrealClasses
     private ConcurrentDictionary<string, IUClass> Classes = new();
     private ConcurrentDictionary<string, IUScriptStruct> ScriptStructs = new();
     private ConcurrentDictionary<ulong, FieldClassGlobal> FieldTypes = new();
+    private ConcurrentDictionary<string, nint> DataTableRowToVTable = new();
     
     private IUnrealFactory Factory;
     private IUnrealMemory Memory;
+    private IUnrealObjects Objects;
     private IReloadedHooks Hooks;
     private ResolveAddress Address;
 
     private BasePropertyFactory PropertyFactory;
     private BaseTypeFactory TypeFactory;
 
-    public UnrealClasses(IUnrealFactory _Factory, IUnrealMemory _Memory, IReloadedHooks _Hooks, ResolveAddress _Address)
+    public UnrealClasses(IUnrealFactory _Factory, IUnrealMemory _Memory, IUnrealObjects _Objects, IReloadedHooks _Hooks, ResolveAddress _Address)
     {
         Factory = _Factory;
         Memory = _Memory;
+        Objects = _Objects;
         Hooks = _Hooks;
         Address = _Address;
         
@@ -472,11 +479,36 @@ public unsafe class UnrealClasses : IUnrealClasses
         Project.Inis.UsingSetting<string>(Constants.UnrealIniId, "GamePackage", nameof(UPackage),
             value => PackageNameToUObjectKey = value);
         
+        Project.Inis.UsingSetting<int>(Constants.UnrealIniId, "GetCustomGuid", nameof(UScriptStruct),
+            value => UUserDefinedStruct_GetCustomGuid_Offset = value);
+        
         _GetPrivateStaticClassBodyUE4 = new(GetPrivateStaticClassBodyUE4);
         _GetPrivateStaticClassBodyUE5 = new(GetPrivateStaticClassBodyUE5);
         _GetStaticStruct = new(GetStaticStructImpl);
         _ConstructUScriptStruct = new(ConstructUScriptStructImpl);
-        // _ConstructUScriptStruct = new();
+
+        // Store the vtable for each DataTable's row type. Since structs don't have default objects like classes, we
+        // have to obtain it from the first entry of each DataTable, so at least once instance of a row's type must
+        // exist for it to be usable in Object XML. Without the vtable, the game will crash when trying to
+        // deallocate the DataTable.
+        // However, if the row type is a UserDefinedStruct, then it won't have a vtable.
+        Objects.OnObjectLoaded += Object =>
+        {
+            var DataTableObject = Factory.CreateUObject((nint)Object.Self);
+            if (!Object.Name.StartsWith("DT_") || DataTableObject.ClassPrivate.NamePrivate.ToString() != "DataTable") return;
+            var DataTable = new UDataTableManaged<Ptr<nint>>((UDataTable<Ptr<nint>>*)Object.Self, Memory);
+            var RowType = Factory.CreateUScriptStruct((nint)DataTable.Self->RowStruct);
+            var RowName = RowType.NamePrivate.ToString();
+            var GetCustomGuid = Hooks.CreateWrapper<UUserDefinedStruct_GetCustomGuid>(
+                *(nint*)(RowType.VTable + UUserDefinedStruct_GetCustomGuid_Offset), out _);
+            var TypeGuid = Guid.Empty;
+            GetCustomGuid(RowType.Ptr, &TypeGuid);
+            if (DataTable.Count == 0 || TypeGuid != Guid.Empty) return;
+            if (!DataTableRowToVTable.ContainsKey(RowName))
+                DataTableRowToVTable.TryAdd(RowName, *DataTable.Values.First().Value->Value);
+            foreach (var Element in DataTable.Values)
+                *Element.Value->Value = DataTableRowToVTable[RowName];
+        };
     }
 }
 
