@@ -30,7 +30,7 @@ public unsafe class PtrFieldWriter(string fieldName, nint fieldPtr, Type fieldTy
             _ogData = new byte[SizeOf];
             Marshal.Copy(fieldPtr, _ogData, 0, SizeOf);
             var ObjectPtr = (TSoftObjectPtr<byte>*)fieldPtr;
-            ObjectPtr->SoftObjectPtr.Super.ObjectId.AssetPath.AssetName = new FName(strValue);
+            ObjectPtr->SoftObjectPtr.Super.ObjectId.AssetPath.PackageName = new FName(strValue);
             Log.Debug($"{nameof(PtrFieldWriter)} || Field '{fieldName}' at 0x{fieldPtr:X} set to: {strValue}");
         }
         else

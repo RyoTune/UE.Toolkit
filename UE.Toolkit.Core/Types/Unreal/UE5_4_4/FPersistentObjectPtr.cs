@@ -8,6 +8,7 @@ namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 public struct FPersistentObjectPtr
 {
     public FWeakObjectPtr WeakPtr;
+    public int TagAtLastTest;
     public Guid ObjectId;
 }
 
@@ -15,5 +16,6 @@ public struct FPersistentObjectPtr
 public struct TPersistentObjectPtr<TObject> where TObject : unmanaged
 {
     public FWeakObjectPtr WeakPtr;
+    public int TagAtLastTest;
     public TObject ObjectId;
 }
