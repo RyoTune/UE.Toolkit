@@ -36,7 +36,6 @@ public unsafe class PtrFieldWriter(string fieldName, nint fieldPtr, Type fieldTy
         else
         {
             Log.Error($"{nameof(PtrFieldWriter)} || Invalid type '{fieldType.Name}' for field '{fieldName}'.");
-            return;
         }
     }
 }

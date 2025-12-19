@@ -26,7 +26,7 @@ public static class GameConfig
         
         Instance = appId switch
         {
-            "p3r.exe" => new UE4_27_2_P3R(),
+            "p3r.exe" or "smt5v-win64-shipping.exe" => new UE4_27_2_P3R(),
             _ => new UE5_4_4_ClairObscur()
         };
         

@@ -2,8 +2,8 @@
   "ModId": "UE.Toolkit.Reloaded",
   "ModName": "Unreal Toolkit",
   "ModAuthor": "RyoTune, Rirurin",
-  "ModVersion": "1.6.2",
-  "ModDescription": "Modding toolkit for Unreal Engine games.\r\n\r\nSupported:\r\n- UE 5.4.4 (Clair Obscur)\r\n- UE 4.27.2 (P3R)",
+  "ModVersion": "1.6.3",
+  "ModDescription": "Modding toolkit for Unreal Engine games.\r\n\r\nSupported:\r\n- UE 5.4.4 (Clair Obscur)\r\n- UE 4.27.2 (P3R/SMTVV)",
   "ModDll": "UE.Toolkit.Reloaded.dll",
   "ModIcon": "Preview.png",
   "ModR2RManagedDll32": "x86/UE.Toolkit.Reloaded.dll",
@@ -53,6 +53,7 @@
   "OptionalDependencies": [],
   "SupportedAppId": [
     "sandfall-wingdk-shipping.exe",
+    "SMT5V-Win64-Shipping.exe",
     "p3r.exe"
   ],
   "ProjectUrl": "",
