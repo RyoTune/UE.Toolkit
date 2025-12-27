@@ -132,15 +132,6 @@ public static class TypeExtensions
     }
 }
 
-// Free list for TSet/TMap
-
-public unsafe struct TMapFreeListIndex
-{
-    public int FirstFreeIndex;
-    public int NumFreeIndices;
-    public int* FreeIndexList;
-}
-
 // Look for edge cases where this isn't the case.
 internal static class MapConstants
 {
@@ -238,9 +229,7 @@ public class TMapElementAccessor<TElemKey, TElemValue> : IEnumerable<Ptr<TElemVa
                 unsafe
                 {
                     if (Allocation != null)
-                    {
                         Allocator.Free((nint)Allocation);
-                    }
                     Allocator.Free((nint)Elements);
                 }
             }
@@ -319,7 +308,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     ///             <description>0x34</description>
     ///         </item>
     ///         <item>
-    ///             <term><c>TMapFreeListIndex*</c> Free List</term>
+    ///             <term><c>int</c> FirstHashIndex</term>
     ///             <description>0x38</description>
     ///         </item>
     ///     </list>
@@ -369,8 +358,14 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         get => *NumFreeIndicesPtr;
         set => *NumFreeIndicesPtr = value;
     }
+    
+    private int* FirstHashIndexPtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
 
-    private TMapFreeListIndex* FreeList => (TMapFreeListIndex*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
+    private int FirstHashIndex
+    {
+        get => *FirstHashIndexPtr;
+        set => *FirstHashIndexPtr = value;
+    }
 
     private int** HashesPtr
     {
@@ -427,7 +422,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     private TElemValue* TryGetLinear(TElemKey key)
     {
         if (Elements.Size == 0) return null;
-        for (int i = 0; i < Elements.Size; i++)
+        for (var i = 0; i < Elements.Size; i++)
         {
             if (Elements.GetKey(i).Equals(key))
             {
@@ -518,12 +513,8 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         {
             ICollection<TElemKey> Keys = new List<TElemKey>();
             for (var i = 0; i < Elements.Size; i++)
-            {
                 if (BitAllocator[i])
-                {
                     Keys.Add(Elements.GetKey(i));
-                }
-            }
             return Keys;
         }
     }
@@ -534,12 +525,8 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         {
             ICollection<Ptr<TElemValue>> Values = new List<Ptr<TElemValue>>();
             for (var i = 0; i < Elements.Size; i++)
-            {
                 if (BitAllocator[i])
-                {
                     Values.Add(new(Elements[i]));
-                }
-            }
             return Values;
         }
     }
@@ -573,6 +560,9 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         {
             Elements.SetNextHashId(Elements.Size, Elements.Size - 1);
             Elements.SetHashIndex(Elements.Size, 0);
+            FirstHashIndex = Elements.Size;
+            HashSize = 1;
+
         }
         // Add a new element to the array
         Elements.SetKey(Elements.Size, key);
@@ -650,7 +640,7 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
         {
             return;
         }
-        for (int i = 0; i < Elements.Size - arrayIndex; i++)
+        for (var i = 0; i < Elements.Size - arrayIndex; i++)
         {
             array[i] = new(Elements.GetKey(i), new(Elements[i]));
         }
@@ -684,14 +674,8 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
             // Disposed unmanaged resources (for Unreal)
             if (OwnsInstance)
             {
-                if (FreeList != null)
-                {
-                    Allocator.Free((nint)FreeList);
-                }
                 if (Hashes != null)
-                {
                     Allocator.Free((nint)Hashes);
-                }
                 Allocator.Free(Self);
             }
             Disposed = true;
@@ -864,8 +848,14 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         get => *NumFreeIndicesPtr;
         set => *NumFreeIndicesPtr = value;
     }
+    
+    private int* FirstHashIndexPtr => (int*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
 
-    private TMapFreeListIndex* FreeList => (TMapFreeListIndex*)(Self + MapConstants.SIZE_OF_ARRAY + MapConstants.SIZE_OF_BIT_ALLOCATOR + sizeof(nint));
+    private int FirstHashIndex
+    {
+        get => *FirstHashIndexPtr;
+        set => *FirstHashIndexPtr = value;
+    }
 
     private int** HashesPtr
     {
@@ -907,13 +897,9 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     private nint TryGetLinear(TElemKey key)
     {
         if (Elements.Size == 0) return nint.Zero;
-        for (int i = 0; i < Elements.Size; i++)
-        {
+        for (var i = 0; i < Elements.Size; i++)
             if (Elements.GetKey(i).Equals(key))
-            {
                 return Elements.GetAddress(i);
-            }
-        }
         return nint.Zero;
     }
 
@@ -937,7 +923,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     }
     private int GetBucketListTail(int HashIndex)
     {
-        int currentIndex = Hashes[HashIndex];
+        var currentIndex = Hashes[HashIndex];
         while (true)
         {
             if (Elements.GetNextHashId(currentIndex) == MapConstants.INVALID_HASH_ID) break;
@@ -971,6 +957,8 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         {
             Elements.SetNextHashId(Elements.Size, Elements.Size - 1);
             Elements.SetHashIndex(Elements.Size, 0);
+            FirstHashIndex = Elements.Size;
+            HashSize = 1;
         }
         // Add a new element to the array
         Elements.SetKey(Elements.Size, key);
@@ -985,7 +973,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         get
         {
             ICollection<TElemKey> Keys = new List<TElemKey>();
-            for (int i = 0; i < Elements.Size; i++)
+            for (var i = 0; i < Elements.Size; i++)
             {
                 Keys.Add(Elements.GetKey(i));
             }
@@ -1000,11 +988,11 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     private void Rehash(int NewSize)
     {
         
-        int* NewHashAlloc = (int*)Allocator.Malloc(sizeof(int) * NewSize);
+        var NewHashAlloc = (int*)Allocator.Malloc(sizeof(int) * NewSize);
         NativeMemory.Fill(NewHashAlloc, (nuint)(NewSize * sizeof(int)), 0xff);
         if (Hashes != null) Allocator.Free((nint)Hashes);
         Hashes = NewHashAlloc;
-        for (int i = 0; i < Elements.Size; i++)
+        for (var i = 0; i < Elements.Size; i++)
         {
             var newHashIndex = (int)Elements.GetKey(i).GetTypeHash() & (NewSize - 1);
             Elements.SetHashIndex(i, newHashIndex);
@@ -1056,14 +1044,8 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
             // Disposed unmanaged resources (for Unreal)
             if (OwnsInstance)
             {
-                if (FreeList != null)
-                {
-                    Allocator.Free((nint)FreeList);
-                }
                 if (Hashes != null)
-                {
                     Allocator.Free((nint)Hashes);
-                }
                 Allocator.Free(Self);
             }
             Disposed = true;
