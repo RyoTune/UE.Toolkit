@@ -64,7 +64,7 @@ public class StructFieldNode : IFieldNode
         var anyElementFound = false;
         while (reader.Read())
         {
-            if (reader.Name == _structName && reader.NodeType == XmlNodeType.EndElement) break;
+            if (reader.Name == _structName || reader.NodeType == XmlNodeType.EndElement) break;
             if (reader.NodeType != XmlNodeType.Element) continue;
             if (AtItemElement(reader)) Log.Warning($"{nameof(StructFieldNode)} || Unexpected '{WriterConstants.ItemTag}' element found. Error?");
             
