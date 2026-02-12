@@ -8,7 +8,7 @@ public static class FieldWriterFactory
     
     public static IFieldWriter? Create(string fieldName, nint fieldPtr, int fieldBit, Type fieldType, IObjectCreator objCreator)
     {
-        if (fieldType.IsPrimitive || fieldType.Name == nameof(String))
+        if (fieldType.IsPrimitive || fieldType.IsEnum || fieldType.Name == nameof(String))
             return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldBit, fieldType);
 
         if (fieldType == typeof(FText) || fieldType == typeof(FString) || fieldType == typeof(FName))
