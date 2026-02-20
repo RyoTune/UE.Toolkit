@@ -1,7 +1,11 @@
+using System.Globalization;
+
 namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
 public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, int fieldBit, Type fieldType) : IFieldWriter
 {
+    private static IFormatProvider FloatProvider = new CultureInfo("en-US");
+    
     private nint? _ogValue;
     private Type _fieldType = fieldType;
     private int _fieldBit = fieldBit;
@@ -22,11 +26,11 @@ public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, int fi
             // Value is enum member name.
             if (Enum.TryParse(enumType, value, true, out var nameValue))
             {
-                SetField(Convert.ToDouble(nameValue));
+                SetField(Convert.ToDouble(nameValue, FloatProvider));
             }
 
             // Value is enum integer value.
-            else if (double.TryParse(value, out var intValue))
+            else if (double.TryParse(value, FloatProvider, out var intValue))
             {
                 SetField(intValue);
             }
@@ -35,7 +39,7 @@ public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, int fi
         {
             SetField(boolValue);
         }
-        else if (double.TryParse(value, out var numValue))
+        else if (double.TryParse(value, FloatProvider, out var numValue))
         {
             SetField(numValue);
         }
@@ -81,10 +85,10 @@ public unsafe class PrimitiveFieldWriter(string fieldName, nint fieldPtr, int fi
                 *(byte*)fieldPtr |= (byte)(*(byte*)&Value << _fieldBit);
                 break;
             case "Single":
-                *(float*)fieldPtr = Convert.ToSingle(value);
+                *(float*)fieldPtr = Convert.ToSingle(value, FloatProvider);
                 break;
             case "Double":
-                *(double*)fieldPtr = Convert.ToDouble(value);
+                *(double*)fieldPtr = Convert.ToDouble(value, FloatProvider);
                 break;
             default:
                 Log.Error($"{nameof(PrimitiveFieldWriter)} || Invalid type '{_fieldType.Name}' for field '{fieldName}'.");
