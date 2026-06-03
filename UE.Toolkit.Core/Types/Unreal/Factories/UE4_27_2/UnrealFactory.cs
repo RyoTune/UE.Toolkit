@@ -10,7 +10,6 @@ using EClassFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EClassFlags;
 using FFieldObjectUnion = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FFieldObjectUnion;
 using FUObjectArray_Pack4 = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FUObjectArray_Pack4;
 using FName = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FName;
-using FText = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText;
 using EStructFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EStructFlags;
 using EInternalObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EInternalObjectFlags;
 using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
@@ -327,7 +326,7 @@ public unsafe class FBytePropertyUE4_27_2(nint ptr, IUnrealFactory factory)
 public unsafe class UUserDefinedEnumUE4_27_2(nint ptr, IUnrealFactory factory)
     : UEnumUE4_27_2(ptr, factory), IUUserDefinedEnum
 {
-    public UE.Toolkit.Core.Types.Unreal.UE5_4_4.TMap<FName, FText> DisplayNameMap => ((UUserDefinedEnum*)ptr)->DisplayNameMap;
+    public TMap<FName, FText> DisplayNameMap => *(TMap<FName, FText>*)(&((UUserDefinedEnum*)ptr)->DisplayNameMap);
 }
 
 public unsafe class UEnumUE4_27_2(nint ptr, IUnrealFactory factory)

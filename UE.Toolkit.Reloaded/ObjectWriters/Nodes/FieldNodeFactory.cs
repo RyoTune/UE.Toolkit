@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces.ObjectWriters;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
@@ -25,7 +26,7 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
         if (fieldType.IsPrimitive
             || fieldType.IsEnum
             || fieldType == typeof(string)
-            || fieldType == typeof(FText)
+            || fieldType == GameConfig.GetFText()
             || fieldType == typeof(FString)
             || fieldType == typeof(FName)
             || fieldType.Name.StartsWith("TSoftObjectPtr")

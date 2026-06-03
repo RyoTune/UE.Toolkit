@@ -8,6 +8,7 @@ using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 using Void = Reloaded.Hooks.Definitions.Structs.Void;
 
 // ReSharper disable InconsistentNaming
@@ -90,7 +91,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     public FText* CreateFText(string content)
     {
         var fstring = CreateFString(content);
-        var ftext = (FText*)UnrealMemory._FMemory!.Malloc(sizeof(FText));
+        var ftext = (FText*)UnrealMemory._FMemory!.Malloc(GameConfig.GetFTextSize());
         _FText_FromString!.Wrapper(ftext, fstring);
         UnrealMemory._FMemory.Free((nint)fstring);
         

@@ -1,5 +1,6 @@
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
@@ -11,7 +12,7 @@ public static class FieldWriterFactory
         if (fieldType.IsPrimitive || fieldType.IsEnum || fieldType.Name == nameof(String))
             return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldBit, fieldType);
 
-        if (fieldType == typeof(FText) || fieldType == typeof(FString) || fieldType == typeof(FName))
+        if (fieldType == GameConfig.GetFText() || fieldType == typeof(FString) || fieldType == typeof(FName))
             return new TextFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
 
         if (fieldType.Name.StartsWith("TSoftObjectPtr") || fieldType.Name.StartsWith("TSoftClassPtr"))

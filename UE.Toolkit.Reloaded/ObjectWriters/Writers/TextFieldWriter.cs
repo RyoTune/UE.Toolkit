@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Writers;
 
@@ -26,8 +27,9 @@ public unsafe class TextFieldWriter(string fieldName, nint fieldPtr, Type fieldT
         switch (fieldType.Name)
         {
             case nameof(FText):
-                _ogData = new byte[sizeof(FText)];
-                Marshal.Copy(fieldPtr, _ogData, 0, sizeof(FText));
+                var allocSize = GameConfig.GetFTextSize();
+                _ogData = new byte[allocSize];
+                Marshal.Copy(fieldPtr, _ogData, 0, allocSize);
                 var ftext = objCreator.CreateFText(strValue);
                 *(FText*)fieldPtr = *ftext;
                 break;

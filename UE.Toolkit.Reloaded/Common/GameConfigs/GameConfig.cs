@@ -32,4 +32,25 @@ public static class GameConfig
         
         Log.Information($"Game config set to: {Instance.Id} (App ID: {appId})");
     }
+
+    public static Type GetFText()
+    {
+        return Instance.Id switch
+        {
+            "P3R" => typeof(UE.Toolkit.Core.Types.Unreal.UE4_27_2.FText),
+            _ => typeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText)
+        };
+    }
+
+    public static int GetFTextSize()
+    {
+        unsafe
+        {
+            return Instance.Id switch
+            {
+                "P3R" => sizeof(UE.Toolkit.Core.Types.Unreal.UE4_27_2.FText),
+                _ => sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText)
+            };   
+        }
+    }
 }
