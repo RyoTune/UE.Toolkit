@@ -319,9 +319,9 @@ public unsafe class UStruct_UE5_4_4(nint ptr, IUnrealFactory factory)
     public IUStruct? SuperStruct
         => _self->SuperStruct != null ? _factory.CreateUStruct((nint)_self->SuperStruct) : null;
     public IEnumerable<IUField> Children
-        => new IUFieldEnumerable(_factory.CreateUField((nint)_self->Children));
+        => new IUFieldEnumerable(_self->Children != null ? _factory.CreateUField((nint)_self->Children) : null);
     public IEnumerable<IFField> ChildProperties =>
-        new IFFieldEnumerable(_factory.CreateFField((nint)_self->ChildProperties));
+        new IFFieldEnumerable(_self->ChildProperties != null ? _factory.CreateFField((nint)_self->ChildProperties) : null);
     public int PropertiesSize => _self->PropertiesSize;
     public int MinAlignment => _self->MinAlignment;
     public TArray<byte> Script { get; } = new();
@@ -341,7 +341,7 @@ public unsafe class UStruct_UE5_4_4(nint ptr, IUnrealFactory factory)
             _factory);
 }
 
-public class IFFieldEnumerable(IFField initial)
+public class IFFieldEnumerable(IFField? initial)
     : IEnumerator<IFField>, IEnumerable<IFField>
 {
     private readonly IFField _initial = initial;
@@ -373,7 +373,7 @@ public class IFFieldEnumerable(IFField initial)
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public class IUFieldEnumerable(IUField initial)
+public class IUFieldEnumerable(IUField? initial)
     : IEnumerator<IUField>, IEnumerable<IUField>
 {
     private readonly IUField _initial = initial;
@@ -457,6 +457,12 @@ public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
             ? factory.CreateUFunction((nint)Function.Value)
             : null;
     }
+    
+    public IUObject? ClassDefaultObject 
+        => _self->ClassDefaultObject != null ? factory.CreateUObject((nint)_self->ClassDefaultObject ) : null;
+
+    public nint Constructor => _self->ClassConstructor;
+    public EClassFlags ClassFlags => _self->ClassFlags;
 }
 
 public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -474,6 +480,8 @@ public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory)
         var LastProperty = ChildProperties.Any() ? _factory.CreateFProperty(ChildProperties.Last().Ptr) : null;
         return LastProperty != null ? LastProperty!.Offset_Internal + LastProperty!.ElementSize : 0;
     }
+
+    public nint FunctionPtr => (nint)_self->Func;
 }
 
 public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObjectArray

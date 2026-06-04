@@ -10,4 +10,6 @@ public interface IUFunction : IUStruct
     int ReturnValueOffset { get; }
 
     int GetTotalParameterSize();
+    
+    nint FunctionPtr { get; }
 }
