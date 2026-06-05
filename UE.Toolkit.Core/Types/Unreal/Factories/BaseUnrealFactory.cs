@@ -48,6 +48,8 @@ public abstract class BaseUnrealFactory : IUnrealFactory
                 return (T)CreateFSetProperty(obj.Ptr);
             case nameof(IFOptionalProperty):
                 return (T)CreateFOptionalProperty(obj.Ptr);
+            case nameof(IFDelegateProperty):
+                return (T)CreateFDelegateProperty(obj.Ptr);
             
             default:
                 throw new NotSupportedException(typeName);
@@ -68,6 +70,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     public abstract IFArrayProperty CreateFArrayProperty(nint ptr);
     public abstract IFSetProperty CreateFSetProperty(nint ptr);
     public abstract IFOptionalProperty CreateFOptionalProperty(nint ptr);
+    public abstract IFDelegateProperty CreateFDelegateProperty(nint ptr);
     
     public abstract IUObjectArray CreateUObjectArray(nint ptr);
     

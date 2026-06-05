@@ -36,6 +36,7 @@ public class UnrealFactory : BaseUnrealFactory
                 nameof(IFArrayProperty) => sizeof(FArrayProperty),
                 nameof(IFSetProperty) => sizeof(FSetProperty),
                 nameof(IFOptionalProperty) => sizeof(FOptionalProperty),
+                nameof(IFDelegateProperty) => sizeof(FDelegateProperty),
                 _ => throw new NotSupportedException(TypeName)
             };
         }
@@ -54,6 +55,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFArrayProperty CreateFArrayProperty(nint ptr) => new FArrayProperty_UE5_4_4(ptr, this);
     public override IFSetProperty CreateFSetProperty(nint ptr) => new FSetProperty_UE5_4_4(ptr, this);
     public override IFOptionalProperty CreateFOptionalProperty(nint ptr) => new FOptionalProperty_UE5_4_4(ptr, this);
+    public override IFDelegateProperty CreateFDelegateProperty(nint ptr) => new FDelegateProperty_UE5_4_4(ptr, this);
     public override IUObjectArray CreateUObjectArray(nint ptr) => new UObjectArray_UE5_4_4(ptr, this);
     public override IUObject CreateUObject(nint ptr) => new UObject_UE5_4_4(ptr, this);
     public override IUClass CreateUClass(nint ptr) => new UClass_UE5_4_4(ptr, this);
@@ -733,4 +735,10 @@ public unsafe class UGameInstance_UE5_4_4(nint ptr, IUnrealFactory factory)
             : null;
         return Subsystem != null;
     }
+}
+
+public unsafe class FDelegateProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
+    : FProperty_UE5_4_4(ptr, factory), IFDelegateProperty 
+{
+    public IUFunction? Function => ((FDelegateProperty*)Ptr)->SignatureFunction != null ? _factory.CreateUFunction((nint)((FDelegateProperty*)Ptr)->SignatureFunction) : null;
 }

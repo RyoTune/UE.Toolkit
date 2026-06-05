@@ -17,6 +17,7 @@ using FArrayProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FArrayProperty;
 using FBoolProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FBoolProperty;
 using FByteProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FByteProperty;
 using FClassProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FClassProperty;
+using FDelegateProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FDelegateProperty;
 using FEnumProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FEnumProperty;
 using FField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FField;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldClass;
@@ -72,6 +73,7 @@ public class UnrealFactory : BaseUnrealFactory
                 nameof(IFArrayProperty) => sizeof(FArrayProperty),
                 nameof(IFSetProperty) => sizeof(FSetProperty),
                 nameof(IFOptionalProperty) => sizeof(FOptionalProperty),
+                nameof(IFDelegateProperty) => sizeof(FDelegateProperty),
                 _ => throw new NotSupportedException(TypeName)
             };
         }
@@ -102,7 +104,9 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFSetProperty CreateFSetProperty(nint ptr) => new FSetPropertyUE4_27_2(ptr, this);
 
     public override IFOptionalProperty CreateFOptionalProperty(nint ptr) => throw new NotSupportedException();
-    
+
+    public override IFDelegateProperty CreateFDelegateProperty(nint ptr) => new FDelegatePropertyUE4_27_2(ptr, this);
+
     public override IUObjectArray CreateUObjectArray(nint ptr) => new UObjectArrayUE4_27_2(ptr, this);
 
     public override IUObject CreateUObject(nint ptr) => new UObjectUE4_27_2(ptr, this);
@@ -770,4 +774,10 @@ public unsafe class UGameInstanceUE4_27_2(nint ptr, IUnrealFactory factory)
             : null;
         return Subsystem != null;
     }
+}
+
+public unsafe class FDelegatePropertyUE4_27_2(nint ptr, IUnrealFactory factory)
+    : FPropertyUE4_27_2(ptr, factory), IFDelegateProperty 
+{
+    public IUFunction? Function => ((FDelegateProperty*)Ptr)->func != null ? _factory.CreateUFunction((nint)((FDelegateProperty*)Ptr)->func) : null;
 }

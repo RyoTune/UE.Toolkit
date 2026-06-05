@@ -25,6 +25,7 @@ public interface IUnrealFactory
     IFArrayProperty CreateFArrayProperty(nint ptr);
     IFSetProperty CreateFSetProperty(nint ptr);
     IFOptionalProperty CreateFOptionalProperty(nint ptr);
+    IFDelegateProperty CreateFDelegateProperty(nint ptr);
     
     IUObjectArray CreateUObjectArray(nint ptr);
     IUObject CreateUObject(nint ptr);
