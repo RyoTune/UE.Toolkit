@@ -1,0 +1,13 @@
+﻿using UE.Toolkit.Core.Types.Unreal.Factories;
+using UE.Toolkit.Core.Types.Unreal.Factories.UE5_7_4;
+using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Unreal;
+
+namespace UE.Toolkit.Reloaded.Common.GameConfigs.Games;
+
+public class UE5_7_4: UE5_4_4_ClairObscur
+{
+    public override string Id => "UE5_7_4";
+    public override IUnrealFactory Factory { get; } = new UnrealFactory();
+    public override IUnrealMemory Memory { get; } = new UnrealMemory();
+}

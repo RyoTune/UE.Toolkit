@@ -27,7 +27,7 @@ Object XML requires game-specific support with an extension mod. Supported games
 | Object Logging |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Object Editing |✅|❔|❔|❔|❔|✅|❔|❔|❔
 | `FMemory` Functions |✅|✅|✅|✅|✅|✅|✅|✅|✅
-| Dumper |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| Dumper |✅|✅|✅|✅|️️️️️️✅|✅|✅|✅️|️️️️✅️
 | Property Editing (Object XML) |✅|❔|❔|❔|❔|✅|❔|❔|❔
 | Add List Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
 | Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
