@@ -18,6 +18,11 @@ public unsafe interface IUnrealObjects : IObjectCreator
     Action<ToolkitUObject<UObjectBase>>? OnObjectLoaded { get; set; }
     
     /// <summary>
+    /// Notify when an object will be destroyed.
+    /// </summary>
+    Action<ToolkitUObject<UObjectBase>>? OnObjectBeginDestroy { get; set; }
+    
+    /// <summary>
     /// Gets the global UObject array.
     /// </summary>
     IUObjectArray GUObjectArray { get; }

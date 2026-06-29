@@ -22,19 +22,19 @@
 
 Object XML requires game-specific support with an extension mod. Supported games [are listed here](#installing-the-ue-toolkit-extension-mod).
 
-| Feature | UE 4.27.2 | UE 5.4.4 |
-| - | - | - |
-| Object Logging | ✅| ✅
-| Object Editing | ✅| ✅
-| `FMemory` Functions | ✅| ✅
-| Dumper | ✅| ✅
-| Property Editing (Object XML) | ✅| ✅
-| Add List Entry (Object XML) | ✅| ❔
-| Add Map Entry (Object XML) | ✅| ❔
-| Type Information | ✅| ✅
-| Custom Constructor | ✅| ❔
-| Add Properties | ✅| ❌
-| Register Struct | ✅| ❌
+| Feature | 4.27 | 5.0 | 5.1 | 5.2 | 5.3 | 5.4 | 5.5 | 5.6 | 5.7
+| - | - | - | - | - | - | - | - | - | - |
+| Object Logging |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Object Editing |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| `FMemory` Functions |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Dumper |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| Property Editing (Object XML) |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| Add List Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
+| Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
+| Type Information |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| Custom Constructor |✅|❔|❔|❔|❔|❔|❔|❔|❔
+| Add Properties |✅|❔|❔|❔|❔|❌|❔|❔|❔
+| Register Struct |✅|❔|❔|❔|❔|❌|❔|❔|❔
 
 Features marked with ❔ are currently untested.
 

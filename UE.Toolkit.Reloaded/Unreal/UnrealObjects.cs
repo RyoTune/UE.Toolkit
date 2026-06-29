@@ -24,7 +24,9 @@ public unsafe class UnrealObjects : IUnrealObjects
     private readonly SHFunction<FText_ToString> _FText_ToString = new();
     
     private static IHook<PostLoadSubobjectsFunction>? _UObject_PostLoadSubobjects;
+    private static IHook<BeginDestroyFunction>? _UObject_BeginDestroy;
     private static Action<nint>? _onObjectLoaded;
+    private static Action<nint>? _onObjectDestroy;
 
     internal ConcurrentDictionary<nint, Action<IUClass>> OnCDOLoaded = new();
     
@@ -38,6 +40,16 @@ public unsafe class UnrealObjects : IUnrealObjects
         _onObjectLoaded?.Invoke(self);
     }
 
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static void UObject_BeginDestroy(nint self)
+    {
+        if (Mod.Config.LogObjectsEnabled)
+            Log.Information($"{nameof(UObject_BeginDestroy)} || {ToolkitUtils.GetPrivateName(self)} || {ToolkitUtils.GetPrivateName((nint)((UObjectBase*)self)->ClassPrivate)}");
+        
+        _UObject_BeginDestroy!.OriginalFunction.Value.Invoke(self);
+        _onObjectDestroy?.Invoke(self);
+    }
+
     private IUnrealFactory Factory;
 
     public UnrealObjects(IUnrealFactory factory)
@@ -47,6 +59,9 @@ public unsafe class UnrealObjects : IUnrealObjects
         Project.Scans.AddScanHook(nameof(UObject_PostLoadSubobjects),
             (result, hooks) => _UObject_PostLoadSubobjects = hooks.CreateHook<PostLoadSubobjectsFunction>((delegate* unmanaged[Stdcall]<nint, nint, void>)&UObject_PostLoadSubobjects, result).Activate());
         
+        Project.Scans.AddScanHook(nameof(UObject_BeginDestroy), 
+            (result, hooks) => _UObject_BeginDestroy = hooks.CreateHook<BeginDestroyFunction>((delegate* unmanaged[Stdcall]<nint, void>)&UObject_BeginDestroy, result).Activate());
+        
         Project.Scans.AddScan(nameof(GUObjectArray),
             result => GUObjectArray = factory.CreateUObjectArray(result));
         
@@ -54,9 +69,12 @@ public unsafe class UnrealObjects : IUnrealObjects
             (result, hooks) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
         
         _onObjectLoaded += objPtr => OnObjectLoaded?.Invoke(new((UObjectBase*)objPtr));
+        _onObjectDestroy += objPtr => OnObjectBeginDestroy?.Invoke(new((UObjectBase*)objPtr));
     }
 
     public Action<ToolkitUObject<UObjectBase>>? OnObjectLoaded { get; set; }
+
+    public Action<ToolkitUObject<UObjectBase>>? OnObjectBeginDestroy { get; set; }
     
     public IUObjectArray GUObjectArray { get; private set; } = null!;
 
@@ -106,5 +124,10 @@ public unsafe class UnrealObjects : IUnrealObjects
     private struct PostLoadSubobjectsFunction
     {
         public FuncPtr<nint, nint, Void> Value;
+    }
+
+    private struct BeginDestroyFunction
+    {
+        public FuncPtr<nint, Void> Value;
     }
 }
