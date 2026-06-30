@@ -21,6 +21,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         pProperty->PostConstructLinkNext = null;
         
         var pClass = (UClass*)Reflect.Ptr;
+        // Is this the only field?
         if (((UStruct*)pClass)->PropertyLink == null)
         {
             ((UStruct*)pClass)->PropertyLink = pProperty;
@@ -177,7 +178,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         => CreateCopyPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "NameProperty", Visibility);
     
     public override bool CreateString<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateStringPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "StringProperty", Visibility);
+        => CreateStringPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "StrProperty", Visibility);
     
     public override bool CreateText<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
         => CreateTextPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "TextProperty", Visibility);

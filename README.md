@@ -31,9 +31,9 @@ Object XML requires game-specific support with an extension mod. Supported games
 | Property Editing (Object XML) |✅|❔|❔|❔|❔|✅|❔|❔|❔
 | Add List Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
 | Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
-| Type Information |✅|❔|❔|❔|❔|✅|❔|❔|❔
-| Custom Constructor |✅|❔|❔|❔|❔|❔|❔|❔|❔
-| Add Properties |✅|❔|❔|❔|❔|❌|❔|❔|❔
+| Type Information |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Custom Constructor |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Add Properties |✅|⚠️|⚠️|⚠️|✅|✅|✅|✅|✅
 | Register Struct |✅|❔|❔|❔|❔|❌|❔|❔|❔
 
 Features marked with ❔ are currently untested.

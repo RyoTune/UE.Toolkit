@@ -2,18 +2,16 @@
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
-using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+// using UE.Toolkit.Core.Types.Unreal.UE5_6_1;
 using UE.Toolkit.Interfaces;
-using FField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FField;
-using FName = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FName;
-using EFindName = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EFindName;
-using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
-using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
-using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldClass;
-using FProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FProperty;
-using UObjectBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UObjectBase;
+using FField = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FField;
+using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FFieldClass;
+using FStructProperty = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FStructProperty;
+using UStruct = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UStruct;
+using UScriptStruct = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UScriptStruct;
 
-namespace UE.Toolkit.Reloaded.Reflection.UE4_27_2;
+namespace UE.Toolkit.Reloaded.Reflection.UE5_7_4;
 
 public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory, 
     IUnrealClasses classes, IPropertyFlagsBuilder flags)
@@ -23,63 +21,62 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
     protected override unsafe void LinkToPropertyList(IFProperty Property, IUClass Reflect)
     {
         var pProperty = (FProperty*)Property.Ptr;
-        pProperty->prop_link_next = null;
-        pProperty->next_ref = null;
-        pProperty->dtor_link_next = null;
-        pProperty->post_ct_link_next = null;
+        pProperty->PropertyLinkNext = null;
+        pProperty->NextRef = null;
+        pProperty->DestructorLinkNext = null;
+        pProperty->PostConstructLinkNext = null;
         
         var pClass = (UClass*)Reflect.Ptr;
-        if (((UStruct*)pClass)->prop_link == null)
+        if (((UStruct*)pClass)->PropertyLink == null)
         {
-            ((UStruct*)pClass)->prop_link = pProperty;
-            ((UStruct*)pClass)->child_properties = (FField*)pProperty;
+            ((UStruct*)pClass)->PropertyLink = pProperty;
+            ((UStruct*)pClass)->ChildProperties = (FField*)pProperty;
         }
         else
         {
             var TargetProp = GetPreviousProperty(Property, Reflect);
             var NextProp = TargetProp.PropertyLinkNext.Any() ? TargetProp.PropertyLinkNext.First() : null;
             var pTargetProp = (FProperty*)TargetProp.Ptr;
-            pTargetProp->prop_link_next = pProperty;
-            ((FField*)pTargetProp)->next = (FField*)pProperty;
+            pTargetProp->PropertyLinkNext = pProperty;
+            ((FField*)pTargetProp)->Next = (FField*)pProperty;
             if (NextProp != null)
             {
                 var pNextProp = (FProperty*)NextProp.Ptr;
-                pProperty->prop_link_next = pNextProp;
-                ((FField*)pProperty)->next = (FField*)pNextProp;
+                pProperty->PropertyLinkNext = pNextProp;
+                ((FField*)pProperty)->Next = (FField*)pNextProp;
             }
         }       
     }
-
+    
     protected override unsafe void SetPropertySuperFields(IFField Field, string Name, IUClass ClassReflection, 
         FieldClassGlobal PropertyClass)
     {
         var pField = (FField*)Field.Ptr;
-        pField->_vtable = PropertyClass.Vtable;
-        pField->class_private = (FFieldClass*)PropertyClass.Params.Ptr;
-        pField->owner.Object = (UObjectBase*)ClassReflection.Ptr; // UClass*
-        pField->next = null;
-        pField->name_private = new FName(Name);
-        pField->flags_private = EObjectFlags.RF_Public | EObjectFlags.RF_MarkAsNative | EObjectFlags.RF_Transient;
+        pField->VTable = PropertyClass.Vtable;
+        pField->ClassPrivate = (FFieldClass*)PropertyClass.Params.Ptr;
+        pField->Owner.Object = (UObjectBase*)ClassReflection.Ptr; // UClass*
+        pField->Next = null;
+        pField->NamePrivate = new FName(Name);
+        pField->FlagsPrivate = EObjectFlags.RF_Public | EObjectFlags.RF_MarkAsNative | EObjectFlags.RF_Transient;
     }
-
+    
     private unsafe void SetPropertyFieldDefaults(FProperty* pProperty, int Offset)
     {
-        pProperty->rep_index = 0;
-        pProperty->blueprint_rep_cond = 0;
-        pProperty->offset_internal = Offset;
-        pProperty->rep_notify_func = new();
+        pProperty->RepIndex = 0;
+        pProperty->BlueprintReplicationCondition = 0;
+        pProperty->Offset_Internal = Offset;
     }
-
-    private unsafe void SetPropertyFieldsInner<T>(IFProperty Property, int Offset,
+    
+    private unsafe void SetPropertyFieldsInner<T>(IFProperty Property, int Offset, 
         PropertyVisibility Visibility, PropertyBuilderFlags PropertyFlags)
     {
         var pProperty = (FProperty*)Property.Ptr;
-        pProperty->array_dim = 1;
-        pProperty->element_size = Marshal.SizeOf<T>();
-        pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyFlags);
-        SetPropertyFieldDefaults(pProperty, Offset);       
+        pProperty->ArrayDim = 1;
+        pProperty->ElementSize = Marshal.SizeOf<T>();
+        pProperty->PropertyFlags = Flags.CreatePropertyFlags(Visibility, PropertyFlags);
+        SetPropertyFieldDefaults(pProperty, Offset);
     }
-
+    
     protected override unsafe void SetCopyPropertyFields<T>(IFProperty Property, int Offset, 
         PropertyVisibility Visibility)
     {
@@ -94,16 +91,16 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
     protected override void SetTextPropertyFields<T>(IFProperty Property, int Offset,
         PropertyVisibility Visibility)
         => SetPropertyFieldsInner<T>(Property, Offset, Visibility, PropertyBuilderFlags.None);
-
+    
     protected override unsafe void SetBoolPropertyFields(IFBoolProperty Property, BooleanMask Mask) 
     {
         var pBoolProperty = (FBoolProperty*)Property.Ptr;
-        pBoolProperty->field_size = (byte)Marshal.SizeOf<byte>();
-        pBoolProperty->byte_offset = 0;
-        pBoolProperty->byte_mask = Mask.ByteMask;
-        pBoolProperty->field_mask = Mask.FieldMask;       
+        pBoolProperty->FieldSize = (byte)Marshal.SizeOf<byte>();
+        pBoolProperty->ByteOffset = 0;
+        pBoolProperty->ByteMask = Mask.ByteMask;
+        pBoolProperty->FieldMask = Mask.FieldMask;       
     }
-     
+    
     public override bool CreateI8<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
         => CreateCopyPropertyInner<TOwner, byte, FProperty>(out NewProperty, Name, Offset, "Int8Property", Visibility);
     
@@ -129,10 +126,10 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         => CreateCopyPropertyInner<TOwner, long, FProperty>(out NewProperty, Name, Offset, "UInt64Property", Visibility);
     
     public override bool CreateF32<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, float, FProperty>(out NewProperty, Name, Offset, "FloatProperty", Visibility);
+        => CreateCopyPropertyInner<TOwner, float, FProperty>(out NewProperty, Name, Offset, "FFloatProperty", Visibility);
     
     public override bool CreateF64<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, double, FProperty>(out NewProperty, Name, Offset, "DoubleProperty", Visibility);
+        => CreateCopyPropertyInner<TOwner, double, FProperty>(out NewProperty, Name, Offset, "FDoubleProperty", Visibility);
 
     public override bool CreateStruct<TOwner, TField>(out IFStructProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility)
@@ -147,16 +144,16 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         unsafe
         {
             var pProperty = (FProperty*)Alloc;
-            pProperty->array_dim = 1;
-            pProperty->element_size = ScriptStruct!.PropertiesSize; // FExampleStruct mExampleField; 
-            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            pProperty->ArrayDim = 1;
+            pProperty->ElementSize = ScriptStruct!.PropertiesSize; // FExampleStruct mExampleField; 
+            pProperty->PropertyFlags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
         LinkToPropertyList(NewProperty, ClassReflection!);
-        unsafe { ((FStructProperty*)NewProperty.Ptr)->struct_data = (UScriptStruct*)ScriptStruct.Ptr; }
+        unsafe { ((FStructProperty*)NewProperty.Ptr)->Struct = (UScriptStruct*)ScriptStruct.Ptr; }
         return true;
     }
-    
+
     public override bool CreateObject<TOwner, TField>(out IFObjectProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility)
     {
@@ -170,18 +167,18 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         unsafe
         {
             var pProperty = (FProperty*)Alloc;
-            pProperty->array_dim = 1;
-            pProperty->element_size = Marshal.SizeOf<nint>();
+            pProperty->ArrayDim = 1;
+            pProperty->ElementSize = Marshal.SizeOf<nint>();
             // For ObjectProperty:  UExampleClass* pExampleObject;
             // For ClassProperty:  TSubclassOf<class UExampleClass> pExampleClass;
-            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            pProperty->PropertyFlags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
         LinkToPropertyList(NewProperty, ClassReflection!);
-        unsafe { ((FObjectProperty*)NewProperty.Ptr)->prop_class = (UClass*)FieldClass!.Ptr; }
+        unsafe { ((FObjectProperty*)NewProperty.Ptr)->PropertyClass = (UClass*)FieldClass!.Ptr; }
         return true;
     }
-    
+
     public override bool CreateName<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
         => CreateCopyPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "NameProperty", Visibility);
     
@@ -203,13 +200,13 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         unsafe
         {
             var pProperty = (FProperty*)Alloc;
-            pProperty->array_dim = 1;
-            pProperty->element_size = 0x10; // sizeof(TArray<T>)
-            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
+            pProperty->ArrayDim = 1;
+            pProperty->ElementSize= 0x10; // sizeof(TArray<T>)
+            pProperty->PropertyFlags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
             SetPropertyFieldDefaults(pProperty, Offset);
         }
-        LinkToPropertyList(NewProperty, ClassReflection);
-        unsafe { ((FArrayProperty*)Alloc)->inner = (FProperty*)Inner.Ptr; }
+        LinkToPropertyList(NewProperty, ClassReflection!);
+        unsafe { ((FArrayProperty*)Alloc)->Inner = (FProperty*)Inner.Ptr; }
         return true;
     }
 }
