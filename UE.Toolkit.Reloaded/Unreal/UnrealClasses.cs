@@ -453,33 +453,10 @@ public unsafe class UnrealClasses : IUnrealClasses
         Objects = _Objects;
         Hooks = _Hooks;
         Address = _Address;
-        
-        IPropertyFlagsBuilder FlagsBuilder = GameConfig.Instance.Id switch
-        {
-            "P3R" => new Reflection.UE4_27_2.PropertyFlagsBuilder(),
-            "UE5_2_1" => new Reflection.UE5_2_1.PropertyFlagsBuilder(),
-            "UE5_6_1" => new Reflection.UE5_6_1.PropertyFlagsBuilder(),
-            "UE5_7_4" => new Reflection.UE5_7_4.PropertyFlagsBuilder(),
-            _ => new Reflection.UE5_4_4.PropertyFlagsBuilder(),
-        };
-        
-        PropertyFactory = GameConfig.Instance.Id switch
-        {
-            "P3R" => new Reflection.UE4_27_2.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-            "UE5_2_1" => new Reflection.UE5_2_1.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-            "UE5_6_1" => new Reflection.UE5_6_1.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-            "UE5_7_4" => new Reflection.UE5_7_4.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-            _ => new Reflection.UE5_4_4.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-        };
-        
-        TypeFactory = GameConfig.Instance.Id switch
-        {
-            "P3R" => new Reflection.UE4_27_2.TypeFactory(Factory, Memory, this, FlagsBuilder),
-            "UE5_2_1" => new Reflection.UE5_2_1.TypeFactory(Factory, Memory, this, FlagsBuilder),
-            "UE5_6_1" => new Reflection.UE5_6_1.TypeFactory(Factory, Memory, this, FlagsBuilder),
-            "UE5_7_4" => new Reflection.UE5_7_4.TypeFactory(Factory, Memory, this, FlagsBuilder),
-            _ => new Reflection.UE5_4_4.TypeFactory(Factory, Memory, this, FlagsBuilder),
-        };
+
+        var FlagsBuilder = GameConfig.Instance.FlagsBuilder;
+        PropertyFactory = GameConfig.Instance.PropertyFactory(this);
+        TypeFactory = GameConfig.Instance.TypeFactory(this);
         
         Project.Inis.UsingSetting<uint>(Constants.UnrealIniId, "Link", nameof(UStruct),
             value => UStructLinkOffset = value);

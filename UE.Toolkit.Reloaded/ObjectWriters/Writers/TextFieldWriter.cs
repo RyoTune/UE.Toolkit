@@ -27,7 +27,7 @@ public unsafe class TextFieldWriter(string fieldName, nint fieldPtr, Type fieldT
         switch (fieldType.Name)
         {
             case nameof(FText):
-                var allocSize = GameConfig.GetFTextSize();
+                var allocSize = GameConfig.Instance.GetFTextSize();
                 _ogData = new byte[allocSize];
                 Marshal.Copy(fieldPtr, _ogData, 0, allocSize);
                 var ftext = objCreator.CreateFText(strValue);

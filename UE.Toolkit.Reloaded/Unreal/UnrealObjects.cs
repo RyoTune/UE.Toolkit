@@ -109,7 +109,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     public FText* CreateFText(string content)
     {
         var fstring = CreateFString(content);
-        var ftext = (FText*)UnrealMemory._FMemory!.Malloc(GameConfig.GetFTextSize());
+        var ftext = (FText*)UnrealMemory._FMemory!.Malloc(GameConfig.Instance.GetFTextSize());
         _FText_FromString!.Wrapper(ftext, fstring);
         UnrealMemory._FMemory.Free((nint)fstring);
         

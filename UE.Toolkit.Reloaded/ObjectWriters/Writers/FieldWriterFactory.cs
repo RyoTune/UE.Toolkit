@@ -12,7 +12,7 @@ public static class FieldWriterFactory
         if (fieldType.IsPrimitive || fieldType.IsEnum || fieldType.Name == nameof(String))
             return new PrimitiveFieldWriter(fieldName, fieldPtr, fieldBit, fieldType);
 
-        if (fieldType == GameConfig.GetFText() || fieldType == typeof(FString) || fieldType == typeof(FName))
+        if (fieldType == GameConfig.Instance.GetFText() || fieldType == typeof(FString) || fieldType == typeof(FName))
             return new TextFieldWriter(fieldName, fieldPtr, fieldType, objCreator);
 
         if (fieldType.Name.StartsWith("TSoftObjectPtr") || fieldType.Name.StartsWith("TSoftClassPtr"))

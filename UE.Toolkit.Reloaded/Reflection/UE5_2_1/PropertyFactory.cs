@@ -5,7 +5,10 @@ using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 
+using FField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FField;
+using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldClass;
 using FProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FProperty;
+using UObjectBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UObjectBase;
 
 namespace UE.Toolkit.Reloaded.Reflection.UE5_2_1;
 
@@ -26,7 +29,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         if (((UStruct*)pClass)->PropertyLink == null)
         {
             ((UStruct*)pClass)->PropertyLink = (UE.Toolkit.Core.Types.Unreal.UE5_4_4.FProperty*)pProperty;
-            ((UStruct*)pClass)->ChildProperties = (FField*)pProperty;
+            ((UStruct*)pClass)->ChildProperties = (UE.Toolkit.Core.Types.Unreal.UE5_4_4.FField*)pProperty;
         }
         else
         {
@@ -34,12 +37,12 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
             var NextProp = TargetProp.PropertyLinkNext.Any() ? TargetProp.PropertyLinkNext.First() : null;
             var pTargetProp = (FProperty*)TargetProp.Ptr;
             pTargetProp->prop_link_next = pProperty;
-            ((FField*)pTargetProp)->Next = (FField*)pProperty;
+            ((FField*)pTargetProp)->next = (FField*)pProperty;
             if (NextProp != null)
             {
                 var pNextProp = (FProperty*)NextProp.Ptr;
                 pProperty->prop_link_next = pNextProp;
-                ((FField*)pProperty)->Next = (FField*)pNextProp;
+                ((FField*)pProperty)->next = (FField*)pNextProp;
             }
         }       
     }
@@ -48,12 +51,12 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         FieldClassGlobal PropertyClass)
     {
         var pField = (FField*)Field.Ptr;
-        pField->VTable = PropertyClass.Vtable;
-        pField->ClassPrivate = (FFieldClass*)PropertyClass.Params.Ptr;
-        pField->Owner.Object = (UObjectBase*)ClassReflection.Ptr; // UClass*
-        pField->Next = null;
-        pField->NamePrivate = new FName(Name);
-        pField->FlagsPrivate = EObjectFlags.RF_Public | EObjectFlags.RF_MarkAsNative | EObjectFlags.RF_Transient;
+        pField->_vtable = PropertyClass.Vtable;
+        pField->class_private = (FFieldClass*)PropertyClass.Params.Ptr;
+        pField->owner.Object = (UObjectBase*)ClassReflection.Ptr; // UClass*
+        pField->next = null;
+        pField->name_private = new FName(Name);
+        pField->flags_private = EObjectFlags.RF_Public | EObjectFlags.RF_MarkAsNative | EObjectFlags.RF_Transient;
     }
     
     private unsafe void SetPropertyFieldDefaults(FProperty* pProperty, int Offset)

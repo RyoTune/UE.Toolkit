@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
@@ -16,6 +17,9 @@ using FArrayProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FArrayProperty;
 using FSetProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSetProperty;
 // using FOptionalProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FOptionalProperty;
 using FDelegateProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FDelegateProperty;
+
+using FPropertyParamsBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FPropertyParamsBase;
+using FStructParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructParams;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_2_1;
 
@@ -79,9 +83,9 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
-    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
-    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
-    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
+    public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_2_1(ptr, this);
+    public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_2_1(ptr, this);
+    public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_2_1(ptr, this);
     public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
     public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this);
     public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this);
@@ -153,4 +157,50 @@ public unsafe class UClass_UE5_2_1(nint ptr, IUnrealFactory factory)
 
     public nint Constructor => _self->ClassConstructor;
     public EClassFlags ClassFlags => _self->ClassFlags;
+}
+
+public unsafe class FStructParams_UE5_2_1(nint ptr, IUnrealFactory factory) : IFStructParams
+{
+    private readonly FStructParams* _self = (FStructParams*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => (nint)_self;
+
+    public nint OuterFunc => _self->OuterFunc;
+    public nint SuperFunc => _self->SuperFunc;
+    public nint StructOpsFunc => _self->StructOpsFunc;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public ulong Size => _self->SizeOf;
+    public ulong Alignment => _self->AlignOf;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+    public EStructFlags StructFlags => _self->StructFlags;
+    public int PropertyCount => _self->NumProperties;
+    public IFPropertyParams? GetProperty(int Index)
+    {
+        var Result = ((FStructParams*)Ptr)->GetProperty(Index);
+        return Result != null ? _factory.CreateFPropertyParams((nint)Result) : null;
+    }
+    
+    public IEnumerable<IFPropertyParams> Properties => new FPropertyParamEnumerator(this);
+}
+
+public unsafe class FPropertyParams_UE5_2_1(nint ptr, IUnrealFactory factory) : IFPropertyParams
+{
+    private readonly FPropertyParamsBase* _self = (FPropertyParamsBase*)ptr;
+    protected readonly IUnrealFactory _factory = factory;   
+    
+    public nint Ptr => (nint)_self;
+    public string Name => Marshal.PtrToStringUTF8(_self->NameUTF8)!;
+    public EPropertyFlags PropertyFlags => _self->PropertyFlags;
+    public EPropertyGenFlags GenFlags => _self->PropertyGenFlags;
+    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+}
+
+public unsafe class FGenericPropertyParams_UE5_2_1(nint ptr, IUnrealFactory factory) 
+    : FPropertyParams_UE5_2_1(ptr, factory), IFGenericPropertyParams
+{
+    private readonly FGenericPropertyParams* _self = (FGenericPropertyParams*)ptr;
+
+    public int ArrayDim => _self->Super.ArrayDim;
+    public int Offset => _self->Super.Offset;
 }

@@ -44,7 +44,7 @@ public unsafe class UnrealStrings : IUnrealStrings
     
     public string UEnumGetDisplayNameTextByIndex(nint userEnum, int index)
     {
-        var outText = (FText*)Marshal.AllocHGlobal(GameConfig.GetFTextSize());
+        var outText = (FText*)Marshal.AllocHGlobal(GameConfig.Instance.GetFTextSize());
         
         var dispNameFText =
             _getDispNameTextByIdx.Wrapper((UUserDefinedEnum*)userEnum, outText, index);
