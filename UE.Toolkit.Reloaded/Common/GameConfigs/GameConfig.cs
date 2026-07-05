@@ -27,8 +27,9 @@ public static class GameConfig
         Instance = appId switch
         {
             "p3r.exe" or "smt5v-win64-shipping.exe" => new UE4_27_2_P3R(),
-            "iostoretest_50-win64-shipping.exe" or "iostoretest_51-win64-shipping.exe" 
-                or "iostoretest_52-win64-shipping.exe" or "chronos-win64-shipping.exe" => new UE5_2_1(),
+            "iostoretest_50-win64-shipping.exe" => new UE5_0_3(),
+            "iostoretest_51-win64-shipping.exe" or "iostoretest_52-win64-shipping.exe"
+                or "chronos-win64-shipping.exe" => new UE5_2_1(),
             "iostoretest_53-win64-shipping.exe" => new UE5_3_2(),
             "iostoretest_56-win64-shipping.exe" => new UE5_6_1(),
             "iostoretest_57-win64-shipping.exe" => new UE5_7_4(),

@@ -51,7 +51,7 @@ public class TypeFactory(IUnrealFactory factory, IUnrealMemory memory,
         ((nint*)CurrentCppStructOpsVtable)[7] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasSerializer
         ((nint*)CurrentCppStructOpsVtable)[8] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasStructuredSerializer
         ((nint*)CurrentCppStructOpsVtable)[9] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // Serialize(FArchive)
-        ((nint*)CurrentCppStructOpsVtable)[10] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // Serialize(FStructedArchive::FSlot)
+        ((nint*)CurrentCppStructOpsVtable)[10] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // Serialize(FStructuredArchive::FSlot)
         ((nint*)CurrentCppStructOpsVtable)[11] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasPostSerialize
         ((nint*)CurrentCppStructOpsVtable)[12] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // PostSerializer
         ((nint*)CurrentCppStructOpsVtable)[13] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasNetSerializer
@@ -86,7 +86,9 @@ public class TypeFactory(IUnrealFactory factory, IUnrealMemory memory,
         List<IFPropertyParams> Fields, out IFStructParams? Out)
     {
         var pProperties = (FPropertyParamsBase**)Memory.MallocZeroed(Marshal.SizeOf<nint>() * Fields.Count);
-        var StructParamStatic = (FStructParams*)Memory.MallocZeroed(Marshal.SizeOf<FStructParams>()); 
+        var StructParamStatic = (FStructParams*)Memory.MallocZeroed(Marshal.SizeOf<FStructParams>());
+        // Retrieve the game package so the reference to it is valid when FStructProperty::OuterFunc is called
+        _ = Classes.GetGamePackage();
         StructParamStatic->OuterFunc = (nint)(delegate* unmanaged[Stdcall]<nint>)(&Unreal.UnrealClasses.FStructProperty_OuterFunc_Callback);
         StructParamStatic->SuperFunc = nint.Zero;
         StructParamStatic->StructOpsFunc = (nint)(delegate* unmanaged[Stdcall]<nint>)(&InitializeCppStructOps);

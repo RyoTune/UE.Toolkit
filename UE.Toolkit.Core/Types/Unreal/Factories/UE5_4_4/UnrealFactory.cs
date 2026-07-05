@@ -470,7 +470,7 @@ public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUO
     public IUObject? IndexToObject(int idx)
     {
         var objItem = _self->ObjObjects.GetItem(idx);
-        if (objItem == null || objItem->Object == null) return null;
+        if (objItem == null || objItem->Object == null || objItem->Flags.HasFlag(EInternalObjectFlags.Unreachable)) return null;
         
         return factory.CreateUObject((nint)objItem->Object);
     }

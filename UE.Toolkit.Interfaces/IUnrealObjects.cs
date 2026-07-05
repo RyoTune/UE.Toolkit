@@ -65,6 +65,38 @@ public unsafe interface IUnrealObjects : IObjectCreator
     /// <remarks>Implemented as a post-hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
     void OnObjectLoadedByClass<TObject>(string objClass, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged;
+    
+    /// <summary>
+    /// Finds an object based on the given name.
+    /// </summary>
+    /// <param name="objectName">Object name.</param>
+    /// <param name="className">Class name.</param>
+    /// <returns>A <see cref="IUObject"/> if an object was found with a matching name.</returns>
+    IUObject? FindObjectByName(string objectName, string className);
+    
+    /// <summary>
+    /// Finds an object based on the given name.
+    /// </summary>
+    /// <param name="objectName">Object name.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>A <see cref="ToolkitUObject{TObject}"/> if an object was found with a matching name.</returns>
+    ToolkitUObject<TObject>? FindObjectByName<TObject>(string objectName)
+        where TObject : unmanaged;
+    
+    /// <summary>
+    /// Finds the first object matching a specified type.
+    /// </summary>
+    /// <param name="objectName">Class name.</param>
+    /// <returns>A <see cref="IUObject"/> if an object was found with the specified type.</returns>
+    IUObject? FindObjectByClass(string className);
+    
+    /// <summary>
+    /// Finds the first object matching a specified type.
+    /// </summary>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>A <see cref="ToolkitUObject{TObject}"/> if an object was found with the specified type.</returns>
+    ToolkitUObject<TObject>? FindObjectByClass<TObject>()
+        where TObject : unmanaged;
 }
 
 /// <summary>

@@ -277,6 +277,18 @@ public interface IUnrealClasses : IUnrealClassesInternal
     #region New Struct Construction
 
     /// <summary>
+    /// Get the package object for the engine "/Script/Engine"
+    /// </summary>
+    /// <returns>The package object for the engine if it's been initialized.</returns>
+    public IUObject? GetEnginePackage();
+    
+    /// <summary>
+    /// Get the package object for the game
+    /// </summary>
+    /// <returns>The package object for the game if it's been initialized.</returns>
+    public IUObject? GetGamePackage();
+
+    /// <summary>
     /// Create a Int8 param to insert into a struct param's property list. This is used when registering new
     /// struct types to the engine at runtime.
     /// </summary>

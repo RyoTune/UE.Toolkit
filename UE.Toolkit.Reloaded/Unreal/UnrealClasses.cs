@@ -190,14 +190,34 @@ public unsafe class UnrealClasses : IUnrealClasses
     private static string? PackageNameToUObjectKey;
     private static Func<nint>? GetStaticStructCurrentCallback = null;
 
+    public IUObject? GetEnginePackage()
+    {
+        var PackageName = "/Script/Engine";
+        if (PackageNameToUObject.TryGetValue(PackageName, out var Object)) return Object;
+        var NewPackage = Objects.FindObjectByName(PackageName, "Package");
+        PackageNameToUObject[PackageName] = NewPackage;
+        return NewPackage;
+    }
+
+    public IUObject? GetGamePackage()
+    {
+        if (PackageNameToUObject.TryGetValue(PackageNameToUObjectKey, out var Object)) return Object;
+        var NewPackage = Objects.FindObjectByName(PackageNameToUObjectKey, "Package");
+        PackageNameToUObject[PackageNameToUObjectKey] = NewPackage;
+        return NewPackage;
+    }
+
     private nint GetStaticStructImpl(nint pInRegister, nint pStructOuter, nint pStructName, nint Size, int Crc)
     {
+        /*
         // UPackage::GamePackage
         var StructOuter = Factory.CreateUObject(pStructOuter);
         // var StructName = Marshal.PtrToStringUni(pStructName);
         var PackageName = StructOuter.NamePrivate.ToString();
+        Log.Debug($"GetStaticStruct was called: {PackageName}");
         PackageNameToUObject.TryAdd(PackageName, StructOuter);
         // Log.Debug($"GetStaticStruct({StructName}): (outer: {StructOuter.NamePrivate}, size: 0x{Size:x}, crc: 0x{Crc:x})");
+        */
         return  _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
     }
 
