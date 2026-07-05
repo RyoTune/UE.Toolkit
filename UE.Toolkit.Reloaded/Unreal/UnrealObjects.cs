@@ -46,9 +46,9 @@ public unsafe class UnrealObjects : IUnrealObjects
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
     private static void UObject_BeginDestroy(nint self)
     {
-        if (Mod.Config.LogObjectsEnabled)
-            Log.Information(
-                $"{nameof(UObject_BeginDestroy)} || {ToolkitUtils.GetPrivateName(self)} || {ToolkitUtils.GetPrivateName((nint)((UObjectBase*)self)->ClassPrivate)}");
+        // if (Mod.Config.LogObjectsEnabled)
+        //     Log.Information(
+        //         $"{nameof(UObject_BeginDestroy)} || {ToolkitUtils.GetPrivateName(self)} || {ToolkitUtils.GetPrivateName((nint)((UObjectBase*)self)->ClassPrivate)}");
 
         _UObject_BeginDestroy!.OriginalFunction.Value.Invoke(self);
         _onObjectDestroy?.Invoke(self);
@@ -77,11 +77,6 @@ public unsafe class UnrealObjects : IUnrealObjects
             (result, hooks) => UStruct.UStruct_IsChildOf = hooks.CreateWrapper<UStruct_IsChildOf>(result, out _));
 
         _onObjectLoaded += objPtr => OnObjectLoaded?.Invoke(new((UObjectBase*)objPtr));
-        _onObjectLoaded += objPtr =>
-        {
-            var Object = Factory.CreateUObject(objPtr);
-            Log.Information($"Class Outer type: {Object.ClassPrivate.OuterPrivate?.NamePrivate.ToString() ?? "OUTER NULL"}");
-        };
         _onObjectDestroy += objPtr => OnObjectBeginDestroy?.Invoke(new((UObjectBase*)objPtr));
     }
 
@@ -119,6 +114,16 @@ public unsafe class UnrealObjects : IUnrealObjects
 
     public void OnObjectLoadedByClass<TObject>(Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged => OnObjectLoadedByClass(typeof(TObject).Name, callback);
+    
+    public void OnObjectLoadedByPath<TObject>(string objectPath, Action<ToolkitUObject<TObject>> callback)
+        where TObject : unmanaged
+    {
+        _onObjectLoaded += objPtr =>
+        {
+            if (((UObjectBase*)objPtr)->NamePrivate.ToString() == objectPath)
+                callback(new((TObject*)objPtr));
+        };
+    }
     
     private void ForEachObject(Func<IUObject, bool> Callback)
     {

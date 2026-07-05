@@ -1,3 +1,4 @@
+using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 
@@ -22,7 +23,18 @@ public unsafe class DataTablesService : IDataTables
     {
         _onDataTableChanged += table =>
         {
-            if (table.Name == name) callback(new((UDataTable<TRow>*)table.Self));
+            if (table.Name == name)
+                callback(new((UDataTable<TRow>*)table.Self));
+        };
+    }
+    
+    public void OnDataTableChangedByPath<TRow>(string objectPath, Action<ToolkitDataTable<TRow>> callback)
+        where TRow : unmanaged
+    {
+        _onDataTableChanged += table =>
+        {
+            if (ToolkitUtils.GetPathName((nint)table.Self) == objectPath)
+                callback(new((UDataTable<TRow>*)table.Self));
         };
     }
     

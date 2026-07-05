@@ -50,32 +50,30 @@ public static unsafe class ToolkitUtils
         return nameNative;
     }
     
-    public static string GetNativeName(IUObject uobj)
-    {
-        if (PrivateToNativeNameMap.TryGetValue(uobj.NamePrivate, out var nameNative)) return nameNative;
-        
-        var namePrivate = uobj.NamePrivate.ToString();
-        nameNative = namePrivate;
-        
-        if (uobj.IsChildOf<UClass>())
-        {
-            nameNative = $"U{namePrivate}";
-        }
-        if (uobj.IsChildOf<AActor>())
-        {
-            nameNative = $"A{namePrivate}";
-        }
-        if (uobj.IsChildOf<UScriptStruct>())
-        {
-            // Already has the F struct prefix, UserDefinedStructs usually I think.
-            var hasStructPrefix = namePrivate[0] == 'F' && char.IsUpper(namePrivate[1]);
-            if (!hasStructPrefix)
-            {
-                nameNative = $"F{namePrivate}";
-            }
-        }
+    public static string GetNativeName(IUObject uobj) => GetNativeName(uobj.Ptr);
 
-        PrivateToNativeNameMap[uobj.NamePrivate] = nameNative;
-        return nameNative;
+    /// <summary>
+    /// Returns the fully qualified pathname for this object, in the format "Outermost.[Outer:]Name"
+    /// </summary>
+    /// <param name="objPtr">Pointer to the object</param>
+    /// <returns>Fully qualified pathname for this object</returns>
+    public static string GetPathName(nint objPtr)
+    {
+        // From UObjectBaseUtility::GetPathName
+        var Object = (UObjectBase*)objPtr;
+        if (Object == null) return "None";
+        
+        var Outer = Object->OuterPrivate;
+        var Result = Object->NamePrivate.ToString();
+        var OuterResult = string.Empty;
+        if (Outer != null)
+        {
+            var bIsOuterPackage = ((UObjectBase*)Outer->ClassPrivate)->NamePrivate.ToString() != "Package"
+                                  && ((UObjectBase*)Outer->OuterPrivate->ClassPrivate)->NamePrivate.ToString() == "Package";
+            OuterResult = GetPathName((nint)Outer) + (bIsOuterPackage ? ":" : ".");
+        }
+        return OuterResult + Result;
     }
+    
+    public static string GetPathName(IUObject uobj) => GetPathName(uobj.Ptr);
 }

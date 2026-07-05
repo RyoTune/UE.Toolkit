@@ -475,6 +475,8 @@ public unsafe class UObjectUE4_27_2(nint ptr, IUnrealFactory factory) : IUObject
     public IUObject GetOutermost() => _factory.CreateUObject((nint)_self->GetOutermost());
 
     public string GetNativeName() => ToolkitUtils.GetNativeName(this);
+
+    public string GetPathName() => ToolkitUtils.GetPathName(this);
 }
 
 public unsafe class UClassUE4_27_2(nint ptr, IUnrealFactory factory)

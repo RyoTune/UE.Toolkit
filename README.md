@@ -90,8 +90,10 @@ You can easily get both using [__FModel__](https://github.com/4sval/FModel/relea
 #### Steps
 1. Inside your chosen folder from the previous steps, create a new __text file__.
 2. Name the file the same as the object's __Name__.
-3. Change the file extension from `.txt` to `.obj.xml`. Your file's name should be similar to: `DT_jRPG_CharacterDefinitions.obj.xml`
+3. Change the file extension from `.txt` to `.obj.xml`. For example, if the file you want to edit is named `DT_jRPG_CharacterDefinitions.uasset` in FModel, then your Object XML would be named `DT_jRPG_CharacterDefinitions.obj.xml`. 
 4. Open your file in a text editor.
+
+While this is suitable for most cases, there are certain situations where there may be multiple files with the same filename but you only want to edit a file with a particular **file path**. In this case, you can name your Object XML to anything you want and specify the path inside the file, which is covered below.
 
 ### Writing an Object XML
 Generally, your XML will match the "shape" of the object, starting with its __Class__. I highly recommend looking at the object in __FModel__ or going to the extension mod's source if you can read code.
@@ -103,6 +105,14 @@ The first element in your XML, aka the __Root Element__, will be the object's __
 
 ```xml
 <DataLayerAsset>
+
+</DataLayerAsset>
+```
+
+To specify a file path, add a `path` property to the root element, using the same path formatting style used by UE4SS. For example, if your object's file path is `/Sandfall/Content/Levels/Goblu/DataLayers/DL_Goblu_00Entry`, then you would replace `/Sandfall/Content` with `/Game` and add a "file extension" with the same name as the filename:
+
+```xml
+<DataLayerAsset path="/Game/Levels/Goblu/DataLayers/DL_Goblu_00Entry.DL_Goblu_00Entry">
 
 </DataLayerAsset>
 ```
@@ -274,14 +284,14 @@ public unsafe struct UFldManagerSubsystem
 A new struct can be registered into UE's type reflection. `IUnrealClasses` contains methods `(Create[Type]Param)` to build a list of property params to pass into `CreateScriptStruct`:
 
 ```c#
-TryCreateScriptStruct("AgePanelSection", 0x30, new List<IFPropertyParams>
+CreateScriptStruct("AgePanelSection", 0x30, new List<IFPropertyParams>
 {
     _context._toolkitClasses.CreateF32Param("X1", 0),
     _context._toolkitClasses.CreateF32Param("X2", 4),
     _context._toolkitClasses.CreateF32Param("Y1", 8),
     _context._toolkitClasses.CreateF32Param("Y2", 0xc),
     _context._toolkitClasses.CreateF32Param("Field28", 0x28),
-});
+}, out var NewStruct);
 ```
 
 Much like adding new fields, this is viewable in Object XML and blueprints.

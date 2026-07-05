@@ -67,6 +67,16 @@ public unsafe interface IUnrealObjects : IObjectCreator
         where TObject : unmanaged;
     
     /// <summary>
+    /// Listen for an object's creation of the given path.
+    /// </summary>
+    /// <param name="objName">Object path.</param>
+    /// <param name="callback">Callback given each object instance.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <remarks>Implemented as a hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
+    void OnObjectLoadedByPath<TObject>(string objectPath, Action<ToolkitUObject<TObject>> callback)
+        where TObject : unmanaged;
+    
+    /// <summary>
     /// Finds an object based on the given name.
     /// </summary>
     /// <param name="objectName">Object name.</param>
