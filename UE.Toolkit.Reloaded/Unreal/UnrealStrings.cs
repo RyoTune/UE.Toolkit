@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 // ReSharper disable InconsistentNaming
 
@@ -16,8 +17,8 @@ public unsafe class UnrealStrings : IUnrealStrings
     private delegate byte FTextInspector_GetTableIdAndKey(FText* text, FName* tableId, FString* key);
     private readonly SHFunction<FTextInspector_GetTableIdAndKey> _FTextInspector_GetTableIdAndKey = new();
     
-    private delegate FText* UEnum_GetDisplayNameTextByIndex(UUserDefinedEnum* userEnum, FText* outName, int index);
-    private readonly SHFunction<UEnum_GetDisplayNameTextByIndex> _getDispNameTextByIdx = new();
+    private delegate FText* UUserDefinedEnum_GetDisplayNameTextByIndex(UUserDefinedEnum* userEnum, FText* outName, int index);
+    private readonly SHFunction<UUserDefinedEnum_GetDisplayNameTextByIndex> _getDispNameTextByIdx = new();
 
     public bool FTextInspectorGetTableIdAndKey(FText* text, [NotNullWhen(true)]out string? tableId, [NotNullWhen(true)]out string? key)
     {
@@ -43,7 +44,7 @@ public unsafe class UnrealStrings : IUnrealStrings
     
     public string UEnumGetDisplayNameTextByIndex(nint userEnum, int index)
     {
-        var outText = (FText*)Marshal.AllocHGlobal(sizeof(FText));
+        var outText = (FText*)Marshal.AllocHGlobal(GameConfig.Instance.GetFTextSize());
         
         var dispNameFText =
             _getDispNameTextByIdx.Wrapper((UUserDefinedEnum*)userEnum, outText, index);

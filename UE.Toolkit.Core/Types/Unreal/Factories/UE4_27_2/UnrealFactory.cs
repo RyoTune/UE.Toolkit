@@ -475,6 +475,8 @@ public unsafe class UObjectUE4_27_2(nint ptr, IUnrealFactory factory) : IUObject
     public IUObject GetOutermost() => _factory.CreateUObject((nint)_self->GetOutermost());
 
     public string GetNativeName() => ToolkitUtils.GetNativeName(this);
+
+    public string GetPathName() => ToolkitUtils.GetPathName(this);
 }
 
 public unsafe class UClassUE4_27_2(nint ptr, IUnrealFactory factory)
@@ -532,8 +534,7 @@ public unsafe class UObjectArrayUE4_27_2(nint ptr, IUnrealFactory factory) : IUO
     public IUObject? IndexToObject(int idx)
     {
         var objItem = _self->ObjObjects.GetItem(idx);
-        if (objItem == null || objItem->Object == null) return null;
-        
+        if (objItem == null || objItem->Object == null || objItem->Flags.HasFlag(EInternalObjectFlags.Unreachable)) return null;
         return factory.CreateUObject((nint)objItem->Object);
     }
 

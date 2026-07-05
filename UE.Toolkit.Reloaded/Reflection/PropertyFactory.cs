@@ -144,18 +144,20 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     protected IFProperty GetPreviousProperty(IFProperty Property, IUClass Reflect)
     {
         IFProperty? TargetProp = null;
+        var MinimumOffset = Reflect.SuperStruct?.PropertiesSize ?? 0;
         foreach (var Prop in Reflect.PropertyLink)
         {
-            if (!Prop.PropertyLinkNext.Any())
+            // We're the last element in the chain
+            var StopConditions = !Prop.PropertyLinkNext.Any() ||
+                                 // The next element will have a larger offset than our new field, so insert before them
+                                 Prop.PropertyLinkNext.First().Offset_Internal > Property.Offset_Internal ||
+                                 // The next element is from the super class, stop since the property chain of a supertype
+                                 // is shared between it and all subtypes
+                                 Prop.PropertyLinkNext.First().Offset_Internal < MinimumOffset;
+            if (StopConditions)
             {
-                // We're the last element in the chain
                 TargetProp = Prop;
-            }
-            else if (Prop.PropertyLinkNext.First().Offset_Internal > Property.Offset_Internal)
-            {
-                // The next element will have a larger offset than our new field, so insert before them
-                TargetProp = Prop;
-                break;
+                break;               
             }
         }
         return TargetProp!;

@@ -28,5 +28,7 @@ public interface IUObject : IPtr
 
     string GetNativeName();
 
+    string GetPathName();
+
     // IUObject GetWorld();
 }

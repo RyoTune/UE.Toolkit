@@ -46,6 +46,7 @@ public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, ID
 
         var rootTypeName = reader.Name;
         var rootTypeProvider = reader.GetAttribute("provider");
+        var rootTypePath = reader.GetAttribute("path");
             
         var typeKey = new TypeKey(rootTypeName, rootTypeProvider);
         if (!_types.TryGetValue(typeKey, out var objType))
@@ -64,19 +65,25 @@ public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, ID
             }
         }
 
-        var objWriter = new ObjectWriter(objName, objType, objFile, _nodeFactory);
+        var objWriter = new ObjectWriter(objName, objType, objFile, _nodeFactory, rootTypePath);
         _objWriters.Add(objWriter);
 
         if (objType.Name.StartsWith(nameof(UDataTable<byte>)))
         {
-            dt.OnDataTableChanged<UObjectBase>(objWriter.ObjectName, table => objWriter.WriteToObject((nint)table.Self));
+            if (objWriter.ObjectPath != null)
+                dt.OnDataTableChangedByPath<UObjectBase>(objWriter.ObjectPath, table => objWriter.WriteToObject((nint)table.Self));
+            else
+                dt.OnDataTableChanged<UObjectBase>(objWriter.ObjectName, table => objWriter.WriteToObject((nint)table.Self));
         }
         else
         {
-            uobjs.OnObjectLoadedByName<UObjectBase>(objWriter.ObjectName, obj => objWriter.WriteToObject((nint)obj.Self));
+            if (objWriter.ObjectPath != null)
+                uobjs.OnObjectLoadedByPath<UObjectBase>(objWriter.ObjectPath, obj => objWriter.WriteToObject((nint)obj.Self));
+            else
+                uobjs.OnObjectLoadedByName<UObjectBase>(objWriter.ObjectName, obj => objWriter.WriteToObject((nint)obj.Self));
         }
         
-        Log.Information($"{nameof(ObjectWriterService)} || Object XML registered: {objWriter.ObjectName}\nFile: {objFile}");
+        Log.Information($"{nameof(ObjectWriterService)} || Object XML registered: {objWriter.GetObjectNameOrPath()}\nFile: {objFile}");
     }
 
     private readonly record struct TypeKey(string TypeName, string? TypeProvider);

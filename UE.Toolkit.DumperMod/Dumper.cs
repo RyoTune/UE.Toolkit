@@ -251,7 +251,7 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.6.0)     */");
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.8.0)     */");
         sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
@@ -346,7 +346,7 @@ public unsafe class Dumper
         if (uenum.IsChildOf<UUserDefinedEnum>())
         {
             var userEnum = _factory.Cast<IUUserDefinedEnum>(uenum);
-            for (int i = 0; i < uenum.Names.ArrayNum; i++)
+            for (var i = 0; i < uenum.Names.ArrayNum; i++)
             {
                 var dispName = _strs.UEnumGetDisplayNameTextByIndex(userEnum.Ptr, i);
                 dispNames[i] = $"{name}::{dispName}";
@@ -503,6 +503,7 @@ public unsafe class Dumper
                 var structPropType = _factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(structPropType, out var knownStruct) ? knownStruct.DisplayName : structPropType);
             case "ClassProperty":
+            case "ClassPtrProperty":
                 var classPropClass = _factory.Cast<IFClassProperty>(prop).MetaClass;
                 var classPropType = classPropClass != null ? classPropClass.NamePrivate.ToString() : "UClass*";
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}*" : classPropType);
@@ -575,6 +576,10 @@ public unsafe class Dumper
                     
                     return $"TLazyObjectPtr<{SanitizeName(lazyObjType)}>";
                 };
+            case "Utf8StrProperty":
+                return () => "FUtf8String";
+            case "AnsiStrProperty":
+                return () => "FAnsiString";
             default:
                 Log.Warning($"Unknown Property: {className}");
                 return () => className;
@@ -628,6 +633,7 @@ public unsafe class Dumper
             case "StructProperty":
                 return _factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
             case "ClassProperty":
+            case "ClassPtrProperty":
                 return _factory.Cast<IFClassProperty>(prop).MetaClass!.NamePrivate.ToString();
             case "EnumProperty":
                 return _factory.Cast<IFEnumProperty>(prop).Enum.NamePrivate.ToString();
@@ -651,6 +657,10 @@ public unsafe class Dumper
                 return "FWeakObjectPtr";
             case "FieldPathProperty":
                 return "FFieldPath";
+            case "Utf8StrProperty":
+                return "FUtf8String";
+            case "AnsiStrProperty":
+                return "FAnsiString";
             default:
                 Log.Warning($"Unknown Property: {className}");
                 return className;

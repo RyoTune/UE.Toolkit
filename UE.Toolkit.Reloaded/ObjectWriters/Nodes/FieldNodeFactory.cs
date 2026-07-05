@@ -26,7 +26,7 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
         if (fieldType.IsPrimitive
             || fieldType.IsEnum
             || fieldType == typeof(string)
-            || fieldType == GameConfig.GetFText()
+            || fieldType == GameConfig.Instance.GetFText()
             || fieldType == typeof(FString)
             || fieldType == typeof(FName)
             || fieldType.Name.StartsWith("TSoftObjectPtr")

@@ -48,8 +48,7 @@ public unsafe class UnrealClasses : IUnrealClasses
         TryHookStructLink(returnClass);
     }
     
-    // NOTE: 5.0 has it's own signature
-    
+    // NOTE: 5.0 has it's own signature, but the parameters are identical in count and data type
     // Used in Engine versions 5.1+
     private delegate void GetPrivateStaticClassBody_UE5(nint packageName, nint name, UClass** returnClass, 
         nint registerNativeFunc, uint size, uint align, uint flags, ulong castFlags, nint config, nint inClassCtor, 
@@ -191,14 +190,34 @@ public unsafe class UnrealClasses : IUnrealClasses
     private static string? PackageNameToUObjectKey;
     private static Func<nint>? GetStaticStructCurrentCallback = null;
 
+    public IUObject? GetEnginePackage()
+    {
+        var PackageName = "/Script/Engine";
+        if (PackageNameToUObject.TryGetValue(PackageName, out var Object)) return Object;
+        var NewPackage = Objects.FindObjectByName(PackageName, "Package");
+        PackageNameToUObject[PackageName] = NewPackage;
+        return NewPackage;
+    }
+
+    public IUObject? GetGamePackage()
+    {
+        if (PackageNameToUObject.TryGetValue(PackageNameToUObjectKey, out var Object)) return Object;
+        var NewPackage = Objects.FindObjectByName(PackageNameToUObjectKey, "Package");
+        PackageNameToUObject[PackageNameToUObjectKey] = NewPackage;
+        return NewPackage;
+    }
+
     private nint GetStaticStructImpl(nint pInRegister, nint pStructOuter, nint pStructName, nint Size, int Crc)
     {
+        /*
         // UPackage::GamePackage
         var StructOuter = Factory.CreateUObject(pStructOuter);
         // var StructName = Marshal.PtrToStringUni(pStructName);
         var PackageName = StructOuter.NamePrivate.ToString();
+        Log.Debug($"GetStaticStruct was called: {PackageName}");
         PackageNameToUObject.TryAdd(PackageName, StructOuter);
         // Log.Debug($"GetStaticStruct({StructName}): (outer: {StructOuter.NamePrivate}, size: 0x{Size:x}, crc: 0x{Crc:x})");
+        */
         return  _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
     }
 
@@ -454,24 +473,10 @@ public unsafe class UnrealClasses : IUnrealClasses
         Objects = _Objects;
         Hooks = _Hooks;
         Address = _Address;
-        
-        IPropertyFlagsBuilder FlagsBuilder = GameConfig.Instance.Id switch
-        {
-            "P3R" => new Reflection.UE4_27_2.PropertyFlagsBuilder(),
-            _ => new Reflection.UE5_4_4.PropertyFlagsBuilder(),
-        };
-        
-        PropertyFactory = GameConfig.Instance.Id switch
-        {
-            "P3R" => new Reflection.UE4_27_2.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-            _ => new Reflection.UE5_4_4.PropertyFactory(Factory, Memory, this, FlagsBuilder),
-        };
-        
-        TypeFactory = GameConfig.Instance.Id switch
-        {
-            "P3R" => new Reflection.UE4_27_2.TypeFactory(Factory, Memory, this, FlagsBuilder),
-            _ => new Reflection.UE5_4_4.TypeFactory(Factory, Memory, this, FlagsBuilder),
-        };
+
+        var FlagsBuilder = GameConfig.Instance.FlagsBuilder;
+        PropertyFactory = GameConfig.Instance.PropertyFactory(this);
+        TypeFactory = GameConfig.Instance.TypeFactory(this);
         
         Project.Inis.UsingSetting<uint>(Constants.UnrealIniId, "Link", nameof(UStruct),
             value => UStructLinkOffset = value);

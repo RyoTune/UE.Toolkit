@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Reflection.Common;
 using ICppStructOps = UE.Toolkit.Core.Types.Unreal.UE5_4_4.ICppStructOps;
 using FStructParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FStructParams;
 using FPropertyParamsBase = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FPropertyParamsBase;
@@ -21,18 +22,6 @@ public class TypeFactory(IUnrealFactory factory, IUnrealMemory memory,
     private static Func<nint, int, nint>? FMemory_Malloc_Static = null;
     private static nint Malloc_Static_Size = 0;
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    private static byte Noop_Bool_False() => 0;
-    
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    private static byte Noop_Bool_True() => 1;
-    
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    private static void Noop_Void() {}
-
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-    private static uint Noop_U32() => 0;
-
     private static nint CurrentCppStructOpsVtable;
     private static uint CurrentCppStructOpsSize;
     private const uint CPP_STRUCT_OPS_ALIGNMENT = 0x8;
@@ -48,55 +37,58 @@ public class TypeFactory(IUnrealFactory factory, IUnrealMemory memory,
         return (nint)Alloc;
     }
 
+    // UScriptStruct::ICppStructOps
     private unsafe void CreateCppStructOpsVtable()
     {
         // 0-38
-        ((nint*)CurrentCppStructOpsVtable)[0] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // ~ICppStructOps
-        ((nint*)CurrentCppStructOpsVtable)[1] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasNoopConstructor
-        ((nint*)CurrentCppStructOpsVtable)[2] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_True); // HasZeroConstructor
-        ((nint*)CurrentCppStructOpsVtable)[3] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // Construct
-        ((nint*)CurrentCppStructOpsVtable)[4] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // ConstructForTests
-        ((nint*)CurrentCppStructOpsVtable)[5] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasDestructor
-        ((nint*)CurrentCppStructOpsVtable)[6] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // Destruct
-        ((nint*)CurrentCppStructOpsVtable)[7] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasSerializer
-        ((nint*)CurrentCppStructOpsVtable)[8] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasStructuredSerializer
-        ((nint*)CurrentCppStructOpsVtable)[9] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // Serialize(FArchive)
-        ((nint*)CurrentCppStructOpsVtable)[10] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // Serialize(FStructedArchive::FSlot)
-        ((nint*)CurrentCppStructOpsVtable)[11] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasPostSerialize
-        ((nint*)CurrentCppStructOpsVtable)[12] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // PostSerializer
-        ((nint*)CurrentCppStructOpsVtable)[13] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasNetSerializer
-        ((nint*)CurrentCppStructOpsVtable)[14] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasNetSharedSerialization
-        ((nint*)CurrentCppStructOpsVtable)[15] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // NetSerializer
-        ((nint*)CurrentCppStructOpsVtable)[16] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasNetDeltaSerializer
-        ((nint*)CurrentCppStructOpsVtable)[17] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // NetDeltaSerialize
-        ((nint*)CurrentCppStructOpsVtable)[18] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasPostScriptConstruct
-        ((nint*)CurrentCppStructOpsVtable)[19] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // PostScriptConstruct
-        ((nint*)CurrentCppStructOpsVtable)[20] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_True); // IsPlainOldData
-        ((nint*)CurrentCppStructOpsVtable)[21] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_True); // HasCopy
-        ((nint*)CurrentCppStructOpsVtable)[22] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // Copy
-        ((nint*)CurrentCppStructOpsVtable)[23] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasIdentical
-        ((nint*)CurrentCppStructOpsVtable)[24] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // Identical
-        ((nint*)CurrentCppStructOpsVtable)[25] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasExportTextItem
-        ((nint*)CurrentCppStructOpsVtable)[26] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // ExportTextItem
-        ((nint*)CurrentCppStructOpsVtable)[27] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasImportTextItem
-        ((nint*)CurrentCppStructOpsVtable)[28] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // ImportTextItem
-        ((nint*)CurrentCppStructOpsVtable)[29] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasAddStructReferencedObjects
-        ((nint*)CurrentCppStructOpsVtable)[30] = (nint)(delegate* unmanaged[Stdcall]<void>)(&Noop_Void); // AddStructReferencedObjects
-        ((nint*)CurrentCppStructOpsVtable)[31] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasSerializeFromMismatchTag
-        ((nint*)CurrentCppStructOpsVtable)[32] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasStructuredSerializeFromMismatchedTag
-        ((nint*)CurrentCppStructOpsVtable)[33] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // SerializeFroMismatchedTag
-        ((nint*)CurrentCppStructOpsVtable)[34] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // StructuredSerializeFroMismatchedTag
-        ((nint*)CurrentCppStructOpsVtable)[35] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // HasGetTypeHash
-        ((nint*)CurrentCppStructOpsVtable)[36] = (nint)(delegate* unmanaged[Stdcall]<uint>)(&Noop_U32); // GetStructTypeHash
-        ((nint*)CurrentCppStructOpsVtable)[37] = (nint)(delegate* unmanaged[Stdcall]<uint>)(&Noop_U32); // GetComputedPropertyFlags
-        ((nint*)CurrentCppStructOpsVtable)[38] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&Noop_Bool_False); // IsAbstract
+        ((nint*)CurrentCppStructOpsVtable)[0] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // ~ICppStructOps
+        ((nint*)CurrentCppStructOpsVtable)[1] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasNoopConstructor
+        ((nint*)CurrentCppStructOpsVtable)[2] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_True); // HasZeroConstructor
+        ((nint*)CurrentCppStructOpsVtable)[3] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // Construct
+        ((nint*)CurrentCppStructOpsVtable)[4] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // ConstructForTests
+        ((nint*)CurrentCppStructOpsVtable)[5] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasDestructor
+        ((nint*)CurrentCppStructOpsVtable)[6] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // Destruct
+        ((nint*)CurrentCppStructOpsVtable)[7] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasSerializer
+        ((nint*)CurrentCppStructOpsVtable)[8] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasStructuredSerializer
+        ((nint*)CurrentCppStructOpsVtable)[9] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // Serialize(FArchive)
+        ((nint*)CurrentCppStructOpsVtable)[10] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // Serialize(FStructuredArchive::FSlot)
+        ((nint*)CurrentCppStructOpsVtable)[11] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasPostSerialize
+        ((nint*)CurrentCppStructOpsVtable)[12] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // PostSerializer
+        ((nint*)CurrentCppStructOpsVtable)[13] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasNetSerializer
+        ((nint*)CurrentCppStructOpsVtable)[14] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasNetSharedSerialization
+        ((nint*)CurrentCppStructOpsVtable)[15] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // NetSerializer
+        ((nint*)CurrentCppStructOpsVtable)[16] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasNetDeltaSerializer
+        ((nint*)CurrentCppStructOpsVtable)[17] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // NetDeltaSerialize
+        ((nint*)CurrentCppStructOpsVtable)[18] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasPostScriptConstruct
+        ((nint*)CurrentCppStructOpsVtable)[19] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // PostScriptConstruct
+        ((nint*)CurrentCppStructOpsVtable)[20] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_True); // IsPlainOldData
+        ((nint*)CurrentCppStructOpsVtable)[21] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_True); // HasCopy
+        ((nint*)CurrentCppStructOpsVtable)[22] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // Copy
+        ((nint*)CurrentCppStructOpsVtable)[23] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasIdentical
+        ((nint*)CurrentCppStructOpsVtable)[24] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // Identical
+        ((nint*)CurrentCppStructOpsVtable)[25] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasExportTextItem
+        ((nint*)CurrentCppStructOpsVtable)[26] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // ExportTextItem
+        ((nint*)CurrentCppStructOpsVtable)[27] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasImportTextItem
+        ((nint*)CurrentCppStructOpsVtable)[28] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // ImportTextItem
+        ((nint*)CurrentCppStructOpsVtable)[29] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasAddStructReferencedObjects
+        ((nint*)CurrentCppStructOpsVtable)[30] = (nint)(delegate* unmanaged[Stdcall]<void>)(&FunctionPointers.Noop_Void); // AddStructReferencedObjects
+        ((nint*)CurrentCppStructOpsVtable)[31] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasSerializeFromMismatchTag
+        ((nint*)CurrentCppStructOpsVtable)[32] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasStructuredSerializeFromMismatchedTag
+        ((nint*)CurrentCppStructOpsVtable)[33] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // SerializeFroMismatchedTag
+        ((nint*)CurrentCppStructOpsVtable)[34] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // StructuredSerializeFroMismatchedTag
+        ((nint*)CurrentCppStructOpsVtable)[35] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // HasGetTypeHash
+        ((nint*)CurrentCppStructOpsVtable)[36] = (nint)(delegate* unmanaged[Stdcall]<uint>)(&FunctionPointers.Noop_U32); // GetStructTypeHash
+        ((nint*)CurrentCppStructOpsVtable)[37] = (nint)(delegate* unmanaged[Stdcall]<uint>)(&FunctionPointers.Noop_U32); // GetComputedPropertyFlags
+        ((nint*)CurrentCppStructOpsVtable)[38] = (nint)(delegate* unmanaged[Stdcall]<byte>)(&FunctionPointers.Noop_Bool_False); // IsAbstract
     }
 
     internal override unsafe bool CreateStructParam(string Name, int Size,
         List<IFPropertyParams> Fields, out IFStructParams? Out)
     {
         var pProperties = (FPropertyParamsBase**)Memory.MallocZeroed(Marshal.SizeOf<nint>() * Fields.Count);
-        var StructParamStatic = (FStructParams*)Memory.MallocZeroed(Marshal.SizeOf<FStructParams>()); 
+        var StructParamStatic = (FStructParams*)Memory.MallocZeroed(Marshal.SizeOf<FStructParams>());
+        // Retrieve the game package so the reference to it is valid when FStructProperty::OuterFunc is called
+        _ = Classes.GetGamePackage();
         StructParamStatic->OuterFunc = (nint)(delegate* unmanaged[Stdcall]<nint>)(&Unreal.UnrealClasses.FStructProperty_OuterFunc_Callback);
         StructParamStatic->SuperFunc = nint.Zero;
         StructParamStatic->StructOpsFunc = (nint)(delegate* unmanaged[Stdcall]<nint>)(&InitializeCppStructOps);

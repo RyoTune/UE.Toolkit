@@ -22,7 +22,7 @@ public unsafe class ObjectWriter
     private byte[] _xmlContent;
     private UObjectBase* _currObj;
 
-    public ObjectWriter(string objName, Type objType, string objFile, FieldNodeFactory nodeFactory)
+    public ObjectWriter(string objName, Type objType, string objFile, FieldNodeFactory nodeFactory, string? objectPath)
     {
         _objType = objType;
         _objFile = objFile;
@@ -41,9 +41,12 @@ public unsafe class ObjectWriter
             .Subscribe(_ => OnXmlChanged());
         
         ObjectName = objName;
+        ObjectPath = objectPath;
     }
 
     public string ObjectName { get; }
+    
+    public string? ObjectPath { get; }
 
     public void WriteToObject(nint objPtr)
     {
@@ -76,6 +79,8 @@ public unsafe class ObjectWriter
         _xmlContent = File.ReadAllBytes(_objFile);
         WriteToObject((nint)_currObj);
         
-        Log.Information($"{nameof(ObjectWriter)} || Object XML updated: {ObjectName}\nFile: {_objFile}");
+        Log.Information($"{nameof(ObjectWriter)} || Object XML updated: {GetObjectNameOrPath()}\nFile: {_objFile}");
     }
+
+    public string GetObjectNameOrPath() => ObjectPath ?? ObjectName;
 }

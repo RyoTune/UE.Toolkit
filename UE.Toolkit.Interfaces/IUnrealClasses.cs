@@ -3,6 +3,9 @@ using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Interfaces;
 
+/// <summary>
+/// API for functionality related to Unreal classes.
+/// </summary>
 public interface IUnrealClasses : IUnrealClassesInternal
 {
     
@@ -107,6 +110,7 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddI64Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
@@ -275,6 +279,18 @@ public interface IUnrealClasses : IUnrealClassesInternal
     #endregion
     
     #region New Struct Construction
+
+    /// <summary>
+    /// Get the package object for the engine "/Script/Engine"
+    /// </summary>
+    /// <returns>The package object for the engine if it's been initialized.</returns>
+    public IUObject? GetEnginePackage();
+    
+    /// <summary>
+    /// Get the package object for the game
+    /// </summary>
+    /// <returns>The package object for the game if it's been initialized.</returns>
+    public IUObject? GetGamePackage();
 
     /// <summary>
     /// Create a Int8 param to insert into a struct param's property list. This is used when registering new

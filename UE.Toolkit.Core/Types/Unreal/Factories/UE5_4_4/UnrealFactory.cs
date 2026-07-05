@@ -200,32 +200,6 @@ public unsafe class FProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
     public string RepNotifyFunc => _self->RepNotifyFunc.ToString();
 }
 
-public unsafe class FProperty_4_27_2(nint ptr, IUnrealFactory factory)
-    : FField_UE5_4_4(ptr, factory), IFProperty
-{
-    private readonly FProperty* _self = (FProperty*)ptr;
-
-    public int ArrayDim => _self->ArrayDim;
-    public int ElementSize => _self->ElementSize;
-    public EPropertyFlags PropertyFlags => _self->PropertyFlags;
-    public ushort RepIndex => _self->RepIndex;
-    public byte BlueprintReplicationCondition => _self->BlueprintReplicationCondition;
-    public int Offset_Internal => _self->Offset_Internal;
-    public IEnumerable<IFProperty> PropertyLinkNext
-        => new IFPropertyEnumerable(_factory.CreateFProperty((nint)_self->PropertyLinkNext), PropertyType.PropertyLink,
-            _factory);
-    public IEnumerable<IFProperty> NextRef
-        => new IFPropertyEnumerable(_factory.CreateFProperty((nint)_self->NextRef), PropertyType.NextRef,
-            _factory);
-    public IEnumerable<IFProperty> DestructorLinkNext
-        => new IFPropertyEnumerable(_factory.CreateFProperty((nint)_self->DestructorLinkNext), PropertyType.DestructorLink,
-            _factory);
-    public IEnumerable<IFProperty> PostConstructLinkNext
-        => new IFPropertyEnumerable(_factory.CreateFProperty((nint)_self->PostConstructLinkNext), PropertyType.PostConstructLink,
-            _factory);
-    public string RepNotifyFunc => _self->RepNotifyFunc.ToString();
-}
-
 public unsafe class IFPropertyEnumerable(IFProperty initial, PropertyType propType, IUnrealFactory factory)
     : IEnumerator<IFProperty>, IEnumerable<IFProperty>
 {
@@ -440,6 +414,8 @@ public unsafe class UObject_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObject
     public IUObject GetOutermost() => _factory.CreateUObject((nint)_self->GetOutermost());
 
     public string GetNativeName() => ToolkitUtils.GetNativeName(this);
+    
+    public string GetPathName() => ToolkitUtils.GetPathName(this);
 }
 
 public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -496,7 +472,7 @@ public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUO
     public IUObject? IndexToObject(int idx)
     {
         var objItem = _self->ObjObjects.GetItem(idx);
-        if (objItem == null || objItem->Object == null) return null;
+        if (objItem == null || objItem->Object == null || objItem->Flags.HasFlag(EInternalObjectFlags.Unreachable)) return null;
         
         return factory.CreateUObject((nint)objItem->Object);
     }
