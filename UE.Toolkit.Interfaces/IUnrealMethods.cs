@@ -2,6 +2,9 @@
 
 namespace UE.Toolkit.Interfaces;
 
+/// <summary>
+/// API for invoking Blueprint methods on an object.
+/// </summary>
 public interface IUnrealMethods
 {
 
@@ -115,6 +118,7 @@ public interface IUnrealMethods
     /// </summary>
     /// <param name="Object">Object to invoke function on.</param>
     /// <param name="Name">Name of the function to invoke.</param>
+    /// <param name="Parameters">The list of parameters used by the function.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public void ProcessEvent<TObject>(ToolkitUObject<TObject> Object, string Name,
         ref List<IInvocationParameter> Parameters) where TObject : unmanaged;
@@ -125,7 +129,9 @@ public interface IUnrealMethods
     /// </summary>
     /// <param name="Object">Object to invoke function on.</param>
     /// <param name="Name">Name of the function to invoke.</param>
+    /// <param name="Parameters">The list of parameters used by the function.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <typeparam name="TReturnType">Return type.</typeparam>
     public TReturnType ProcessEvent<TObject, TReturnType>(ToolkitUObject<TObject> Object, string Name,
         ref List<IInvocationParameter> Parameters) 
         where TObject : unmanaged

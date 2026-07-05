@@ -22,7 +22,7 @@ public interface IDataTables
     /// <summary>
     /// Notify whenever a <see cref="UDataTable{TRow}"/> is changed, typically just when loaded, and receive it in simple wrapper.
     /// </summary>
-    /// <param name="name"><see cref="UDataTable{TRow}"/> object path.</param>
+    /// <param name="objectPath"><see cref="UDataTable{TRow}"/> object path.</param>
     /// <param name="callback">Callback function receiving the <see cref="UDataTable{TRow}"/>.</param>
     /// <typeparam name="TRow"><see cref="UDataTable{TRow}"/> row struct type. Use <see cref="UObjectBase"/> to handle typing yourself.</typeparam>
     void OnDataTableChangedByPath<TRow>(string objectPath, Action<ToolkitDataTable<TRow>> callback)

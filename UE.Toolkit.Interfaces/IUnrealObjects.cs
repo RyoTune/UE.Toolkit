@@ -10,7 +10,7 @@ namespace UE.Toolkit.Interfaces;
 /// <summary>
 /// API for functionality related to Unreal objects.
 /// </summary>
-public unsafe interface IUnrealObjects : IObjectCreator
+public interface IUnrealObjects : IObjectCreator
 {
     /// <summary>
     /// Notify on the creation of any object.
@@ -69,7 +69,7 @@ public unsafe interface IUnrealObjects : IObjectCreator
     /// <summary>
     /// Listen for an object's creation of the given path.
     /// </summary>
-    /// <param name="objName">Object path.</param>
+    /// <param name="objectPath">Object path.</param>
     /// <param name="callback">Callback given each object instance.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <remarks>Implemented as a hook on <c>UObject::PostLoadSubobjects</c>, allowing for editing object data before use.</remarks>
@@ -96,7 +96,7 @@ public unsafe interface IUnrealObjects : IObjectCreator
     /// <summary>
     /// Finds the first object matching a specified type.
     /// </summary>
-    /// <param name="objectName">Class name.</param>
+    /// <param name="className">Class name.</param>
     /// <returns>A <see cref="IUObject"/> if an object was found with the specified type.</returns>
     IUObject? FindObjectByClass(string className);
     
