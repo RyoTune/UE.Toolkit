@@ -7,5 +7,6 @@ public unsafe struct FString
 {
     public TArray<char> Data;
 
-    public override string ToString() => new(Data.AllocatorInstance, 0, Data.ArrayNum - 1);
+    public override string ToString() => Data.ArrayNum > 0 
+        ? new(Data.AllocatorInstance, 0, Data.ArrayNum - 1) : string.Empty;
 }
