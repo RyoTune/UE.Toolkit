@@ -74,7 +74,8 @@ public class DataTableFieldNode(string fieldName, nint fieldPtr, Type fieldType,
 
             var rowStructHint = reader.GetAttribute(WriterConstants.RowStructHintAttr);
             var rowStructProvider = reader.GetAttribute(WriterConstants.RowStructProviderAttr);
-            nodeFactory.TypeRegistry.TryGetType(rowStruct, rowStructHint, rowStructProvider, out rowType);
+            rowType = null;
+            // nodeFactory.TypeRegistry.TryGetType(rowStruct, rowStructHint, rowStructProvider, out rowType);
         }
 
         return rowType != null;

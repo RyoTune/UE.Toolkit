@@ -2,15 +2,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Interfaces;
 using UE.Toolkit.Interfaces.ObjectWriters;
 using UE.Toolkit.Reloaded.Common.GameConfigs;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
-public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, IUnrealMemoryInternal memory)
+public class FieldNodeFactory(IObjectCreator objCreator, IUnrealMemoryInternal memory, IUnrealClasses unrealClasses)
 {
-    public ITypeRegistry TypeRegistry { get; } = typeReg;
-    public IUnrealMemoryInternal Memory { get; } = memory;
+    public IUnrealMemoryInternal Memory => memory;
+    public IUnrealClasses UnrealClasses => unrealClasses;
     
     public bool TryCreate(string fieldName, nint fieldPtr, int fieldBit, Type fieldType, [NotNullWhen(true)]out IFieldNode? node)
     {
@@ -20,7 +21,6 @@ public class FieldNodeFactory(ITypeRegistry typeReg, IObjectCreator objCreator, 
 
     private IFieldNode? Create(string fieldName, nint fieldPtr, int fieldBit, Type fieldType)
     {
-        
         Log.Debug($"{nameof(FieldNodeFactory)} || Create Node '{fieldName}' with type '{fieldType.Name}'.");
         
         if (fieldType.IsPrimitive

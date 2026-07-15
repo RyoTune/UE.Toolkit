@@ -218,7 +218,7 @@ public unsafe class UnrealClasses : IUnrealClasses
         PackageNameToUObject.TryAdd(PackageName, StructOuter);
         // Log.Debug($"GetStaticStruct({StructName}): (outer: {StructOuter.NamePrivate}, size: 0x{Size:x}, crc: 0x{Crc:x})");
         */
-        return  _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
+        return _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -264,6 +264,24 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     public bool GetScriptStructInfoFromName(string Name, out IUScriptStruct? Value)
         => ScriptStructs.TryGetValue(Name[1..], out Value);
+
+    public bool GetEnumInfoFromType<TObject>(out IUEnum? Value) where TObject : unmanaged
+        => GetEnumInfoFromName(typeof(TObject).Name, out Value);
+    
+    private delegate nint GetStaticEnum(nint pInRegister, nint pEnumOuter, nint pEnumName, nint Size, int Crc);
+    private SHFunction<GetStaticEnum> _GetStaticEnum;
+    private nint GetStaticEnumImpl(nint pInRegister, nint pEnumOuter, nint pEnumName, nint Size, int Crc)
+    {
+        var pEnum = _GetStaticEnum!.Hook!.OriginalFunction(pInRegister, pEnumOuter, pEnumName, Size, Crc);
+        var Enum = Factory.CreateUEnum(pEnum);
+        Enums.TryAdd(Enum.NamePrivate.ToString(), Enum);
+        return pEnum;
+    }
+    
+    public bool GetEnumInfoFromName(string Name, out IUEnum? Value)
+        => Enums.TryGetValue(Name, out Value);
+    
+    // START ADD PROPERTIES
 
     public bool AddI8Property<TObject>(string Name, int Offset, out IFProperty? Property)
         where TObject : unmanaged
@@ -454,6 +472,7 @@ public unsafe class UnrealClasses : IUnrealClasses
     private ConcurrentDictionary<string, ClassExtension> ClassExtensions = new();
     private ConcurrentDictionary<string, IUClass> Classes = new();
     private ConcurrentDictionary<string, IUScriptStruct> ScriptStructs = new();
+    private ConcurrentDictionary<string, IUEnum> Enums = new();
     private ConcurrentDictionary<ulong, FieldClassGlobal> FieldTypes = new();
     private ConcurrentDictionary<string, nint> DataTableRowToVTable = new();
     
@@ -490,6 +509,7 @@ public unsafe class UnrealClasses : IUnrealClasses
         _GetPrivateStaticClassBodyUE4 = new(GetPrivateStaticClassBodyUE4);
         _GetPrivateStaticClassBodyUE5 = new(GetPrivateStaticClassBodyUE5);
         _GetStaticStruct = new(GetStaticStructImpl);
+        _GetStaticEnum = new(GetStaticEnumImpl);
         _ConstructUScriptStruct = new(ConstructUScriptStructImpl);
 
         // Store the vtable for each DataTable's row type. Since structs don't have default objects like classes, we

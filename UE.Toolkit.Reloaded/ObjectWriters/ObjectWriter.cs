@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Xml;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters;
@@ -12,7 +13,7 @@ public unsafe class ObjectWriter
 {
     private static readonly EventLoopScheduler WriterScheduler = new();
     
-    private readonly Type _objType;
+    private readonly string _objType;
     private readonly string _objFile;
     private readonly FieldNodeFactory _nodeFactory;
     private readonly FileSystemWatcher _xmlFileWatcher;
@@ -22,7 +23,9 @@ public unsafe class ObjectWriter
     private byte[] _xmlContent;
     private UObjectBase* _currObj;
 
-    public ObjectWriter(string objName, Type objType, string objFile, FieldNodeFactory nodeFactory, string? objectPath)
+    private IUnrealClasses? _unrealClasses;
+
+    public ObjectWriter(string objName, string objType, string objFile, FieldNodeFactory nodeFactory, string? objectPath)
     {
         _objType = objType;
         _objFile = objFile;
@@ -57,6 +60,16 @@ public unsafe class ObjectWriter
 
         // TODO: Possibly rework XML node tree creation to return
         // a collection of generated writers to allow resetting values on rewrites.
+        Log.Information($"TODO: WriteToObject for {_objFile} (Type: {_objType})");
+        if (_nodeFactory.UnrealClasses.GetClassInfoFromName($"U{_objType}", out _))
+            Log.Information($"Found {_objType} as UObject");
+        else if (_nodeFactory.UnrealClasses.GetScriptStructInfoFromName($"F{_objType}", out _))
+            Log.Information($"Found {_objType} as UScriptStruct");
+        else if (_nodeFactory.UnrealClasses.GetEnumInfoFromName($"E{_objType}", out _))
+            Log.Information($"Found {_objType} as Enum");
+        else 
+            Log.Information($"Could not find info for {_objType}");
+        /*
         if (_nodeFactory.TryCreate(ObjectName, objPtr, 0, _objType, out var rootNode))
         {
             rootNode.ConsumeNode(reader);
@@ -65,6 +78,7 @@ public unsafe class ObjectWriter
         {
             Log.Error($"Failed to create root node from Object XML file.\nFile: {_objFile}");
         }
+        */
     }
 
     private void OnXmlChanged()
