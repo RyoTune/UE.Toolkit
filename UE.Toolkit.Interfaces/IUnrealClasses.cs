@@ -6,7 +6,7 @@ namespace UE.Toolkit.Interfaces;
 /// <summary>
 /// API for functionality related to Unreal classes.
 /// </summary>
-public interface IUnrealClasses : IUnrealClassesInternal
+public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
 {
     
     #region Class/Struct Getters

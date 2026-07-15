@@ -15,6 +15,7 @@ public static class MapNodeFactory
                 // Check if it has a StructLayout with an explicit alignment value, this lets us avoid iterating
                 // through each field to determine alignment
                 // Every type defined in the extension mod has an alignment value in it's StructLayout
+                Log.Debug($"{nameof(MapNodeFactory)} || Field '{property.NamePrivate}' with type '{property.KeyProp.NamePrivate}' has alignment {factory.Factory.GetAlignment(property.ValueProp)}");
                 return factory.Factory.GetAlignment(property.ValueProp) switch
                 {
                     <= 4 => new MapNodeInt(property, value, factory),
@@ -23,7 +24,7 @@ public static class MapNodeFactory
             case "NameProperty":
                 return new MapNodeFName(property, value, factory);
             default:
-                Log.Warning($"{nameof(MapNodeFactory)} || Field '{property.NamePrivate}' with type '{property.KeyProp.NamePrivate}' is not currently supported for map editing operations.");
+                Log.Warning($"{nameof(MapNodeFactory)} || Field '{property.NamePrivate}' with type '{factory.Classes.GetPropertyTypeName(property.KeyProp)}' is not currently supported for map editing operations.");
                 return new DummyNode(property);
         }
     }

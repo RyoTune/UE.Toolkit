@@ -61,14 +61,16 @@ public unsafe class ObjectWriter
         reader.MoveToContent();
         
         Log.Information($"TODO: WriteToObject for {_objFile} (Type: {_objType})");
+        IUClass? rootClass = null;
         IFieldNode? rootNode = null;
         // The root object *has* to be a class since UObjects contain the serialization methods needed to convert
         // to and from a file-based representation (UAssets are just binary files representing UObjects).
-        if (_factory.Classes.GetClassInfoFromName($"U{_objType}", out var uclass))
+        if (_factory.Classes.GetClassInfoFromName($"U{_objType}", out rootClass) || // If the prefix is not included
+            _factory.Classes.GetClassInfoFromName($"U{_objType[1..]}", out rootClass)) // If the prefix is included (Theo!!!!)
         {
-            rootNode = uclass.NamePrivate.ToString() == "DataTable"
+            rootNode = rootClass.NamePrivate.ToString() == "DataTable"
                 ? new DataTableDocument(ObjectName, objPtr, _factory)
-                : new StructDocument(ObjectName, uclass, objPtr, _factory);
+                : new StructDocument(ObjectName, rootClass, objPtr, _factory);
         }
 
         if (rootNode != null)
