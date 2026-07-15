@@ -4,6 +4,7 @@ using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
@@ -711,16 +712,38 @@ public class TMapAccessorEnumerator<TElemKey, TElemValue> : IEnumerator<KeyValue
 /// INTERNAL USE
 /// Used in cases where the value type is not known at compile time, such as when processing Object XML.
 /// The only operations supported are ones required to work with Object XML.
+public interface IDynamicMapTypeProvider
+{
+    int DynSizeOf();
+}
+
+public class DynamicMapSystemType(Type type) : IDynamicMapTypeProvider
+{
+    private Type Type => type;
+    
+    public int DynSizeOf() => Marshal.SizeOf(type);
+}
+
+public class DynamicMapUnrealProperty(IFProperty type) : IDynamicMapTypeProvider
+{
+    private IFProperty Type => type;
+
+    public int DynSizeOf() => Type.ElementSize;
+}
+
+/// INTERNAL USE
+/// Used in cases where the value type is not known at compile time, such as when processing Object XML.
+/// The only operations supported are ones required to work with Object XML.
 public class TMapDynamicElementAccessor<TElemKey> : IDisposable
     where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
 {
     protected unsafe TArray<byte>* Elements;
-    private Type ValueType;
+    private IDynamicMapTypeProvider ValueType;
     protected IUnrealMemoryInternal Allocator;
     protected bool OwnsInstance = false;
     private bool Disposed = false;
     
-    public unsafe TMapDynamicElementAccessor(TArray<byte>* _Self, Type _ValueType, IUnrealMemoryInternal _Allocator, bool _OwnsInstance = false)
+    public unsafe TMapDynamicElementAccessor(TArray<byte>* _Self, IDynamicMapTypeProvider _ValueType, IUnrealMemoryInternal _Allocator, bool _OwnsInstance = false)
     {
         Self = _Self;
         ValueType = _ValueType;
@@ -752,7 +775,7 @@ public class TMapDynamicElementAccessor<TElemKey> : IDisposable
         set => Elements->ArrayMax = value;
     }
 
-    internal int ValueSize => Marshal.SizeOf(ValueType);
+    internal int ValueSize => ValueType.DynSizeOf();
 
     internal unsafe nint this[int Index]
     {
@@ -824,7 +847,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
 
     protected IUnrealMemoryInternal Allocator;
     protected TMapDynamicElementAccessor<TElemKey> Elements;
-    private Type ValueType;
+    private IDynamicMapTypeProvider ValueType;
     protected TBitArrayList BitAllocator;
     protected bool OwnsInstance;
     protected bool Disposed = false;
@@ -883,7 +906,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TMap</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
-    public TMapDynamicDictionary(TMap<TElemKey, byte>* _Self, Type _ValueType, IUnrealMemoryInternal _Allocator)
+    public TMapDynamicDictionary(TMap<TElemKey, byte>* _Self, IDynamicMapTypeProvider _ValueType, IUnrealMemoryInternal _Allocator)
     {
         Self = (nint)_Self;
         ValueType = _ValueType;

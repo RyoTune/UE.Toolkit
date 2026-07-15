@@ -1,4 +1,5 @@
 using System.Xml;
+using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Interfaces.ObjectWriters;
@@ -8,10 +9,11 @@ using UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters;
 
-public class ObjectWriterService(IUnrealObjects uobjs, IDataTables dt, IUnrealMemory memory, IUnrealClasses unrealClasses)
+public class ObjectWriterService(IUnrealObjects uobjs, IDataTables dt, IUnrealMemory memory, 
+    IUnrealClasses unrealClasses, IUnrealFactory unrealFactory)
 {
     private readonly List<ObjectWriter> _objWriters = [];
-    private readonly FieldNodeFactory _nodeFactory = new(uobjs, memory, unrealClasses);
+    private readonly NodeFactory _nodeFactory = new(uobjs, memory, unrealClasses, unrealFactory);
 
     public void AddPath(string path)
     {
@@ -48,7 +50,7 @@ public class ObjectWriterService(IUnrealObjects uobjs, IDataTables dt, IUnrealMe
         var objWriter = new ObjectWriter(objName, rootTypeName, objFile, _nodeFactory, rootTypePath);
         _objWriters.Add(objWriter);
 
-        if (rootTypeName.StartsWith("DataTable"))
+        if (rootTypeName == "DataTable")
         {
             Action<string, Action<ToolkitDataTable<UObjectBase>>> Callback =
                 objWriter.ObjectPath != null ? dt.OnDataTableChangedByPath : dt.OnDataTableChanged;

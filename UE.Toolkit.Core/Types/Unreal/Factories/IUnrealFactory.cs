@@ -10,6 +10,8 @@ public interface IUnrealFactory
 {
     T Cast<T>(IPtr obj);
     nint SizeOf<T>();
+    nint GetAlignment(IFProperty prop);
+    
     IUnrealMemoryInternal? Memory { get; set; }
     
     IFProperty CreateFProperty(nint ptr);

@@ -56,6 +56,20 @@ public abstract class BaseUnrealFactory : IUnrealFactory
         }
     }
     public abstract nint SizeOf<T>();
+    // Type alignment when placed inline, such as the value type in a TMap
+    public nint GetAlignment(IFProperty prop)
+    {
+        return prop.ClassPrivate.Name switch
+        {
+            "Int8Property" or "BoolProperty" => 1,
+            "Int16Property" or "UInt16Property" => 2,
+            "IntProperty" or "Int32Property" or "UInt32Property" or "FloatProperty" or "NameProperty" => 4,
+            "Int64Property" or "UInt64Property" or "DoubleProperty" or "StrProperty" or "TextProperty" or "ObjectProperty" 
+                or "SoftObjectProperty" or "SoftClassProperty" or "ArrayProperty" => 8,
+            "StructProperty" => CreateFStructProperty(prop.Ptr).Struct.MinAlignment,
+            _ => throw new NotSupportedException(prop.ClassPrivate.Name)
+        };
+    }
 
     public abstract IFProperty CreateFProperty(nint ptr);
     public abstract IFBoolProperty CreateFBoolProperty(nint ptr);

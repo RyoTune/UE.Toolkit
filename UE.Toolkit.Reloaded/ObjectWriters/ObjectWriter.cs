@@ -3,6 +3,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Xml;
+using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.ObjectWriters.Nodes;
@@ -15,7 +17,7 @@ public unsafe class ObjectWriter
     
     private readonly string _objType;
     private readonly string _objFile;
-    private readonly FieldNodeFactory _nodeFactory;
+    private readonly NodeFactory _factory;
     private readonly FileSystemWatcher _xmlFileWatcher;
     private readonly Subject<Unit> _xmlChanged = new();
     private readonly IDisposable _xmlSub;
@@ -25,11 +27,11 @@ public unsafe class ObjectWriter
 
     private IUnrealClasses? _unrealClasses;
 
-    public ObjectWriter(string objName, string objType, string objFile, FieldNodeFactory nodeFactory, string? objectPath)
+    public ObjectWriter(string objName, string objType, string objFile, NodeFactory factory, string? objectPath)
     {
         _objType = objType;
         _objFile = objFile;
-        _nodeFactory = nodeFactory;
+        _factory = factory;
         _xmlContent = File.ReadAllBytes(objFile);
         _xmlFileWatcher = new(Path.GetDirectoryName(objFile)!, Path.GetFileName(objFile))
         {
@@ -57,28 +59,26 @@ public unsafe class ObjectWriter
         
         using var reader = XmlReader.Create(new MemoryStream(_xmlContent));
         reader.MoveToContent();
-
-        // TODO: Possibly rework XML node tree creation to return
-        // a collection of generated writers to allow resetting values on rewrites.
+        
         Log.Information($"TODO: WriteToObject for {_objFile} (Type: {_objType})");
-        if (_nodeFactory.UnrealClasses.GetClassInfoFromName($"U{_objType}", out _))
-            Log.Information($"Found {_objType} as UObject");
-        else if (_nodeFactory.UnrealClasses.GetScriptStructInfoFromName($"F{_objType}", out _))
-            Log.Information($"Found {_objType} as UScriptStruct");
-        else if (_nodeFactory.UnrealClasses.GetEnumInfoFromName($"E{_objType}", out _))
-            Log.Information($"Found {_objType} as Enum");
-        else 
-            Log.Information($"Could not find info for {_objType}");
-        /*
-        if (_nodeFactory.TryCreate(ObjectName, objPtr, 0, _objType, out var rootNode))
+        IFieldNode? rootNode = null;
+        // The root object *has* to be a class since UObjects contain the serialization methods needed to convert
+        // to and from a file-based representation (UAssets are just binary files representing UObjects).
+        if (_factory.Classes.GetClassInfoFromName($"U{_objType}", out var uclass))
+        {
+            rootNode = uclass.NamePrivate.ToString() == "DataTable"
+                ? new DataTableDocument(ObjectName, objPtr, _factory)
+                : new StructDocument(ObjectName, uclass, objPtr, _factory);
+        }
+
+        if (rootNode != null)
         {
             rootNode.ConsumeNode(reader);
         }
         else
         {
-            Log.Error($"Failed to create root node from Object XML file.\nFile: {_objFile}");
+            Log.Error($"{nameof(ObjectWriter)} || Failed to create root node with type '{_objType}' from Object XML file.\nFile: {_objFile}");
         }
-        */
     }
 
     private void OnXmlChanged()

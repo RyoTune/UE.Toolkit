@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
@@ -339,6 +340,29 @@ public unsafe class UEnumUE4_27_2(nint ptr, IUnrealFactory factory)
     private readonly UEnum* _self = (UEnum*)ptr;
     public string CppType => _self->cpp_type.ToString();
     public UE.Toolkit.Core.Types.Unreal.UE5_4_4.TArray<UE.Toolkit.Core.Types.Unreal.UE5_4_4.TPair<FName, long>> Names => _self->entries;
+
+    public bool TryParse(string name, bool ignoreCase, [NotNullWhen(true)] out long? value)
+    {
+        value = null;
+        if (ignoreCase)
+        {
+            name = name.ToLower();
+        }
+        var NamesArray = new TArrayList<TPair<FName, long>>(&_self->entries, _factory.Memory);
+        foreach (var pDiscriminant in NamesArray)
+        {
+            var Discriminant = pDiscriminant.Value;
+            var CheckName = Discriminant->Key.ToString();
+            if (ignoreCase)
+                CheckName = CheckName.ToLower();
+            if (CheckName == name)
+            {
+                value = Discriminant->Value;
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 public unsafe class UScriptStructUE4_27_2(nint ptr, IUnrealFactory factory)
