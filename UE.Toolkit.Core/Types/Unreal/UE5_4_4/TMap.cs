@@ -4,6 +4,8 @@ using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Common.DynamicMap;
+using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Core.Types.Unreal.UE5_4_4;
@@ -712,40 +714,22 @@ public class TMapAccessorEnumerator<TElemKey, TElemValue> : IEnumerator<KeyValue
 /// INTERNAL USE
 /// Used in cases where the value type is not known at compile time, such as when processing Object XML.
 /// The only operations supported are ones required to work with Object XML.
-public interface IDynamicMapTypeProvider
-{
-    int DynSizeOf();
-}
-
-public class DynamicMapSystemType(Type type) : IDynamicMapTypeProvider
-{
-    private Type Type => type;
-    
-    public int DynSizeOf() => Marshal.SizeOf(type);
-}
-
-public class DynamicMapUnrealProperty(IFProperty type) : IDynamicMapTypeProvider
-{
-    private IFProperty Type => type;
-
-    public int DynSizeOf() => Type.ElementSize;
-}
-
-/// INTERNAL USE
-/// Used in cases where the value type is not known at compile time, such as when processing Object XML.
-/// The only operations supported are ones required to work with Object XML.
-public class TMapDynamicElementAccessor<TElemKey> : IDisposable
-    where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
+// public class TMapDynamicElementAccessor<TElemKey> : IDisposable
+//     where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
+public class TMapDynamicElementAccessor : IDisposable
 {
     protected unsafe TArray<byte>* Elements;
-    private IDynamicMapTypeProvider ValueType;
+    internal IDynamicMapKeyType KeyType;
+    internal IDynamicMapValueType ValueType;
     protected IUnrealMemoryInternal Allocator;
     protected bool OwnsInstance = false;
     private bool Disposed = false;
     
-    public unsafe TMapDynamicElementAccessor(TArray<byte>* _Self, IDynamicMapTypeProvider _ValueType, IUnrealMemoryInternal _Allocator, bool _OwnsInstance = false)
+    public unsafe TMapDynamicElementAccessor(TArray<byte>* _Self, IDynamicMapKeyType _KeyType, 
+        IDynamicMapValueType _ValueType, IUnrealMemoryInternal _Allocator, bool _OwnsInstance = false)
     {
         Self = _Self;
+        KeyType = _KeyType;
         ValueType = _ValueType;
         Allocator = _Allocator;
         OwnsInstance = _OwnsInstance;
@@ -775,12 +759,7 @@ public class TMapDynamicElementAccessor<TElemKey> : IDisposable
         set => Elements->ArrayMax = value;
     }
 
-    internal int ValueSize => ValueType.DynSizeOf();
-
-    internal unsafe nint this[int Index]
-    {
-        get => (nint)Allocation + (Index * ValueSize);
-    }
+    internal unsafe nint this[int Index] => (nint)Allocation + Index * ValueType.DynSizeOf();
 
     // TMapElement layout:
     // public KeyType Key;
@@ -788,14 +767,15 @@ public class TMapDynamicElementAccessor<TElemKey> : IDisposable
     // public int HashNextId;
     // public int HashIndex;
     
-    internal unsafe int SizeOf() => sizeof(TElemKey) + ValueSize + 2 * sizeof(int);
+    internal int SizeOf() => (KeyType.DynSizeOf() + ValueType.DynSizeOf() + 3 & ~3) + 2 * sizeof(int);
     private int GetKeyOffset(int Index) => Index * SizeOf();
-    private unsafe int GetValueOffset(int Index) => GetKeyOffset(Index) + sizeof(TElemKey);
+    private int GetValueOffset(int Index) => GetKeyOffset(Index) + KeyType.DynSizeOf();
     private int GetNextHashIdOffset(int Index) => GetKeyOffset(Index + 1) - 2 * sizeof(int);
     private int GetHashIndexOffset(int Index) => GetKeyOffset(Index + 1) - sizeof(int);
     
-    internal unsafe TElemKey GetKey(int Index) => *(TElemKey*)(Allocation + GetKeyOffset(Index));
-    internal unsafe TElemKey SetKey(int Index, TElemKey Key) => *(TElemKey*)(Allocation + GetKeyOffset(Index)) = Key;
+    internal unsafe IDynamicMapKey GetKey(int Index) => KeyType.FromPtr((nint)(Allocation + GetKeyOffset(Index)));
+    internal unsafe void SetKey(int Index, IDynamicMapKey Key) => Key.Write((nint)(Allocation + GetKeyOffset(Index)));
+    
     internal unsafe int GetNextHashId(int Index) => *(int*)(Allocation + GetNextHashIdOffset(Index));
     internal unsafe int SetNextHashId(int Index, int Value) => *(int*)(Allocation + GetNextHashIdOffset(Index)) = Value;
     internal unsafe int GetHashIndex(int Index) => *(int*)(Allocation + GetHashIndexOffset(Index));
@@ -840,14 +820,14 @@ public class TMapDynamicElementAccessor<TElemKey> : IDisposable
 /// INTERNAL USE
 /// Used in cases where the value type is not known at compile time, such as when processing Object XML.
 /// The only operations supported are ones required to work with Object XML.
-public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
-    where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
+// public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
+//     where TElemKey : unmanaged, IEquatable<TElemKey>, IMapHashable
+public unsafe class TMapDynamicDictionary : IDisposable
 {
     public nint Self { get; private set; }
 
     protected IUnrealMemoryInternal Allocator;
-    protected TMapDynamicElementAccessor<TElemKey> Elements;
-    private IDynamicMapTypeProvider ValueType;
+    protected TMapDynamicElementAccessor Elements;
     protected TBitArrayList BitAllocator;
     protected bool OwnsInstance;
     protected bool Disposed = false;
@@ -906,18 +886,18 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TMap</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
-    public TMapDynamicDictionary(TMap<TElemKey, byte>* _Self, IDynamicMapTypeProvider _ValueType, IUnrealMemoryInternal _Allocator)
+    public TMapDynamicDictionary(nint _Self, IDynamicMapKeyType _KeyType, 
+        IDynamicMapValueType _ValueType, IUnrealMemoryInternal _Allocator)
     {
-        Self = (nint)_Self;
-        ValueType = _ValueType;
+        Self = _Self;
         Allocator = _Allocator;
-        Elements = new(ElementsRaw, ValueType, Allocator);
+        Elements = new(ElementsRaw, _KeyType, _ValueType, Allocator);
         OwnsInstance = false;
         BitAllocator = new(BitAllocatorRaw, Allocator);
     }
    
     // ValueType*
-    private nint TryGetLinear(TElemKey key)
+    private nint TryGetLinear(IDynamicMapKey key)
     {
         if (Elements.Size == 0) return nint.Zero;
         for (var i = 0; i < Elements.Size; i++)
@@ -926,7 +906,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         return nint.Zero;
     }
 
-    private nint TryGetByHash(TElemKey key)
+    private nint TryGetByHash(IDynamicMapKey key)
     {
         var value = nint.Zero;
         // Hash alloc doesn't exist for single element maps,
@@ -955,13 +935,13 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         return currentIndex;
     }
     
-    public bool TryGetValue(TElemKey key, out nint pValue)
+    public bool TryGetValue(IDynamicMapKey key, out nint pValue)
     {
         pValue = new(TryGetByHash(key));
         return pValue != nint.Zero;
     }
 
-    public void AddIndirect(TElemKey key, nint pNewItem)
+    public void AddIndirect(IDynamicMapKey key, nint pNewItem)
     {
         if (ContainsKey(key)) return; // Don't allow duplicate keys
         if (Hashes == null && Elements.Size + 1 >= MapConstants.MIN_SIZE_FOR_HASH_LIST) Rehash(MapConstants.HASH_INITIAL_SIZE);
@@ -985,17 +965,17 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         }
         // Add a new element to the array
         Elements.SetKey(Elements.Size, key);
-        NativeMemory.Copy((void*)pNewItem, (void*)Elements.GetAddress(Elements.Size), (nuint)Elements.ValueSize);
+        NativeMemory.Copy((void*)pNewItem, (void*)Elements.GetAddress(Elements.Size), (nuint)Elements.ValueType.DynSizeOf());
         // Update the bit allocator
         BitAllocator.Add(true);
         Elements.Size++;
     }
     
-    public ICollection<TElemKey> Keys
+    public ICollection<IDynamicMapKey> Keys
     {
         get
         {
-            ICollection<TElemKey> Keys = new List<TElemKey>();
+            var Keys = new List<IDynamicMapKey>();
             for (var i = 0; i < Elements.Size; i++)
             {
                 Keys.Add(Elements.GetKey(i));
@@ -1004,7 +984,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         }
     }
     
-    public bool ContainsKey(TElemKey key) => Keys.Contains(key);
+    public bool ContainsKey(IDynamicMapKey key) => Keys.Contains(key);
     
     public int Count => Elements.Size;
 
@@ -1039,7 +1019,7 @@ public unsafe class TMapDynamicDictionary<TElemKey> : IDisposable
         Elements.Capacity = NewSize;
     }
 
-    int CalculateNewArraySize() => (Elements.Allocation != null) ? Elements.Capacity * 2 : MapConstants.DEFAULT_ARRAY_SIZE;
+    int CalculateNewArraySize() => Elements.Allocation != null ? Elements.Capacity * 2 : MapConstants.DEFAULT_ARRAY_SIZE;
     /// <summary>
     /// Relinquishes ownership of the TMap so that C#'s garbage collector doesn't delete this.
     /// </summary>

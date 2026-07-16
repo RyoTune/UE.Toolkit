@@ -1,4 +1,6 @@
-﻿using System.Xml;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Xml;
+using UE.Toolkit.Core.Types.Unreal.Common.DynamicMap;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
@@ -6,34 +8,35 @@ namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
 public static class MapNodeFactory
 {
+    private static bool CreateMapKey(IFMapProperty property, NodeFactory factory, [NotNullWhen(true)] out IDynamicMapKeyType? MapKey)
+    {
+        var Key = property.KeyProp;
+        MapKey = Key.ClassPrivate.Name switch
+        {
+            "IntProperty" => new IntDynamicMapKeyType(property, factory.Factory),
+            "NameProperty" => new NameDynamicMapKeyType(property, factory.Factory),
+            _ => null
+        };
+        return MapKey != null;
+    }
+    
     public static IFieldNode CreateMapNode(IFMapProperty property, nint value, NodeFactory factory)
     {
         var Key = property.KeyProp;
-        switch (Key.ClassPrivate.Name)
+        if (!CreateMapKey(property, factory, out var mapKey))
         {
-            case "IntProperty":
-                // Check if it has a StructLayout with an explicit alignment value, this lets us avoid iterating
-                // through each field to determine alignment
-                // Every type defined in the extension mod has an alignment value in it's StructLayout
-                Log.Debug($"{nameof(MapNodeFactory)} || Field '{property.NamePrivate}' with type '{property.KeyProp.NamePrivate}' has alignment {factory.Factory.GetAlignment(property.ValueProp)}");
-                return factory.Factory.GetAlignment(property.ValueProp) switch
-                {
-                    <= 4 => new MapNodeInt(property, value, factory),
-                    _ => new MapNodeInt8(property, value, factory)
-                };
-            case "NameProperty":
-                return new MapNodeFName(property, value, factory);
-            default:
-                Log.Warning($"{nameof(MapNodeFactory)} || Field '{property.NamePrivate}' with type '{factory.Classes.GetPropertyTypeName(property.KeyProp)}' is not currently supported for map editing operations.");
-                return new DummyNode(property);
+            Log.Warning($"{nameof(MapNodeFactory)} || Field '{property.NamePrivate}' with type '{factory.Classes.GetPropertyTypeName(property.KeyProp)}' is not currently supported for map editing operations.");
+            return new DummyNode(property);
         }
+        return new MapNode(property, mapKey, value, factory);
     }
 }
 
-public abstract class BaseMapNode<TKeyValue>(IFMapProperty property, nint value, NodeFactory factory)
-    : IFieldNode where TKeyValue : unmanaged, IMapHashable, IEquatable<TKeyValue>
+public class MapNode(IFMapProperty property, IDynamicMapKeyType mapKey, nint value, NodeFactory factory)
+    : IFieldNode
 {
     protected IFMapProperty Property => property;
+    protected IDynamicMapKeyType MapKey => mapKey;
     protected nint Value => value;
     protected NodeFactory Factory => factory;
     
@@ -55,16 +58,15 @@ public abstract class BaseMapNode<TKeyValue>(IFMapProperty property, nint value,
             var id = subReader.GetAttribute(WriterConstants.ItemIdAttr);
             if (id == null)
             {
-                Log.Error($"{nameof(BaseMapNode<TKeyValue>)} || '{WriterConstants.ItemTag}' is missing an ID.");
+                Log.Error($"{nameof(MapNode)} || '{WriterConstants.ItemTag}' is missing an ID.");
                 break;
             }
 
-            if (!CreateKeyValue(id, out var KeyMaybe))
+            if (!MapKey.FromString(id, out var Key))
             {
-                Log.Error($"{nameof(BaseMapNode<TKeyValue>)} || Could not process map key {id}");
+                Log.Error($"{nameof(MapNode)} || Could not process map key {id}");
                 break;               
             }
-            var Key = KeyMaybe!.Value;
             unsafe
             {
                 var tempMapBitAlloc = (TArray<byte>*)(tempMap.Self + 0x20); // MapConstants.SIZE_OF_ARRAY + 0x10
@@ -80,7 +82,7 @@ public abstract class BaseMapNode<TKeyValue>(IFMapProperty property, nint value,
                 var newEntry = Factory.Memory.MallocZeroed(Property.ValueProp.ElementSize);
                 tempMap.AddIndirect(Key, newEntry);
                 Factory.Memory.Free(newEntry);
-                Log.Debug($"{nameof(BaseMapNode<TKeyValue>)} || Added entry at 0x{newEntry:x} with key '{Key}' into '{Property.NamePrivate}'");
+                Log.Debug($"{nameof(MapNode)} || Added entry at 0x{newEntry:x} with key '{Key}' into '{Property.NamePrivate}'");
             }
 
             if (tempMap.TryGetValue(Key, out var valuePtr))
@@ -91,63 +93,9 @@ public abstract class BaseMapNode<TKeyValue>(IFMapProperty property, nint value,
             }
         }
     }
+
+    public TMapDynamicDictionary CreateTempMap(nint fieldPtr, IFProperty valueType)
+        => new(fieldPtr, MapKey, new DynamicMapValueUnrealProperty(valueType), Factory.Memory);
     
-    public abstract TMapDynamicDictionary<TKeyValue> CreateTempMap(
-        nint fieldPtr, IFProperty valueType);
-
-    public abstract bool CreateKeyValue(string id, out TKeyValue? Value);
-
-    public virtual bool ContainsKey(TMapDynamicDictionary<TKeyValue> dict, TKeyValue key)
-        => dict.ContainsKey(key);
-}
-
-public class MapNodeInt(IFMapProperty property, nint value, NodeFactory factory)
-    : BaseMapNode<HashableInt>(property, value, factory)
-{
-    public override unsafe TMapDynamicDictionary<HashableInt> CreateTempMap(nint fieldPtr, IFProperty valueType)
-        => new((TMap<HashableInt, byte>*)fieldPtr, new DynamicMapUnrealProperty(valueType), Factory.Memory);
-
-    public override bool CreateKeyValue(string id, out HashableInt? Value)
-    {
-        Value = null;
-        if (!int.TryParse(id, out var itemIdx))
-        {
-            Log.Warning($"{nameof(MapNodeInt)} || Invalid ID: {id}");
-            return false;
-        }
-        Value = new HashableInt(itemIdx);
-        return true;
-    }
-}
-
-public class MapNodeInt8(IFMapProperty property, nint value, NodeFactory factory)
-    : BaseMapNode<HashableInt8>(property, value, factory)
-{
-    public override unsafe TMapDynamicDictionary<HashableInt8> CreateTempMap(nint fieldPtr, IFProperty valueType)
-        => new((TMap<HashableInt8, byte>*)fieldPtr, new DynamicMapUnrealProperty(valueType), Factory.Memory);
-
-    public override bool CreateKeyValue(string id, out HashableInt8? Value)
-    {
-        Value = null;
-        if (!int.TryParse(id, out var itemIdx))
-        {
-            Log.Warning($"{nameof(MapNodeInt8)} || Invalid ID: {id}");
-            return false;
-        }
-        Value = new HashableInt8(itemIdx);
-        return true;
-    }
-}
-
-public class MapNodeFName(IFMapProperty property, nint value, NodeFactory factory)
-    : BaseMapNode<FName>(property, value, factory)
-{
-    public override unsafe TMapDynamicDictionary<FName> CreateTempMap(nint fieldPtr, IFProperty valueType)
-        => new((TMap<FName, byte>*)fieldPtr, new DynamicMapUnrealProperty(valueType), Factory.Memory);
-
-    public override bool CreateKeyValue(string id, out FName? Value)
-    {
-        Value = new FName(id);
-        return true;
-    }
+    public virtual bool ContainsKey(TMapDynamicDictionary dict, IDynamicMapKey key) => dict.ContainsKey(key);
 }
