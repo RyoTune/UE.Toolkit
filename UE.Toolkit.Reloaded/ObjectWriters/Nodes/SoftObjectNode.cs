@@ -15,7 +15,7 @@ public class SoftObjectNode(IFProperty property, Ptr<FSoftObjectPtr> value, IUnr
     {
         var SoftObjectPath = Classes.IntoSoftObjectPath((nint)(&Value.Value->Super.ObjectId));
         SoftObjectPath.SetAssetPath(text);
-        Log.Debug($"{nameof(SoftObjectNode)} || Field '{property.NamePrivate}' at 0x{(nint)Value.Value:X} set to '{text}'");
+        Log.Debug($"{nameof(SoftObjectNode)} || Field '{Property.NamePrivate}' at 0x{(nint)Value.Value:X} set to '{text}'");
     }
 
     protected override unsafe void SetInitialValue()

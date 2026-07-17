@@ -3,10 +3,13 @@ using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.Interfaces;
 
+/// <summary>
+/// API for obtaining special type reflection info which cannot be obtained entirely through the runtime reflection system.
+/// </summary>
 public interface ITypeReflection
 {
     
-    #region FSoftObjectPath
+    #region FText
     
     /// <summary>
     /// Get the FText type used by the currently running version of the engine.
