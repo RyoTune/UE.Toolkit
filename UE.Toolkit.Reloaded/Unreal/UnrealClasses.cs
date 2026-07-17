@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.Marshalling;
 using Reloaded.Hooks.Definitions;
 using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
@@ -473,7 +474,7 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     public Type GetFText() => GameConfig.Instance.GetFText();
     public int GetFTextSize() => GameConfig.Instance.GetFTextSize();
-    
+    public ISoftObjectPath IntoSoftObjectPath(nint ptr) => GameConfig.Instance.IntoSoftObjectPath(ptr);
     
     public string GetPropertyTypeName(IFProperty prop)
     {

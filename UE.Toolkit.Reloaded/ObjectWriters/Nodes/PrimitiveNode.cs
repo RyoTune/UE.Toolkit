@@ -10,7 +10,6 @@ public static class ObjectXMLFormatProvider
     public static IFormatProvider FloatProvider = new CultureInfo("en-US");
 }
 
-
 public abstract class BasePrimitiveNode<TProperty, TValue>(TProperty property, Ptr<TValue> value) : IFieldNode
     where TProperty : IFProperty
     where TValue : unmanaged

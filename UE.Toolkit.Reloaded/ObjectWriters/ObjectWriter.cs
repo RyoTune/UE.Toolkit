@@ -59,13 +59,11 @@ public unsafe class ObjectWriter
         
         using var reader = XmlReader.Create(new MemoryStream(_xmlContent));
         reader.MoveToContent();
-        
-        Log.Information($"TODO: WriteToObject for {_objFile} (Type: {_objType})");
-        IUClass? rootClass = null;
+
         IFieldNode? rootNode = null;
         // The root object *has* to be a class since UObjects contain the serialization methods needed to convert
         // to and from a file-based representation (UAssets are just binary files representing UObjects).
-        if (_factory.Classes.GetClassInfoFromName($"U{_objType}", out rootClass) || // If the prefix is not included
+        if (_factory.Classes.GetClassInfoFromName($"U{_objType}", out var rootClass) || // If the prefix is not included
             _factory.Classes.GetClassInfoFromName($"U{_objType[1..]}", out rootClass)) // If the prefix is included (Theo!!!!)
         {
             rootNode = rootClass.NamePrivate.ToString() == "DataTable"

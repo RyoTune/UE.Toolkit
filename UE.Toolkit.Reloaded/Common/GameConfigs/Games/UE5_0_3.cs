@@ -1,4 +1,5 @@
-﻿using UE.Toolkit.Core.Types.Unreal.Factories;
+﻿using UE.Toolkit.Core.Types.Unreal.Common;
+using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_2_1;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.Reflection;
@@ -23,4 +24,8 @@ public class UE5_0_3 : UE5_4_4_ClairObscur
     public override Type GetFText() => typeof(UE.Toolkit.Core.Types.Unreal.UE4_27_2.FText);
 
     public override unsafe int GetFTextSize() => sizeof(UE.Toolkit.Core.Types.Unreal.UE4_27_2.FText);
+    
+    public override unsafe ISoftObjectPath IntoSoftObjectPath(nint ptr)
+        => new UE.Toolkit.Core.Types.Unreal.UE4_27_2.SoftObjectPath(
+            new((UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSoftObjectPath*)ptr));
 }

@@ -13,6 +13,8 @@ public interface IStructMapKeyImpl
 {
     bool FromString(string text, IStructMapKeyImpl impl, [NotNullWhen(true)] out IDynamicMapKey? key);
     uint GetTypeHash(nint ptr);
+    string DisplayString(nint ptr);
+    bool PointerEqual(nint a, nint b);
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 0x18)]
@@ -39,6 +41,10 @@ public class FKeyMapKeyImpl : IStructMapKeyImpl
     }
 
     public unsafe uint GetTypeHash(nint ptr) => ((FKey_Private*)ptr)->KeyName.GetTypeHash();
+
+    public unsafe string DisplayString(nint ptr) => ((FKey_Private*)ptr)->KeyName.ToString();
+    
+    public unsafe bool PointerEqual(nint a, nint b) => ((FKey_Private*)a)->KeyName.Equals(((FKey_Private*)b)->KeyName);
 }
 
 [StructLayout(LayoutKind.Explicit, Size = 0x10)]
@@ -48,29 +54,41 @@ struct FGuid_Private
     [FieldOffset(0x4)] public int B; // Size: 0x4
     [FieldOffset(0x8)] public int C; // Size: 0x4
     [FieldOffset(0xC)] public int D; // Size: 0x4
+
+    public override string ToString() => $"{A:X} {B:X} {C:X} {D:X}";
 }
 
-/*
 public class FGuidMapKeyImpl : IStructMapKeyImpl
 {
     public bool FromString(string text, IStructMapKeyImpl impl, [NotNullWhen(true)] out IDynamicMapKey? key)
     {
-        throw new NotImplementedException();
+        key = null;
+        if (!Guid.TryParse(text, out var guid))
+        {
+            return false;
+        }
+        key = new StructDynamicMapKey(guid.ToByteArray(), impl);
+        return true;
     }
 
-    public uint GetTypeHash(nint ptr)
+    public unsafe uint GetTypeHash(nint ptr)
     {
-        throw new NotImplementedException();
+        var AsBytes = new byte[sizeof(FGuid_Private)];
+        Marshal.Copy(ptr, AsBytes, 0, AsBytes.Length);
+        return (uint)HashAlgorithms.CityHash.ComputeHash(AsBytes).AsInt32();
     }
+    
+    public unsafe string DisplayString(nint ptr) => ((FGuid_Private*)ptr)->ToString();
+    
+    public unsafe bool PointerEqual(nint a, nint b) => ((FGuid_Private*)a)->Equals(*(FGuid_Private*)b);
 }
-*/
 
 public static class StructMapKeyRegistry
 {
-    public static Dictionary<string, IStructMapKeyImpl> Implementations = new()
+    public static readonly Dictionary<string, IStructMapKeyImpl> Implementations = new()
     {
         { "Key", new FKeyMapKeyImpl() },
-        // { "Guid", new FGuidMapKeyImpl() },
+        { "Guid", new FGuidMapKeyImpl() },
     };
 }
 
@@ -133,12 +151,30 @@ public class StructDynamicMapKey(byte[] value, IStructMapKeyImpl impl) : IDynami
             return Impl.GetTypeHash((nint)pValue);
         }
     }
+
+    public override unsafe string ToString()
+    {
+        fixed (byte* pValue = Value)
+        {
+            return impl.DisplayString((nint)pValue);
+        }
+    }
     
     public override bool Equals(object? obj)
     {
         if (obj is null) return false;
         if (ReferenceEquals(this, obj)) return true;
+        Log.Debug($"{this} == {obj}");
         if (obj.GetType() != GetType()) return false;
-        return Value.Equals(((StructDynamicMapKey)obj).Value);
+        unsafe
+        {
+            fixed (byte* pThis = Value)
+            {
+                fixed (byte* pOther = ((StructDynamicMapKey)obj).Value)
+                {
+                    return Impl.PointerEqual((nint)pThis, (nint)pOther);
+                }
+            }
+        }
     }
 }

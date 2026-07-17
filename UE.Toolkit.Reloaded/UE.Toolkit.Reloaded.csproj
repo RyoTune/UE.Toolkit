@@ -46,6 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="HashifyNET" Version="7.1.1" />
         <PackageReference Include="Reloaded.Mod.Interfaces" Version="2.4.0" ExcludeAssets="runtime" />
         <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.9.0" />
         <PackageReference Include="RyoTune.Reloaded" Version="4.2.1" />
