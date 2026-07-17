@@ -3,6 +3,7 @@ using System.Xml;
 using UE.Toolkit.Core.Types.Unreal.Common.DynamicMap;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Reloaded.Common.DynamicMap;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
@@ -13,8 +14,17 @@ public static class MapNodeFactory
         var Key = property.KeyProp;
         MapKey = Key.ClassPrivate.Name switch
         {
-            "IntProperty" => new IntDynamicMapKeyType(property, factory.Factory),
+            "Int8Property" => new Int8DynamicMapKeyType(property, factory.Factory),
+            "Int16Property" or "UInt16Property" => new Int16DynamicMapKeyType(property, factory.Factory),
+            "IntProperty" or "UInt32Property" => new IntDynamicMapKeyType(property, factory.Factory),
+            "Int64Property" or "UInt64Property" => new Int64DynamicMapKeyType(property, factory.Factory),
             "NameProperty" => new NameDynamicMapKeyType(property, factory.Factory),
+            "StrProperty" => new StringDynamicMapKeyType(property, factory.Factory, factory.Objects, factory.Memory),
+            /*
+            "StructProperty" => StructDynamicMapKeyType.Create(
+                property, factory.Factory.CreateFStructProperty(Key.Ptr), 
+                factory.Factory, factory.Objects, factory.Memory),
+            */
             _ => null
         };
         return MapKey != null;

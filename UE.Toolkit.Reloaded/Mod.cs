@@ -14,6 +14,8 @@ using UE.Toolkit.Reloaded.DataTables;
 using UE.Toolkit.Reloaded.ObjectWriters;
 using UE.Toolkit.Reloaded.Toolkit;
 using UE.Toolkit.Reloaded.Unreal;
+using UnrealEssentials.Interfaces;
+using IUnrealMemory = UE.Toolkit.Interfaces.IUnrealMemory;
 
 namespace UE.Toolkit.Reloaded;
 
@@ -30,6 +32,9 @@ public class Mod : ModBase, IExports
     private readonly IMod _owner;
 
     private readonly IModConfig _modConfig;
+    
+    // Unreal Essentials API
+    private readonly IUnrealEssentials _essentials;
 
     // Unreal Toolkit API
     private readonly IUnrealFactory _factory;
@@ -46,6 +51,7 @@ public class Mod : ModBase, IExports
     private readonly UnrealMethods _methods;
     private readonly UnrealState _state;
     private readonly UnrealSpawning _spawning;
+    
 
     public Mod(ModContext context)
     {
@@ -61,8 +67,14 @@ public class Mod : ModBase, IExports
         Project.Initialize(_modConfig, _modLoader, _log, true);
         Log.LogLevel = Config.LogLevel;
         
+        if (!_modLoader.GetController<IUnrealEssentials>().TryGetTarget(out _essentials))
+        {
+            throw new Exception(
+                "Unreal Essentials is missing! Download the latest version from https://github.com/AnimatedSwine37/UnrealEssentials/releases");
+        }
+        
         // Setup game patterns and Unreal factory.
-        GameConfig.SetGame(_modLoader.GetAppConfig().AppId);
+        GameConfig.SetGame(_modLoader.GetAppConfig().AppId, _essentials);
 
         _factory = GameConfig.Instance.Factory;
         _memory = GameConfig.Instance.Memory;
@@ -78,7 +90,7 @@ public class Mod : ModBase, IExports
         _state = new(_factory, _classes);
         _spawning = new(_classes, _factory, _state);
         _writer = new(_objects, _tables, _memory, _classes, _factory);
-        _toolkit = new(_writer);
+        _toolkit = new(_writer, _essentials);
         
         _modLoader.AddOrReplaceController(_owner, _memory);
         _modLoader.AddOrReplaceController<IDataTables>(_owner, _tables);

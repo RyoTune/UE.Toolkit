@@ -9,7 +9,7 @@ namespace UE.Toolkit.Reloaded.Common.GameConfigs.Games;
 
 public class UE5_0_3 : UE5_4_4_ClairObscur
 {
-    public override string Id => "P3R";
+    public override string Id => "UE5_0_3";
     public override IUnrealFactory Factory { get; } = new UnrealFactory();
     public override IUnrealMemory Memory { get; } = new UnrealMemory();
     public override IPropertyFlagsBuilder FlagsBuilder { get; } = new PropertyFlagsBuilder();

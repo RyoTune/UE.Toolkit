@@ -49,7 +49,7 @@ public class StructDocument : IFieldNode
             if (_fields.TryGetValue(fieldName, out var fieldData))
             {
                 var fieldPtr = BaseAddress + fieldData.Offset_Internal;
-                Log.Information($"StructDocument->Field {fieldData.NamePrivate} @ 0x{fieldPtr:x}");
+                Log.Debug($"StructDocument->{fieldData.NamePrivate} @ 0x{fieldPtr:x}");
                 Factory.Create(fieldData, fieldPtr).ConsumeNode(reader);
             }
             else
