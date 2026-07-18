@@ -120,7 +120,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     {
         _onObjectLoaded += objPtr =>
         {
-            if (((UObjectBase*)objPtr)->NamePrivate.ToString() == objectPath)
+            if (ToolkitUtils.GetPathName(objPtr) == objectPath)
                 callback(new((TObject*)objPtr));
         };
     }

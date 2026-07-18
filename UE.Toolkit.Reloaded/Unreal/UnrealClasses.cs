@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.Marshalling;
 using Reloaded.Hooks.Definitions;
 using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
@@ -218,7 +219,7 @@ public unsafe class UnrealClasses : IUnrealClasses
         PackageNameToUObject.TryAdd(PackageName, StructOuter);
         // Log.Debug($"GetStaticStruct({StructName}): (outer: {StructOuter.NamePrivate}, size: 0x{Size:x}, crc: 0x{Crc:x})");
         */
-        return  _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
+        return _GetStaticStruct!.Hook!.OriginalFunction(pInRegister, pStructOuter, pStructName, Size, Crc);
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
@@ -264,6 +265,24 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     public bool GetScriptStructInfoFromName(string Name, out IUScriptStruct? Value)
         => ScriptStructs.TryGetValue(Name[1..], out Value);
+
+    public bool GetEnumInfoFromType<TObject>(out IUEnum? Value) where TObject : unmanaged
+        => GetEnumInfoFromName(typeof(TObject).Name, out Value);
+    
+    private delegate nint GetStaticEnum(nint pInRegister, nint pEnumOuter, nint pEnumName, nint Size, int Crc);
+    private SHFunction<GetStaticEnum> _GetStaticEnum;
+    private nint GetStaticEnumImpl(nint pInRegister, nint pEnumOuter, nint pEnumName, nint Size, int Crc)
+    {
+        var pEnum = _GetStaticEnum!.Hook!.OriginalFunction(pInRegister, pEnumOuter, pEnumName, Size, Crc);
+        var Enum = Factory.CreateUEnum(pEnum);
+        Enums.TryAdd(Enum.NamePrivate.ToString(), Enum);
+        return pEnum;
+    }
+    
+    public bool GetEnumInfoFromName(string Name, out IUEnum? Value)
+        => Enums.TryGetValue(Name, out Value);
+    
+    // START ADD PROPERTIES
 
     public bool AddI8Property<TObject>(string Name, int Offset, out IFProperty? Property)
         where TObject : unmanaged
@@ -450,10 +469,98 @@ public unsafe class UnrealClasses : IUnrealClasses
         => FieldTypes.TryGetValue(Name.ComparisonIndex.Value, out FieldClass);
     
     #endregion
+    
+    #region ITypeReflection implementation
+
+    public Type GetFText() => GameConfig.Instance.GetFText();
+    public int GetFTextSize() => GameConfig.Instance.GetFTextSize();
+    public ISoftObjectPath IntoSoftObjectPath(nint ptr) => GameConfig.Instance.IntoSoftObjectPath(ptr);
+    
+    public string GetPropertyTypeName(IFProperty prop)
+    {
+        var className = prop.ClassPrivate.Name;
+        switch (className)
+        {
+            case "BoolProperty":
+                return "bool";
+            case "ByteProperty":
+                var byteProp = Factory.Cast<IFByteProperty>(prop);
+                return byteProp.Enum?.NamePrivate.ToString() ?? "byte";
+            case "Int8Property":
+                return "byte";
+            case "Int16Property":
+                return "short";
+            case "UInt16Property":
+                return "ushort";
+            case "IntProperty":
+                return "int";
+            case "UInt32Property":
+                return "uint";
+            case "Int64Property":
+                return "long";
+            case "UInt64Property":
+                return "ulong";
+            case "FloatProperty":
+                return "float";
+            case "DoubleProperty":
+                return "double";
+            case "NameProperty":
+                return "FName";
+            case "StrProperty":
+                return "FString";
+            case "TextProperty":
+                return "FText";
+            case "DataTableRowHandle":
+                return "FDataTableRowHandle";
+            case "ObjectProperty":
+                return $"{Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate}*";
+            case "SoftObjectProperty":
+                return $"TSoftObjectPtr<{Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate}>";
+            case "SoftClassProperty":
+                return $"TSoftClassPtr<{Factory.Cast<IFSoftClassProperty>(prop).MetaClass.NamePrivate}>";
+            case "StructProperty":
+                return Factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
+            case "ClassProperty":
+            case "ClassPtrProperty":
+                return Factory.Cast<IFClassProperty>(prop).MetaClass!.NamePrivate.ToString();
+            case "EnumProperty":
+                return Factory.Cast<IFEnumProperty>(prop).Enum.NamePrivate.ToString();
+            case "MapProperty":
+                var mapProp = Factory.Cast<IFMapProperty>(prop);
+                var mapPropKeyType = GetPropertyTypeName(mapProp.KeyProp);
+                var mapPropValueType = GetPropertyTypeName(mapProp.ValueProp);
+                return $"TMap<{mapPropKeyType}, {mapPropValueType}>";
+            case "InterfaceProperty":
+                return $"TScriptInterface<{Factory.Cast<IFInterfaceProperty>(prop).NamePrivate}>";
+            case "ArrayProperty":
+                return $"TArray<{GetPropertyTypeName(Factory.Cast<IFArrayProperty>(prop).Inner)}>";
+            case "SetProperty":
+                return $"TSet<{GetPropertyTypeName(Factory.Cast<IFSetProperty>(prop).ElementProp)}>";
+            case "DelegateProperty":
+                return "FScriptDelegate";
+            case "MulticastInlineDelegateProperty":
+            case "MulticastSparseDelegateProperty":
+                return "FMulticastScriptDelegate";
+            case "WeakObjectProperty":
+                return "FWeakObjectPtr";
+            case "FieldPathProperty":
+                return "FFieldPath";
+            case "Utf8StrProperty":
+                return "FUtf8String";
+            case "AnsiStrProperty":
+                return "FAnsiString";
+            default:
+                Log.Warning($"Unknown Property: {className}");
+                return className;
+        }
+    }
+    
+    #endregion
 
     private ConcurrentDictionary<string, ClassExtension> ClassExtensions = new();
     private ConcurrentDictionary<string, IUClass> Classes = new();
     private ConcurrentDictionary<string, IUScriptStruct> ScriptStructs = new();
+    private ConcurrentDictionary<string, IUEnum> Enums = new();
     private ConcurrentDictionary<ulong, FieldClassGlobal> FieldTypes = new();
     private ConcurrentDictionary<string, nint> DataTableRowToVTable = new();
     
@@ -490,6 +597,7 @@ public unsafe class UnrealClasses : IUnrealClasses
         _GetPrivateStaticClassBodyUE4 = new(GetPrivateStaticClassBodyUE4);
         _GetPrivateStaticClassBodyUE5 = new(GetPrivateStaticClassBodyUE5);
         _GetStaticStruct = new(GetStaticStructImpl);
+        _GetStaticEnum = new(GetStaticEnumImpl);
         _ConstructUScriptStruct = new(ConstructUScriptStructImpl);
 
         // Store the vtable for each DataTable's row type. Since structs don't have default objects like classes, we

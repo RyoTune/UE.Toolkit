@@ -18,17 +18,15 @@
 - Add new properties to a class/struct's type information.
 - Register a new struct into the type information system.
 
-## Supported Engine Version and Games
-
-Object XML requires game-specific support with an extension mod. Supported games [are listed here](#installing-the-ue-toolkit-extension-mod).
+## Supported Engine Versions
 
 | Feature | 4.27 | 5.0 | 5.1 | 5.2 | 5.3 | 5.4 | 5.5 | 5.6 | 5.7
 | - | - | - | - | - | - | - | - | - | - |
 | Object Logging |✅|✅|✅|✅|✅|✅|✅|✅|✅
-| Object Editing |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| Object Editing |✅|❔|❔|✅|❔|✅|❔|❔|❔
 | `FMemory` Functions |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Dumper |✅|✅|✅|✅|️️️️️️✅|✅|✅|✅️|️️️️✅️
-| Property Editing (Object XML) |✅|❔|❔|❔|❔|✅|❔|❔|❔
+| Property Editing (Object XML) |✅|❔|❔|✅|❔|✅|❔|❔|❔
 | Add List Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
 | Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
 | Type Information |✅|✅|✅|✅|✅|✅|✅|✅|✅
@@ -49,11 +47,6 @@ I recommend the P3R guides, since they're the newest and cover GamePass. __You o
 ### Installing UE Toolkit
 1. Go to [Releases](https://github.com/RyoTune/UE.Toolkit/releases) and download the latest version of `UE.Toolkit.Reloaded.7z`
 2. Drag and drop the `7z` file into Reloaded to install.
-
-### Installing the UE Toolkit Extension Mod
-Install the extension mod for your game to be able to use all features (Object XML Editing).
-- __Clair Obscur__ - https://github.com/RyoTune/E33.UEToolkit/releases
-- __Persona 3 Reload__ - https://github.com/RyoTune/P3R.UEToolkit/releases
 
 ## Editing Objects with XML
 In supported games, you're able to edit any object with just a simple text file (XML). No Unreal Engine, no file unpacking/repacking/cooking, and no hex 🤮 editing. Just _Notepad++_ and a dream ✨! ~~Or Notepad if you hate yourself...~~

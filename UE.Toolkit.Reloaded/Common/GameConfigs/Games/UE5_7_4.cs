@@ -19,8 +19,4 @@ public class UE5_7_4: UE5_4_4_ClairObscur
 
     public override BaseTypeFactory TypeFactory(IUnrealClasses classes)
         => new TypeFactory(Factory, Memory, classes, FlagsBuilder);
-    
-    public override Type GetFText() => typeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText);
-
-    public override unsafe int GetFTextSize() => sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText);
 }

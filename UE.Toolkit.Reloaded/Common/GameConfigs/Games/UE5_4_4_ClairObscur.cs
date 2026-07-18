@@ -1,3 +1,4 @@
+using UE.Toolkit.Core.Types.Unreal.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 using UE.Toolkit.Interfaces;
@@ -24,4 +25,8 @@ public class UE5_4_4_ClairObscur : IGameConfig
     public virtual Type GetFText() => typeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText);
 
     public virtual unsafe int GetFTextSize() => sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FText);
+
+    public virtual unsafe ISoftObjectPath IntoSoftObjectPath(nint ptr)
+        => new UE.Toolkit.Core.Types.Unreal.UE5_4_4.SoftObjectPath(
+            new((UE.Toolkit.Core.Types.Unreal.UE5_4_4.FSoftObjectPath*)ptr));
 }

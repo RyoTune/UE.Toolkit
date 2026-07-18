@@ -1,5 +1,6 @@
 // ReSharper disable InconsistentNaming
 
+using UE.Toolkit.Core.Types.Unreal.Common;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.Reflection;
@@ -16,4 +17,5 @@ public interface IGameConfig
     BaseTypeFactory TypeFactory(IUnrealClasses classes);
     Type GetFText();
     int GetFTextSize();
+    ISoftObjectPath IntoSoftObjectPath(nint ptr);
 }

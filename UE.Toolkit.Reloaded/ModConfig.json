@@ -2,8 +2,8 @@
   "ModId": "UE.Toolkit.Reloaded",
   "ModName": "Unreal Toolkit",
   "ModAuthor": "RyoTune, Rirurin",
-  "ModVersion": "1.8.0",
-  "ModDescription": "Modding toolkit for Unreal Engine games.\r\n\r\nSupported:\r\n- UE 5.4.4 (Clair Obscur)\r\n- UE 4.27.2 (P3R/SMTVV)",
+  "ModVersion": "1.9.0",
+  "ModDescription": "Modding toolkit for Unreal Engine games.\r\nSupports games between UE 4.27 and UE 5.7",
   "ModDll": "UE.Toolkit.Reloaded.dll",
   "ModIcon": "Preview.png",
   "ModR2RManagedDll32": "x86/UE.Toolkit.Reloaded.dll",
@@ -35,6 +35,15 @@
             "AssetFileName": "Mod.zip"
           },
           "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
+        },
+        "UnrealEssentials": {
+          "Config": {
+            "UserName": "AnimatedSwine37",
+            "RepositoryName": "UnrealEssentials",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "UnrealEssentials.ReleaseMetadata.json"
         }
       }
     },
@@ -48,7 +57,8 @@
   "IsUniversalMod": true,
   "ModDependencies": [
     "reloaded.sharedlib.hooks",
-    "Reloaded.Memory.SigScan.ReloadedII"
+    "Reloaded.Memory.SigScan.ReloadedII",
+    "UnrealEssentials"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [

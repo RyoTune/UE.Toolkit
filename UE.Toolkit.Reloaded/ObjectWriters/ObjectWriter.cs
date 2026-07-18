@@ -3,7 +3,10 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Xml;
+using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters;
@@ -12,9 +15,9 @@ public unsafe class ObjectWriter
 {
     private static readonly EventLoopScheduler WriterScheduler = new();
     
-    private readonly Type _objType;
+    private readonly string _objType;
     private readonly string _objFile;
-    private readonly FieldNodeFactory _nodeFactory;
+    private readonly NodeFactory _factory;
     private readonly FileSystemWatcher _xmlFileWatcher;
     private readonly Subject<Unit> _xmlChanged = new();
     private readonly IDisposable _xmlSub;
@@ -22,11 +25,13 @@ public unsafe class ObjectWriter
     private byte[] _xmlContent;
     private UObjectBase* _currObj;
 
-    public ObjectWriter(string objName, Type objType, string objFile, FieldNodeFactory nodeFactory, string? objectPath)
+    private IUnrealClasses? _unrealClasses;
+
+    public ObjectWriter(string objName, string objType, string objFile, NodeFactory factory, string? objectPath)
     {
         _objType = objType;
         _objFile = objFile;
-        _nodeFactory = nodeFactory;
+        _factory = factory;
         _xmlContent = File.ReadAllBytes(objFile);
         _xmlFileWatcher = new(Path.GetDirectoryName(objFile)!, Path.GetFileName(objFile))
         {
@@ -55,15 +60,24 @@ public unsafe class ObjectWriter
         using var reader = XmlReader.Create(new MemoryStream(_xmlContent));
         reader.MoveToContent();
 
-        // TODO: Possibly rework XML node tree creation to return
-        // a collection of generated writers to allow resetting values on rewrites.
-        if (_nodeFactory.TryCreate(ObjectName, objPtr, 0, _objType, out var rootNode))
+        IFieldNode? rootNode = null;
+        // The root object *has* to be a class since UObjects contain the serialization methods needed to convert
+        // to and from a file-based representation (UAssets are just binary files representing UObjects).
+        if (_factory.Classes.GetClassInfoFromName($"U{_objType}", out var rootClass) || // If the prefix is not included
+            _factory.Classes.GetClassInfoFromName($"U{_objType[1..]}", out rootClass)) // If the prefix is included (Theo!!!!)
+        {
+            rootNode = rootClass.NamePrivate.ToString() == "DataTable"
+                ? new DataTableDocument(ObjectName, objPtr, _factory)
+                : new StructDocument(ObjectName, rootClass, objPtr, _factory);
+        }
+
+        if (rootNode != null)
         {
             rootNode.ConsumeNode(reader);
         }
         else
         {
-            Log.Error($"Failed to create root node from Object XML file.\nFile: {_objFile}");
+            Log.Error($"{nameof(ObjectWriter)} || Failed to create root node with type '{_objType}' from Object XML file.\nFile: {_objFile}");
         }
     }
 

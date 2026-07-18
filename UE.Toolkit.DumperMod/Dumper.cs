@@ -86,13 +86,15 @@ public unsafe class Dumper
     private readonly IUnrealObjects _uobjs;
     private readonly IUnrealStrings _strs;
     private readonly IUnrealFactory _factory;
+    private readonly IUnrealClasses _classes;
 
-    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, IUnrealStrings strs, string dumpDir)
+    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, IUnrealStrings strs, IUnrealClasses classes, string dumpDir)
     {
         _uobjs = uobjs;
         _strs = strs;
         _dumpDir = dumpDir;
         _factory = factory;
+        _classes = classes;
         
         if (Directory.Exists(dumpDir)) Directory.Delete(dumpDir, true);
         Directory.CreateDirectory(dumpDir);
@@ -251,7 +253,7 @@ public unsafe class Dumper
 
     private static void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.8.0)     */");
+        sb.AppendLine("/* Generated with UE Toolkit: Dumper (1.9.0)     */");
         sb.AppendLine("/* GitHub: https://github.com/RyoTune/UE.Toolkit */");
         sb.AppendLine("/* Author: RyoTune                               */");
         sb.AppendLine("/* Special thanks to UE4SS team and Rirurin      */");
@@ -510,12 +512,12 @@ public unsafe class Dumper
             case "EnumProperty":
                 var enumProp = _factory.Cast<IFEnumProperty>(prop);
                 var enumPropName = enumProp.Enum.NamePrivate.ToString();
-                GenerateEnumDefinition(enumProp.Enum, GetPropertyTypeName(enumProp.UnderlyingProp));
+                GenerateEnumDefinition(enumProp.Enum, _classes.GetPropertyTypeName(enumProp.UnderlyingProp));
                 return () => SanitizeName(enumPropName);
             case "MapProperty":
                 var mapProp = _factory.Cast<IFMapProperty>(prop);
-                var mapPropKeyType = GetPropertyTypeName(mapProp.KeyProp);
-                var mapPropValueType = GetPropertyTypeName(mapProp.ValueProp);
+                var mapPropKeyType = _classes.GetPropertyTypeName(mapProp.KeyProp);
+                var mapPropValueType = _classes.GetPropertyTypeName(mapProp.ValueProp);
                 return () =>
                 {
                     var isKeyPtr = mapPropKeyType.EndsWith('*') || mapPropKeyType.Contains('<'); // Use nint for pointers and generic types.
@@ -536,7 +538,7 @@ public unsafe class Dumper
                 var intPropType = _factory.Cast<IFInterfaceProperty>(prop).InterfaceClass.NamePrivate.ToString();
                 return () => SanitizeName(_UStructDefinitions.TryGetValue(intPropType, out var knownStruct) ? $"TScriptInterface<{knownStruct.DisplayName}>" : $"TScriptInterface<{intPropType}>");
             case "ArrayProperty":
-                var arrayPropType = GetPropertyTypeName(_factory.Cast<IFArrayProperty>(prop).Inner);
+                var arrayPropType = _classes.GetPropertyTypeName(_factory.Cast<IFArrayProperty>(prop).Inner);
                 return () =>
                 {
                     var isPtrType = arrayPropType.EndsWith('*') || arrayPropType.Contains('<'); // Use nint for pointers and generic types.
@@ -547,7 +549,7 @@ public unsafe class Dumper
                         $"TArray<{arrTypeSanitized}>";
                 };
             case "SetProperty":
-                var setPropType = GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp);
+                var setPropType = _classes.GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp);
                 return () =>
                 {
                     var isPtrType = setPropType.EndsWith('*') || setPropType.Contains('<'); // Use nint for pointers and generic types.;
@@ -557,7 +559,7 @@ public unsafe class Dumper
                         : $"TSet<{SanitizeName(knownStruct?.DisplayName ?? setPropType)}>";
                 };
             case "OptionalProperty":
-                var optionalType = GetPropertyTypeName(_factory.Cast<IFOptionalProperty>(prop).ValueProperty);
+                var optionalType = _classes.GetPropertyTypeName(_factory.Cast<IFOptionalProperty>(prop).ValueProperty);
                 return () =>
                 {
                     if (_UStructDefinitions.TryGetValue(optionalType, out var knownOptType))
@@ -583,87 +585,6 @@ public unsafe class Dumper
             default:
                 Log.Warning($"Unknown Property: {className}");
                 return () => className;
-        }
-    }
-
-    /// <summary>
-    /// Gets the property type name, such as <c>byte</c> for <c>ByteProperty</c>.
-    /// </summary>
-    /// <param name="prop"></param>
-    /// <returns></returns>
-    private string GetPropertyTypeName(IFProperty prop)
-    {
-        var className = prop.ClassPrivate.Name;
-        switch (className)
-        {
-            case "BoolProperty":
-                return "bool";
-            case "ByteProperty" or "Int8Property":
-                return "byte";
-            case "Int16Property":
-                return "short";
-            case "UInt16Property":
-                return "ushort";
-            case "IntProperty":
-                return "int";
-            case "UInt32Property":
-                return "uint";
-            case "Int64Property":
-                return "long";
-            case "UInt64Property":
-                return "ulong";
-            case "FloatProperty":
-                return "float";
-            case "DoubleProperty":
-                return "double";
-            case "NameProperty":
-                return "FName";
-            case "StrProperty":
-                return "FString";
-            case "TextProperty":
-                return "FText";
-            case "DataTableRowHandle":
-                return "FDataTableRowHandle";
-            case "ObjectProperty":
-                return $"{_factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate}*";
-            case "SoftObjectProperty":
-                return $"TSoftObjectPtr<{_factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate}>";
-            case "SoftClassProperty":
-                return $"TSoftClassPtr<{_factory.Cast<IFSoftClassProperty>(prop).MetaClass.NamePrivate}>";
-            case "StructProperty":
-                return _factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
-            case "ClassProperty":
-            case "ClassPtrProperty":
-                return _factory.Cast<IFClassProperty>(prop).MetaClass!.NamePrivate.ToString();
-            case "EnumProperty":
-                return _factory.Cast<IFEnumProperty>(prop).Enum.NamePrivate.ToString();
-            case "MapProperty":
-                var mapProp = _factory.Cast<IFMapProperty>(prop);
-                var mapPropKeyType = GetPropertyTypeName(mapProp.KeyProp);
-                var mapPropValueType = GetPropertyTypeName(mapProp.ValueProp);
-                return $"TMap<{mapPropKeyType}, {mapPropValueType}>";
-            case "InterfaceProperty":
-                return $"TScriptInterface<{_factory.Cast<IFInterfaceProperty>(prop).NamePrivate}>";
-            case "ArrayProperty":
-                return $"TArray<{GetPropertyTypeName(_factory.Cast<IFArrayProperty>(prop).Inner)}>";
-            case "SetProperty":
-                return $"TSet<{GetPropertyTypeName(_factory.Cast<IFSetProperty>(prop).ElementProp)}>";
-            case "DelegateProperty":
-                return "FScriptDelegate";
-            case "MulticastInlineDelegateProperty":
-            case "MulticastSparseDelegateProperty":
-                return "FMulticastScriptDelegate";
-            case "WeakObjectProperty":
-                return "FWeakObjectPtr";
-            case "FieldPathProperty":
-                return "FFieldPath";
-            case "Utf8StrProperty":
-                return "FUtf8String";
-            case "AnsiStrProperty":
-                return "FAnsiString";
-            default:
-                Log.Warning($"Unknown Property: {className}");
-                return className;
         }
     }
 

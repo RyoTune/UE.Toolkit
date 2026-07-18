@@ -1,4 +1,5 @@
 using System.Xml;
+using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Interfaces.ObjectWriters;
@@ -8,11 +9,11 @@ using UE.Toolkit.Reloaded.ObjectWriters.Nodes;
 
 namespace UE.Toolkit.Reloaded.ObjectWriters;
 
-public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, IDataTables dt, IUnrealMemory memory)
+public class ObjectWriterService(IUnrealObjects uobjs, IDataTables dt, IUnrealMemory memory, 
+    IUnrealClasses unrealClasses, IUnrealFactory unrealFactory)
 {
-    private readonly Dictionary<TypeKey, Type> _types = [];
     private readonly List<ObjectWriter> _objWriters = [];
-    private readonly FieldNodeFactory _nodeFactory = new(typeReg, uobjs, memory);
+    private readonly NodeFactory _nodeFactory = new(uobjs, memory, unrealClasses, unrealFactory);
 
     public void AddPath(string path)
     {
@@ -38,53 +39,30 @@ public class ObjectWriterService(ITypeRegistry typeReg, IUnrealObjects uobjs, ID
 
     private unsafe void RegisterFile(string objFile)
     {
-        const string any = "any";
         var objName = Path.GetFileName(objFile).Replace(".obj.xml", string.Empty);
             
         using var reader = XmlReader.Create(File.OpenRead(objFile));
         reader.MoveToContent();
 
         var rootTypeName = reader.Name;
-        var rootTypeProvider = reader.GetAttribute("provider");
         var rootTypePath = reader.GetAttribute("path");
-            
-        var typeKey = new TypeKey(rootTypeName, rootTypeProvider);
-        if (!_types.TryGetValue(typeKey, out var objType))
-        {
-            // Find type if not previously registered.
-            var rootTypeHint = reader.GetAttribute(WriterConstants.HintAttr);
-            if (typeReg.TryGetType(rootTypeName, rootTypeHint, rootTypeProvider, out objType))
-            {
-                _types[typeKey] = objType;
-                Log.Debug($"{nameof(ObjectWriterService)} || Registered Type: {rootTypeName} || Provider: {rootTypeProvider ?? any}");
-            }
-            else
-            {
-                Log.Error($"{nameof(ObjectWriterService)} || Failed to find type '{rootTypeName}' with provider '{rootTypeProvider ?? any}'.\nFile: {objFile}");
-                return;
-            }
-        }
 
-        var objWriter = new ObjectWriter(objName, objType, objFile, _nodeFactory, rootTypePath);
+        var objWriter = new ObjectWriter(objName, rootTypeName, objFile, _nodeFactory, rootTypePath);
         _objWriters.Add(objWriter);
 
-        if (objType.Name.StartsWith(nameof(UDataTable<byte>)))
+        if (rootTypeName == "DataTable")
         {
-            if (objWriter.ObjectPath != null)
-                dt.OnDataTableChangedByPath<UObjectBase>(objWriter.ObjectPath, table => objWriter.WriteToObject((nint)table.Self));
-            else
-                dt.OnDataTableChanged<UObjectBase>(objWriter.ObjectName, table => objWriter.WriteToObject((nint)table.Self));
+            Action<string, Action<ToolkitDataTable<UObjectBase>>> Callback =
+                objWriter.ObjectPath != null ? dt.OnDataTableChangedByPath : dt.OnDataTableChanged;
+            Callback(objWriter.ObjectPath ?? objWriter.ObjectName, x => objWriter.WriteToObject((nint)x.Self));
         }
         else
         {
-            if (objWriter.ObjectPath != null)
-                uobjs.OnObjectLoadedByPath<UObjectBase>(objWriter.ObjectPath, obj => objWriter.WriteToObject((nint)obj.Self));
-            else
-                uobjs.OnObjectLoadedByName<UObjectBase>(objWriter.ObjectName, obj => objWriter.WriteToObject((nint)obj.Self));
+            Action<string, Action<ToolkitUObject<UObjectBase>>> Callback =
+                objWriter.ObjectPath != null ? uobjs.OnObjectLoadedByPath : uobjs.OnObjectLoadedByName;
+            Callback(objWriter.ObjectPath ?? objWriter.ObjectName, x => objWriter.WriteToObject((nint)x.Self));
         }
         
         Log.Information($"{nameof(ObjectWriterService)} || Object XML registered: {objWriter.GetObjectNameOrPath()}\nFile: {objFile}");
     }
-
-    private readonly record struct TypeKey(string TypeName, string? TypeProvider);
 }

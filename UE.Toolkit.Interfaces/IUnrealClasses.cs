@@ -6,7 +6,7 @@ namespace UE.Toolkit.Interfaces;
 /// <summary>
 /// API for functionality related to Unreal classes.
 /// </summary>
-public interface IUnrealClasses : IUnrealClassesInternal
+public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
 {
     
     #region Class/Struct Getters
@@ -46,6 +46,24 @@ public interface IUnrealClasses : IUnrealClassesInternal
     /// <param name="Value">Type information for the object type with the given name.</param>
     /// <returns>If the type information exists.</returns>
     public bool GetScriptStructInfoFromName(string Name, out IUScriptStruct? Value);
+    
+    /// <summary>
+    /// Get the type information for a specified object. If this enum has no type info, this will return null.
+    /// This method works on types that are prefixed with E.
+    /// </summary>
+    /// <param name="Value">Type information for the specified object type.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>If the type information exists.</returns>
+    public bool GetEnumInfoFromType<TObject>(out IUEnum? Value) where TObject : unmanaged;
+    
+    /// <summary>
+    /// Get the type information for a specified object. If this enum has no type info, this will return null.
+    /// This method works on types that are prefixed with E.
+    /// </summary>
+    /// <param name="Name">Name of the object type.</param>
+    /// <param name="Value">Type information for the object type with the given name.</param>
+    /// <returns>If the type information exists.</returns>
+    public bool GetEnumInfoFromName(string Name, out IUEnum? Value);
     
     #endregion
     
