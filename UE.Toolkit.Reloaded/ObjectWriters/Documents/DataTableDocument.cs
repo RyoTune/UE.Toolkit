@@ -15,12 +15,12 @@ public class DataTableDocument(string tableName, nint baseAddress, NodeFactory f
 
     public unsafe void ConsumeNode(XmlReader reader)
     {
-        // DataTable item type.
-        if (!TryGetRowType(reader, out var rowStruct)) return;
-        
         // DataTable map type is always FName + Pointer, can just use UObject.
-        // var tempTable = new ToolkitDataTable<UObjectBase>((UDataTable<UObjectBase>*)fieldPtr); 
         var tempTable = new UDataTableManaged<Ptr<byte>>((UDataTable<Ptr<byte>>*)BaseAddress, Factory.Memory);
+        
+        // DataTable item type.
+        if (!TryGetRowType(reader, tempTable, out var rowStruct)) return;
+        Log.Verbose($"{nameof(DataTableDocument)} || Row Struct is '{rowStruct.NamePrivate}'.");
         
         // Get any item nodes.
         using var subReader = reader.ReadSubtree();
@@ -53,16 +53,11 @@ public class DataTableDocument(string tableName, nint baseAddress, NodeFactory f
         Log.Verbose($"{nameof(DataTableDocument)} || Field '{TableName}' node consumed.");
     }
 
-    private bool TryGetRowType(XmlReader reader, [NotNullWhen(true)] out IUStruct? rowStruct)
+    private bool TryGetRowType(XmlReader reader, UDataTableManaged<Ptr<byte>> dataTable, 
+        [NotNullWhen(true)] out IUStruct? rowStruct)
     {
-        // DataTable root object, type needs to be specified as attribute.
-        var rowStructName = reader.GetAttribute(WriterConstants.RowStructAttr);
-        if (rowStructName == null)
-        {
-            rowStruct = null;
-            Log.Error($"{nameof(DataTableDocument)} || Data Table declaration is missing '{WriterConstants.RowStructAttr}' attribute.");
-            return false;
-        }
+        // DataTable root object
+        var rowStructName = reader.GetAttribute(WriterConstants.RowStructAttr) ?? dataTable.RowStructName;
         rowStruct = Factory.Classes.GetScriptStructInfoFromName($"F{rowStructName}", out var rowStructNew) ? rowStructNew : null;
         if (rowStruct == null)
         {
