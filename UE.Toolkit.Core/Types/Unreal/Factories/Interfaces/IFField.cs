@@ -6,8 +6,11 @@ public interface IFField : IPtr
 {
     nint VTable { get; }
     IFFieldClass ClassPrivate { get; }
-    FFieldObjectUnion Owner { get; }
+    IFFieldVariant Owner { get; }
     IFField? Next { get; }
     string NamePrivate { get; }
     EObjectFlags FlagsPrivate { get; }
+
+    void SetOwnerUObject(IUObject owner);
+    void SetOwnerFField(IFField owner);
 }

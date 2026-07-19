@@ -68,6 +68,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+    public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
@@ -169,10 +170,26 @@ public unsafe class FField_UE5_4_4(nint ptr, IUnrealFactory factory)
     public nint Ptr => ptr;
     public nint VTable => _self->VTable;
     public IFFieldClass ClassPrivate => _factory.CreateFFieldClass((nint)_self->ClassPrivate);
-    public FFieldObjectUnion Owner => _self->Owner;
+    public IFFieldVariant Owner => factory.CreateFFieldVariant((nint)(&_self->Owner));
     public IFField? Next => _self->Next != null ? _factory.CreateFField((nint)_self->Next) : null;
     public string NamePrivate => _self->NamePrivate.ToString();
     public EObjectFlags FlagsPrivate => _self->FlagsPrivate;
+    
+    public void SetOwnerUObject(IUObject owner) => _self->Owner.Object = (UObjectBase*)(owner.Ptr + 1);
+
+    public void SetOwnerFField(IFField owner) => _self->Owner.Field = (FField*)owner.Ptr;
+}
+
+public unsafe class FFieldVariantUE5_4_4(nint ptr, IUnrealFactory factory)
+    : IFFieldVariant
+{
+    private readonly FFieldObjectUnion* _self = (FFieldObjectUnion*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => ptr;
+    public IFField? Field => _self->Field != null ? _factory.CreateFField((nint)_self->Field) : null;
+    public IUObject? Object => _self->Object != null ? _factory.CreateUObject((nint)(_self->Object) + 1) : null;
+    public bool IsObject => ((nint)_self->Object & 1) != 0;
 }
 
 public unsafe class FProperty_UE5_4_4(nint ptr, IUnrealFactory factory)

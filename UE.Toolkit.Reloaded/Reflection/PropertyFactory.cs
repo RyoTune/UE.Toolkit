@@ -53,7 +53,7 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         return Value.ComparisonIndex.Value == OtherValue;
     }
 
-    private bool GetProperty(string Name, out FieldClassGlobal? FieldClass)
+    protected bool GetProperty(string Name, out FieldClassGlobal? FieldClass)
     {
         FieldClass = null;
         PropertyNames ??= InitializePropertyNames();
@@ -72,7 +72,9 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     
     #region INTERNAL INTERFACE
     
-    protected abstract void LinkToPropertyList(IFProperty Property, IUClass Reflect);
+    protected abstract void LinkToPropertyList(IFProperty Property, IUClass? Reflect);
+    
+    #region Properties Owned by a Class
 
     protected abstract void SetPropertySuperFields(IFField Field, string Name, IUClass ClassReflection,
         FieldClassGlobal PropertyClass);
@@ -126,6 +128,54 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         where TProperty : unmanaged
         => CreatePropertyInner<TOwner, TProperty>(out NewProperty, Name,
             Offset, PropertyName, Visibility, SetTextPropertyFields<TField>);
+    
+    #endregion
+    
+    // Used in cases where we're constructing a type parameter for a generic type such as an array or map,
+    // so we don't want the element linked to a class. Set no parent initially, then let the array/map
+    // property initializer set the owners for the type params.
+    #region Unowned Properties
+    
+    protected abstract void SetPropertySuperFieldsNoOwner(IFField Field, string Name, FieldClassGlobal PropertyClass);
+
+    private bool CreatePropertyInner<TProperty>(out IFProperty? NewProperty,
+        string Name, int Offset, string PropertyName, PropertyVisibility Visibility,
+        Action<IFProperty, int, PropertyVisibility> Callback)
+        where TProperty : unmanaged
+    {
+        NewProperty = null;
+        if (!GetProperty(PropertyName, out var PropertyClass))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<TProperty>(), FIELD_ALIGNMENT);
+        SetPropertySuperFieldsNoOwner(Factory.CreateFField(Alloc), Name, PropertyClass!);
+        NewProperty = Factory.CreateFProperty(Alloc);
+        Callback(NewProperty, Offset, Visibility);
+        LinkToPropertyList(NewProperty, null);
+        return true;
+    }
+    
+    protected bool CreateCopyPropertyInner<TField, TProperty>(out IFProperty? NewProperty,
+        string Name, int Offset, string PropertyName, PropertyVisibility Visibility)
+        where TField : unmanaged
+        where TProperty : unmanaged
+        => CreatePropertyInner<TProperty>(out NewProperty, Name,
+            Offset, PropertyName, Visibility, SetCopyPropertyFields<TField>);
+    
+    protected bool CreateStringPropertyInner<TField, TProperty>(out IFProperty? NewProperty,
+        string Name, int Offset, string PropertyName, PropertyVisibility Visibility)
+        where TField : unmanaged
+        where TProperty : unmanaged
+        => CreatePropertyInner<TProperty>(out NewProperty, Name,
+            Offset, PropertyName, Visibility, SetStringPropertyFields<TField>);
+    
+    protected bool CreateTextPropertyInner<TField, TProperty>(out IFProperty? NewProperty,
+        string Name, int Offset, string PropertyName, PropertyVisibility Visibility)
+        where TField : unmanaged
+        where TProperty : unmanaged
+        => CreatePropertyInner<TProperty>(out NewProperty, Name,
+            Offset, PropertyName, Visibility, SetTextPropertyFields<TField>);
+    
+    #endregion
 
     protected abstract void SetBoolPropertyFields(IFBoolProperty Property, BooleanMask Mask);
     
@@ -197,6 +247,36 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     public abstract bool CreateF64<TOwner>(out IFProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility) where TOwner: unmanaged;
     
+    public abstract bool CreateI8(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateI16(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateI32(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateI64(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateU8(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateU16(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateU32(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateU64(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateF32(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateF64(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
     public bool CreateCBool<TOwner>(out IFBoolProperty? NewProperty, string Name, int Offset, 
         PropertyVisibility Visibility) where TOwner: unmanaged
         => CreateBoolPropertyInner<TOwner>(out NewProperty, Name, Offset, Visibility, new(1, 255));
@@ -223,6 +303,16 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         where TOwner : unmanaged
         where TField : unmanaged;
     
+    public abstract bool CreateStruct<TField>(out IFStructProperty? NewProperty,
+        string Name, int Offset, PropertyVisibility Visibility)
+        where TField : unmanaged;
+
+    public abstract bool CreateStruct(out IFStructProperty? NewProperty,
+        string Name, string TypeName, int Offset, PropertyVisibility Visibility);
+    
+    public abstract bool CreateStructDTSpecial(out IFObjectProperty? NewProperty,
+        string Name, string TypeName, int Offset, PropertyVisibility Visibility);
+    
     public abstract bool CreateObject<TOwner, TField>(out IFObjectProperty? NewProperty,
         string Name, int Offset, PropertyVisibility Visibility)
         where TOwner : unmanaged
@@ -248,10 +338,24 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     
     public abstract bool CreateText<TOwner>(out IFProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility) where TOwner: unmanaged;
+    
+    public abstract bool CreateName(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility) ;
+    
+    public abstract bool CreateString(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility) ;
+    
+    public abstract bool CreateText(out IFProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility) ;
 
     public abstract bool CreateArray<TObject>(out IFArrayProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility, IFProperty Inner) where TObject : unmanaged;
     
+    // public abstract bool CreateMap<TObject>(out IFArrayProperty? NewProperty, string Name, int Offset,
+    //     PropertyVisibility Visibility, IFProperty Key, IFProperty Value) where TObject : unmanaged;
+    
+     public abstract bool CreateMap(out IFMapProperty? NewProperty, string Name, int Offset,
+         PropertyVisibility Visibility, IFProperty Key, IFProperty Value);
     #endregion
 
     protected readonly IUnrealFactory Factory = factory;

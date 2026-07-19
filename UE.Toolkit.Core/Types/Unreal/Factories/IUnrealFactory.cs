@@ -42,6 +42,7 @@ public interface IUnrealFactory
     
     IFFieldClass CreateFFieldClass(nint ptr);
     IFField CreateFField(nint ptr);
+    IFFieldVariant CreateFFieldVariant(nint ptr);
 
     IFStructParams CreateFStructParams(nint ptr);
     IFPropertyParams CreateFPropertyParams(nint ptr);

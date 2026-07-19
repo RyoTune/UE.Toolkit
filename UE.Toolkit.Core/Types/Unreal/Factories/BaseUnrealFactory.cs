@@ -100,6 +100,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     
     public abstract IFFieldClass CreateFFieldClass(nint ptr);
     public abstract IFField CreateFField(nint ptr);
+    public abstract IFFieldVariant CreateFFieldVariant(nint ptr); 
     
     public abstract IFStructParams CreateFStructParams(nint ptr);
     public abstract IFPropertyParams CreateFPropertyParams(nint ptr);

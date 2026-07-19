@@ -64,6 +64,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+    public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);

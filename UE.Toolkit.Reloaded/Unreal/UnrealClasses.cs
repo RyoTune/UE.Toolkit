@@ -301,56 +301,124 @@ public unsafe class UnrealClasses : IUnrealClasses
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateI32<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateI32<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddI64Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateI64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateI64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddU8Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateU8<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateU8<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddU16Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateU16<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateU16<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddU32Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateU32<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateU32<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddU64Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateU64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateU64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddF32Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateF32<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateF32<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddF64Property<TObject>(string Name, int Offset, out IFProperty? Property) 
     where TObject : unmanaged
     {
         Property = null;
-        return  PropertyFactory.CreateF64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateF64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+    
+    public bool AddI8Property(string Name, int Offset, out IFProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateI8(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddI16Property(string Name, int Offset, out IFProperty? Property) 
+    {
+        Property = null;
+        return PropertyFactory.CreateI16(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+    
+    public bool AddI32Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateI32(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddI64Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateI64(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddU8Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateU8(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddU16Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateU16(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddU32Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateU32(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddU64Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateU64(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddF32Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateF32(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddF64Property(string Name, int Offset, out IFProperty? Property) 
+    
+    {
+        Property = null;
+        return PropertyFactory.CreateF64(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
     public bool AddCBoolProperty<TObject>(string Name, int Offset, out IFBoolProperty? Property)
@@ -420,6 +488,15 @@ public unsafe class UnrealClasses : IUnrealClasses
         return PropertyFactory.CreateArray<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Inner);
     }
 
+    /*
+    public bool AddMapProperty<TObject>(string Name, int Offset,
+        IFProperty Key, IFProperty Value, out IFMapProperty? Property) where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateMap<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Key, Value);
+    }
+    */
+
     public IFGenericPropertyParams? CreateI8Param(string Name, int Offset)
         => TypeFactory.CreateI8Param(Name, Offset, out var Out) ? Out : null;
     
@@ -449,6 +526,53 @@ public unsafe class UnrealClasses : IUnrealClasses
     
     public IFGenericPropertyParams? CreateF64Param(string Name, int Offset)
         => TypeFactory.CreateF64Param(Name, Offset, out var Out) ? Out : null;
+    
+    public bool AddStructProperty<TField>(string Name, int Offset, out IFStructProperty? Property)
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateStruct<TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+    
+    public bool AddStructProperty(string Name, string TypeName, int Offset, out IFStructProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateStruct(out Property, Name, TypeName, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddStructProperty_DataTableSpecial(string Name, string TypeName, int Offset, out IFObjectProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateStructDTSpecial(out Property, Name, TypeName, Offset, PropertyVisibility.Public);       
+    }
+    
+    public bool AddNameProperty(string Name, int Offset, out IFProperty? Property)
+        
+    {
+        Property = null;
+        return PropertyFactory.CreateName(out Property, Name, Offset, PropertyVisibility.Public);   
+    }
+
+    public bool AddStringProperty(string String, int Offset, out IFProperty? Property)
+        
+    {
+        Property = null;
+        return PropertyFactory.CreateString(out Property, String, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddTextProperty(string Text, int Offset, out IFProperty? Property)
+        
+    {
+        Property = null;
+        return PropertyFactory.CreateText(out Property, Text, Offset, PropertyVisibility.Public);
+    }
+    
+    public bool AddMapProperty(string Name, int Offset,
+        IFProperty Key, IFProperty Value, out IFMapProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateMap(out Property, Name, Offset, PropertyVisibility.Public, Key, Value);
+    }
 
     public bool CreateScriptStruct(string Name, int Size, List<IFPropertyParams> Fields, out IUScriptStruct? Out)
     {

@@ -8,7 +8,7 @@ using EFunctionFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EFunctionFlags;
 using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
 using EPropertyGenFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyGenFlags;
 using EClassFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EClassFlags;
-using FFieldObjectUnion = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FFieldObjectUnion;
+// using FFieldObjectUnion = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FFieldObjectUnion;
 using FUObjectArray_Pack4 = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FUObjectArray_Pack4;
 using FName = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FName;
 using EStructFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EStructFlags;
@@ -22,6 +22,7 @@ using FDelegateProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FDelegatePropert
 using FEnumProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FEnumProperty;
 using FField = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FField;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldClass;
+using FFieldObjectUnion = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FFieldObjectUnion;
 using FGenericPropertyParams = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FGenericPropertyParams;
 using FMapProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FMapProperty;
 using FObjectProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FObjectProperty;
@@ -130,6 +131,8 @@ public class UnrealFactory : BaseUnrealFactory
 
     public override IFField CreateFField(nint ptr) => new FFieldUE4_27_2(ptr, this);
     
+    public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE4_27_2(ptr, this);
+    
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParamsUE4_27_2(ptr, this);
     
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParamsUE4_27_2(ptr, this);
@@ -232,10 +235,34 @@ public unsafe class FFieldUE4_27_2(nint ptr, IUnrealFactory factory)
     public nint Ptr => ptr;
     public nint VTable => _self->_vtable;
     public IFFieldClass ClassPrivate => _factory.CreateFFieldClass((nint)_self->class_private);
-    public FFieldObjectUnion Owner => throw new NotSupportedException();
+    public IFFieldVariant Owner => factory.CreateFFieldVariant((nint)(&_self->owner));
     public IFField? Next => _self->next != null ? _factory.CreateFField((nint)_self->next) : null;
     public string NamePrivate => _self->name_private.ToString();
     public EObjectFlags FlagsPrivate => _self->flags_private;
+
+    public void SetOwnerUObject(IUObject owner)
+    {
+        _self->owner.Object = (UObjectBase*)owner.Ptr;
+        _self->owner.bIsUObject = true;
+    }
+
+    public void SetOwnerFField(IFField owner)
+    {
+        _self->owner.Field = (FField*)owner.Ptr;
+        _self->owner.bIsUObject = false;
+    }
+}
+
+public unsafe class FFieldVariantUE4_27_2(nint ptr, IUnrealFactory factory)
+    : IFFieldVariant
+{
+    private readonly FFieldObjectUnion* _self = (FFieldObjectUnion*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => ptr;
+    public IFField? Field => _self->Field != null ? _factory.CreateFField((nint)_self->Field) : null;
+    public IUObject? Object => _self->Object != null ? _factory.CreateUObject((nint)_self->Object) : null;
+    public bool IsObject => _self->bIsUObject;
 }
 
 public unsafe class FPropertyUE4_27_2(nint ptr, IUnrealFactory factory)
