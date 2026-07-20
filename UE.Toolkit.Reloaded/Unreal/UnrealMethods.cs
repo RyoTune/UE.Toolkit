@@ -2,6 +2,7 @@
 using Reloaded.Hooks.Definitions;
 using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Common.FunctionParam;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
@@ -142,7 +143,7 @@ public class BoolInvocationParameter(bool value) : IInvocationParameter
 public class UnrealMethods : IUnrealMethods
 {
     
-    #region Function Invocation Parameters
+    #region Function Invocation Parameters (OLD)
 
     public IInvocationParameter CreateI8Param(sbyte Value = 0) => new I8InvocationParameter(Value);
     public IInvocationParameter CreateI16Param(short Value = 0) => new I16InvocationParameter(Value);
@@ -160,7 +161,7 @@ public class UnrealMethods : IUnrealMethods
     
     #endregion
     
-    #region Function Invocation Execute
+    #region Function Invocation Execute (OLD)
     
     private delegate void UObject_ProcessEvent(nint Object, nint TargetFunction, nint Params);
     private uint UObject_ProcessEvent_Offset;
@@ -177,6 +178,7 @@ public class UnrealMethods : IUnrealMethods
         ref List<IInvocationParameter> Parameters, out IUFunction? Function, out nint Alloc, ExecutionFlags Flags) 
         where TObject : unmanaged
     {
+        Log.Warning("IUnrealMethods::ProcessEvent is deprecated! Use IUObject::ProcessEvent instead!\n");
         // Get type reflection for object type
         Function = null;
         Alloc = nint.Zero;
@@ -223,11 +225,8 @@ public class UnrealMethods : IUnrealMethods
             }
             Parameter.ToAlloc(Alloc + Property.Offset_Internal);
         }
-        unsafe
-        {
-            var ProcessEventWrapper = Hooks.CreateWrapper<UObject_ProcessEvent>(*(nint*)(Function.VTable + UObject_ProcessEvent_Offset), out _);
-            ProcessEventWrapper((nint)Object.Self, Function.Ptr, Alloc);
-        }
+
+        unsafe { CallProcessEvent((nint)Object.Self, Function, Alloc); }
         return true;
     }
 
@@ -332,6 +331,32 @@ public class UnrealMethods : IUnrealMethods
     }
     
     #endregion
+
+    internal unsafe void CallProcessEvent(nint Object, IUFunction Function, nint Alloc)
+    {
+        var ProcessEventWrapper = Hooks.CreateWrapper<UObject_ProcessEvent>(*(nint*)(Function.VTable + UObject_ProcessEvent_Offset), out _);
+        ProcessEventWrapper(Object, Function.Ptr, Alloc);   
+    }
+
+    internal unsafe IFunctionParam CreateReturnParam(IFProperty property)
+    {
+        return property.ClassPrivate.Name switch
+        {
+            "Int8Property" => new Int8Param(new((byte*)Memory.Malloc(sizeof(byte))), Memory),
+            "Int16Property" => new Int16Param(new((short*)Memory.Malloc(sizeof(short))), Memory),
+            "Int32Property" => new Int32Param(new((int*)Memory.Malloc(sizeof(int))), Memory),
+            "IntProperty" => new IntParam(new((int*)Memory.Malloc(sizeof(int))), Memory),
+            "Int64Property" => new Int64Param(new((long*)Memory.Malloc(sizeof(long))), Memory),
+            "UInt16Property" => new UInt16Param(new((ushort*)Memory.Malloc(sizeof(ushort))), Memory),
+            "UInt32Property" => new UInt32Param(new((uint*)Memory.Malloc(sizeof(uint))), Memory),
+            "UInt64Property" => new UInt64Param(new((ulong*)Memory.Malloc(sizeof(ulong))), Memory),
+            "FloatProperty" => new FloatParam(new((float*)Memory.Malloc(sizeof(float))), Memory),
+            "DoubleProperty" => new DoubleParam(new((double*)Memory.Malloc(sizeof(double))), Memory),
+            "NameProperty" => new NameParam(new((FName*)Memory.Malloc(sizeof(FName))), Memory),
+            "ObjectProperty" => new ObjectParam(new((nint*)Memory.Malloc(sizeof(nint))), Memory),
+            _ => throw new NotSupportedException($"CreateReturnParam with property {property.ClassPrivate.Name}")
+        };
+    }
     
     #region Unreal Toolkit API References
 

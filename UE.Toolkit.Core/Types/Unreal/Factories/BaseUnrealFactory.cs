@@ -7,6 +7,8 @@ public abstract class BaseUnrealFactory : IUnrealFactory
 {
     
     public IUnrealMemoryInternal? Memory { get; set; }
+    public Action<nint, IUFunction, nint>? ProcessEvent { get; set; }
+    public Func<IFProperty, IFunctionParam>? CreateReturnParam { get; set; }
     
     public T Cast<T>(IPtr obj)
     {

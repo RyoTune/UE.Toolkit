@@ -13,6 +13,8 @@ public interface IUnrealFactory
     nint GetAlignment(IFProperty prop);
     
     IUnrealMemoryInternal? Memory { get; set; }
+    Action<nint, IUFunction, nint>? ProcessEvent { get; set; }
+    Func<IFProperty, IFunctionParam>? CreateReturnParam { get; set; }
     
     IFProperty CreateFProperty(nint ptr);
     IFBoolProperty CreateFBoolProperty(nint ptr);
