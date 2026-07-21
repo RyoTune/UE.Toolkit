@@ -4,6 +4,7 @@ using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
+using UnrealEssentials.Interfaces;
 
 // ReSharper disable InconsistentNaming
 
@@ -87,14 +88,17 @@ public unsafe class Dumper
     private readonly IUnrealStrings _strs;
     private readonly IUnrealFactory _factory;
     private readonly IUnrealClasses _classes;
+    private readonly IUnrealEssentials _essentials;
 
-    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, IUnrealStrings strs, IUnrealClasses classes, string dumpDir)
+    public Dumper(IUnrealFactory factory, IUnrealObjects uobjs, IUnrealStrings strs, IUnrealClasses classes, 
+        string dumpDir, IUnrealEssentials essentials)
     {
         _uobjs = uobjs;
         _strs = strs;
         _dumpDir = dumpDir;
         _factory = factory;
         _classes = classes;
+        _essentials = essentials;
         
         if (Directory.Exists(dumpDir)) Directory.Delete(dumpDir, true);
         Directory.CreateDirectory(dumpDir);

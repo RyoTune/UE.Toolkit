@@ -15,4 +15,6 @@ public interface IUClass : IUStruct
     nint Constructor { get; }
 
     EClassFlags ClassFlags { get; }
+    
+    EClassCastFlags ClassCastFlags { get; }
 }

@@ -561,6 +561,8 @@ public unsafe class UClassUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemo
     public nint Constructor => _self->class_ctor;
     
     public EClassFlags ClassFlags => _self->class_flags;
+    
+    public EClassCastFlags ClassCastFlags => _self->class_cast_flags;
 }
 
 public unsafe class UFunctionUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)

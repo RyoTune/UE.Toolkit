@@ -35,6 +35,8 @@ public interface IUObject : IPtr
     // IUObject GetWorld();
 
     ProcessEventResult ProcessEvent(string Name, List<IFunctionParam> Params, out IFunctionParam? Return);
+
+    IUnrealFactory GetFactory();
 }
 
 public abstract unsafe class BaseUObject<TUObjectBase>(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory) 
@@ -43,6 +45,8 @@ public abstract unsafe class BaseUObject<TUObjectBase>(nint ptr, IUnrealFactory 
     protected readonly TUObjectBase* _self = (TUObjectBase*)ptr;
     protected readonly IUnrealFactory _factory = factory;
     protected readonly IUnrealMemoryInternal _memory = memory;
+
+    public IUnrealFactory GetFactory() => _factory;
     
     public nint Ptr => (nint)_self;
     

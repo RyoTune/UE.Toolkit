@@ -149,4 +149,5 @@ public unsafe class UClass_UE5_6_1(nint ptr, IUnrealFactory factory, IUnrealMemo
 
     public nint Constructor => _self->ClassConstructor;
     public EClassFlags ClassFlags => _self->ClassFlags;
+    public EClassCastFlags ClassCastFlags => _self->ClassCastFlags;
 }
