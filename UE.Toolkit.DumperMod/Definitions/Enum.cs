@@ -4,7 +4,8 @@ using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.DumperMod.Definitions;
 
-public class EnumFactory(Context context, IUEnum uenum, string? knownType = null) : BaseObjectFactory(context)
+public class EnumFactory(Context context, ObjectType objectType, IUEnum uenum, string? knownType = null) 
+    : BaseObjectFactory(context, objectType)
 {
     public override void Register()
     {

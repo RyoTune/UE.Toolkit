@@ -1,15 +1,18 @@
-﻿using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+﻿using System.Text;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.DumperMod.Definitions;
 
+[Flags]
 public enum ObjectType
 {
-    Class, // inherits from UClass
-    Struct, // inherits from UScriptStruct
-    Enum, // inherits from UEnum
-    // Interface, // inherits from UInterface
-    Other,
+    None = 0,
+    Class = 1 << 0, // inherits from UClass
+    Struct = 1 << 1, // inherits from UScriptStruct
+    Enum = 1 << 2, // inherits from UEnum
+    Interface = 1 << 3, // inherits from UInterface
+    Function = 1 << 5, // inherits from UFunction
 }
 
 public class Registry(Context context)
@@ -18,33 +21,24 @@ public class Registry(Context context)
 
     public Dictionary<string, StructDefinition> Structs = [];
     public Dictionary<string, EnumDefinition> Enums = [];
-    private Dictionary<string, ObjectType> Types = [];
 
-    private ObjectType FromTypeName(IUClass uclass) => uclass.NamePrivate.ToString() switch
+    private IObjectFactory? GetObjectFactory(IUObject obj)
     {
-        "Class" => ObjectType.Class,
-        "ScriptStruct" => ObjectType.Struct,
-        "Enum" => ObjectType.Enum,
-        // "Interface" => ObjectType.Interface,
-        _ => ObjectType.Other
-    };
-
-    private ObjectType RetrieveObjectType(IUObject uobject)
-    {
-        string ClassName = uobject.ClassPrivate.NamePrivate.ToString();
-        IUClass? CurrentClass = uobject.ClassPrivate;
-        while (CurrentClass != null)
+        if (obj.IsChildOf<UClass>())
         {
-            var CurrentType = FromTypeName(CurrentClass);
-            if (CurrentType != ObjectType.Other)
+            var objectType = ObjectType.Class;
+            if (obj.IsChildOf<UInterface>()) objectType |= ObjectType.Interface;
+            return Mod.Config.Schema switch
             {
-                Types[ClassName] = CurrentType;
-                return CurrentType;
-            }
-            CurrentClass = CurrentClass.GetSuperClass();
+                DumpSchema.Static => new ClassFactoryStatic(Context, objectType, Context.Factory.Cast<IUClass>(obj)),
+                DumpSchema.Dynamic => new ClassFactory(Context, objectType, Context.Factory.Cast<IUClass>(obj)),
+            };
         }
-        Types[ClassName] = ObjectType.Other;
-        return ObjectType.Other;
+        if (obj.IsChildOf<UScriptStruct>())
+            return new StructFactory(Context, ObjectType.Struct, Context.Factory.Cast<IUScriptStruct>(obj));
+        if (obj.IsChildOf<UEnum>())
+            return new EnumFactory(Context, ObjectType.Enum, Context.Factory.Cast<IUEnum>(obj));
+        return null;
     }
 
     public void Register()
@@ -54,48 +48,28 @@ public class Registry(Context context)
         {
             var obj = objectArray.IndexToObject(i);
             if (obj == null) continue;
-            
-            /*
-            var typeName = obj.ClassPrivate.NamePrivate.ToString();
-            var moduleName = GetModuleNameForPackage(obj.GetOutermost());
-            var fileBaseName = obj.ClassPrivate.NamePrivate.ToString();
-            Log.Debug($"Object {obj.NamePrivate} | Filename {fileBaseName} | Module {moduleName}");
-            */
-            var typeName = obj.ClassPrivate.NamePrivate.ToString();
-            IObjectFactory? factory = (Types.TryGetValue(typeName, out var objectType) ? objectType : RetrieveObjectType(obj)) switch
-                {
-                    ObjectType.Class => new ClassFactory(Context, Context.Factory.Cast<IUClass>(obj)),
-                    ObjectType.Struct => new StructFactory(Context, Context.Factory.Cast<IUScriptStruct>(obj)),
-                    ObjectType.Enum => new EnumFactory(Context, Context.Factory.Cast<IUEnum>(obj)),
-                    _ => null
-                };
-            factory?.Register();
-            /*
-            if (obj.IsChildOf<UClass>())
-            {
-                var uclass = Context.Factory.Cast<IUClass>(obj);
-                if (obj.IsChildOf<UInterface>())
-                {
-                    // TODO:
-                    var interfaceName = obj.NamePrivate.ToString();
-                    Context.Registry.Structs[interfaceName] = new(interfaceName, interfaceName, 0, 0, [], null);
-                    Log.Debug($"Interface: {interfaceName}");
-                }
-                else
-                {
-                    Context.ClassFactory.Register(uclass);
-                }
-            }
-            else if (obj.IsChildOf<UScriptStruct>())
-            {
-                Context.StructFactory.Register(Context.Factory.Cast<IUScriptStruct>(obj));
-            }
-            else if (obj.IsChildOf<UEnum>())
-            {
-                Context.EnumFactory.Register(Context.Factory.Cast<IUEnum>(obj));
-            }
-            */
+            // Interfaces? (Interface)
+            GetObjectFactory(obj)?.Register();
         }
+    }
+
+    private void SerializeDefinition(string Name, ISerializable ser, StringBuilder? sb, ref int numDumped)
+    {
+        if (Mod.Config.Mode == DumpFileMode.FilePerType)
+        {
+            var outputFile = Path.Join(Context.DumpDirectory, $"{Name}.cs");
+            File.WriteAllText(outputFile, ser.Serialize(Context));
+        }
+        else sb?.AppendLine(ser.Serialize(Context));
+        numDumped++;       
+    }
+
+    public void Serialize(StringBuilder? sb, ref int numDumped)
+    {
+        foreach (var (_, Definition) in Context.Registry.Structs)
+            SerializeDefinition(Definition.DisplayName, Definition, sb, ref numDumped);
+        foreach (var (Name, Definition) in Context.Registry.Enums)
+            SerializeDefinition(Name, Definition, sb, ref numDumped);
     }
     
     private static string GetModuleNameForPackage(IUObject package)
@@ -112,27 +86,5 @@ public class Registry(Context context)
         }
 
         return packageName["/Script/".Length..];
-    }
-    
-    private static unsafe string GetHeaderNameForObject(IUObject obj)
-    {
-        string? headerName = null;
-        UObjectBase* finalObj;
-        
-        if (obj.IsA<UClass>() || obj.IsA<UScriptStruct>())
-        {
-            headerName = obj.NamePrivate.ToString();
-        }
-        else if (obj.IsA<UEnum>())
-        {
-            headerName = obj.NamePrivate.ToString();
-        }
-        else
-        {
-            // TODO: UFunction stuff;
-        }
-        
-        // TODO: Other stuff?
-        return headerName;
     }
 }

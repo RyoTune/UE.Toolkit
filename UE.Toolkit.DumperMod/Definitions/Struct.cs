@@ -3,18 +3,22 @@ using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 
 namespace UE.Toolkit.DumperMod.Definitions;
 
-public class StructFactory(Context context, IUScriptStruct scriptStruct) : BaseObjectFactory(context)
+public class StructFactory(Context context, ObjectType objectType, IUScriptStruct scriptStruct) : BaseObjectFactory(context, objectType)
 {
     public override void Register()
     {
         var structName = scriptStruct.NamePrivate.ToString();
-        var structNativeName = scriptStruct.GetNativeName();
+        var structNativeName = "F" + structName;
         var size = scriptStruct.PropertiesSize;
         var alignment = scriptStruct.MinAlignment;
         var super = scriptStruct.SuperStruct;
         var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
-        //var superNativeName = super != null ? GetNativeStructName((UScriptStruct*)super) : null;
+        if ((superName ?? string.Empty) == structName)
+        {
+            Log.Warning($"{nameof(StructFactory)} || '{structNativeName}' is recursive");
+            return;
+        }
         var props = new PropertyStructFactory(Context).ResolveProperties(scriptStruct.PropertyLink, superSize);
         Context.Registry.Structs[structName] = new StructDefinition(structName, structNativeName, size, alignment, props, superName);
     }
@@ -94,4 +98,6 @@ public class StructDefinition(
     }
 
     public virtual ObjectType Type => ObjectType.Struct;
+
+    public virtual string GetUnmanagedTypeName() => DisplayName;
 }

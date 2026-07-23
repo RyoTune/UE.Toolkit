@@ -338,25 +338,8 @@ public class UnrealMethods : IUnrealMethods
         ProcessEventWrapper(Object, Function.Ptr, Alloc);   
     }
 
-    internal unsafe IFunctionParam CreateReturnParam(IFProperty property)
-    {
-        return property.ClassPrivate.Name switch
-        {
-            "Int8Property" => new Int8Param(new((byte*)Memory.Malloc(sizeof(byte))), Memory),
-            "Int16Property" => new Int16Param(new((short*)Memory.Malloc(sizeof(short))), Memory),
-            "Int32Property" => new Int32Param(new((int*)Memory.Malloc(sizeof(int))), Memory),
-            "IntProperty" => new IntParam(new((int*)Memory.Malloc(sizeof(int))), Memory),
-            "Int64Property" => new Int64Param(new((long*)Memory.Malloc(sizeof(long))), Memory),
-            "UInt16Property" => new UInt16Param(new((ushort*)Memory.Malloc(sizeof(ushort))), Memory),
-            "UInt32Property" => new UInt32Param(new((uint*)Memory.Malloc(sizeof(uint))), Memory),
-            "UInt64Property" => new UInt64Param(new((ulong*)Memory.Malloc(sizeof(ulong))), Memory),
-            "FloatProperty" => new FloatParam(new((float*)Memory.Malloc(sizeof(float))), Memory),
-            "DoubleProperty" => new DoubleParam(new((double*)Memory.Malloc(sizeof(double))), Memory),
-            "NameProperty" => new NameParam(new((FName*)Memory.Malloc(sizeof(FName))), Memory),
-            "ObjectProperty" => new ObjectParam(new((nint*)Memory.Malloc(sizeof(nint))), Memory),
-            _ => throw new NotSupportedException($"CreateReturnParam with property {property.ClassPrivate.Name}")
-        };
-    }
+    internal IFunctionParam CreateReturnParam(IFProperty property)
+        => FunctionParamFactory.CreateParam(property, Factory, Classes, Memory);
     
     #region Unreal Toolkit API References
 

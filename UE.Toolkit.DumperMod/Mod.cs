@@ -19,7 +19,7 @@ public class Mod : ModBase
 
     public static Config Config = null!;
     private readonly IModConfig _modConfig;
-    private readonly DumperEx _dumper;
+    private readonly Dumper _dumper;
 
     public Mod(ModContext context)
     {

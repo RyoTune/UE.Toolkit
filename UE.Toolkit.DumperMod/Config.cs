@@ -11,8 +11,14 @@ public class Config : Configurable<Config>
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
     [DisplayName("Dump Mode")]
+    [Description("Defines how the dump will be saved onto the file system")]
     [DefaultValue(DumpFileMode.SingleFile)]
     public DumpFileMode Mode { get; set; } = DumpFileMode.SingleFile;
+    
+    [DisplayName("Dump Schema")]
+    [Description("Defines the format for the type dump")]
+    [DefaultValue(DumpSchema.Dynamic)]
+    public DumpSchema Schema { get; set; } = DumpSchema.Dynamic;
 
     [DisplayName("File Namespace")]
     [DefaultValue("")]
@@ -37,6 +43,14 @@ public enum DumpFileMode
     
     [Display(Name = "File Per Module")]
     FilePerModule,
+}
+
+public enum DumpSchema
+{
+    [Display(Name = "Structs Only")]
+    Static,
+    [Display(Name = "Structs and Classes")]
+    Dynamic,
 }
 
 /// <summary>

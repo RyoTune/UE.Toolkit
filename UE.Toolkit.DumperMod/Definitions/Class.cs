@@ -1,36 +1,50 @@
 ﻿using System.Text;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.DumperMod.Definitions;
 
-public class ClassFactory(Context context, IUClass uclass) : BaseObjectFactory(context)
+public class ClassFactory(Context context, ObjectType objectType, IUClass uclass) : BaseObjectFactory(context, objectType)
 {
     public override void Register() {
-        var className = uclass.NamePrivate.ToString();
-        var classNativeName = uclass.GetNativeName();
+        var innerName = uclass.NamePrivate.ToString();
+        var displayName = uclass.GetNativeName();
         var size = uclass.PropertiesSize;
         var alignment = uclass.MinAlignment;
         
         // TODO: Flag stuff?
-
         var super = uclass.GetSuperClass();
         var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
-        //var superNativeName = super != null ? GetNativeClassName(super) : "UObjectBaseUtility";
-        
-        // TODO: Add super header data.
         
         // TODO: Generate delegates.
 
         var propClass = new PropertyClassFactory(Context).ResolveProperties(uclass.PropertyLink, superSize);
-        var propStruct = new PropertyStructReprFactory(Context).ResolveProperties(uclass.PropertyLink, superSize);
+        var propStruct = new PropertyStructFactory(Context).ResolveProperties(uclass.PropertyLink, superSize);
 
-        // TODO: Generate functions.
-
-        Context.Registry.Structs[className] =
-            new ClassDefinition(className, classNativeName, size, alignment, propClass, propStruct, superName);
+        // TODO
+        // var functions = new FunctionFactory(Context).ResolveFunctions(uclass);
         
-        Log.Debug($"UObject: {classNativeName}");
+        Context.Registry.Structs[innerName] =
+            new ClassDefinition(innerName, displayName, size, alignment, propClass, propStruct, [], superName);
+    }
+}
+
+public class ClassFactoryStatic(Context context, ObjectType objectType, IUClass uclass)
+    : BaseObjectFactory(context, objectType)
+{
+    public override void Register() {
+        var innerName = uclass.NamePrivate.ToString();
+        var displayName = uclass.GetNativeName();
+        var size = uclass.PropertiesSize;
+        var alignment = uclass.MinAlignment;
+        
+        var super = uclass.GetSuperClass();
+        var superSize = super?.PropertiesSize ?? 0;
+        var superName = super?.NamePrivate.ToString();
+        
+        var propStruct = new PropertyStructFactory(Context).ResolveProperties(uclass.PropertyLink, superSize);
+        Context.Registry.Structs[innerName] = new StructDefinition(innerName, displayName, size, alignment, propStruct, superName);
     }
 }
 
@@ -41,10 +55,12 @@ public class ClassDefinition(
     int alignment,
     List<BasePropertyDefintion> propClass,
     List<BasePropertyDefintion> propStruct,
+    List<FunctionDefinition> functions,
     string? superInternalName)
     : StructDefinition(internalName, displayName, size, alignment, propClass, superInternalName)
 {
     private List<BasePropertyDefintion> PropStruct => propStruct;
+    private List<FunctionDefinition> Functions => functions;
     
     public override string Serialize(Context context)
     {
@@ -56,10 +72,12 @@ public class ClassDefinition(
         if (SuperInternalName != null) context.Registry.Structs.TryGetValue(SuperInternalName, out SuperDef);
         var SuperDefName = SuperDef != null ? Builtins.SanitizeName(SuperDef.DisplayName) : "ObjectImpl";
         sb.AppendLine($"public class {DisplayNameCS}(IUObject inner) : {SuperDefName}(inner), ITypeRepr<{DisplayNameRepr}>\n{{");
-        var ReprNewModifier = DisplayNameCS != "UObject" ? "new " : string.Empty;
+        var ReprNewModifier = SuperDef != null  ? "new " : string.Empty;
         sb.AppendLine($"\tpublic {ReprNewModifier}unsafe {DisplayNameRepr}* Repr => ({DisplayNameRepr}*)Inner.Ptr;\n");
         foreach (var prop in Properties)
             sb.AppendLine(prop.Serialize(context));
+        foreach (var func in Functions)
+            sb.AppendLine(func.Serialize(context));
         sb.AppendLine("}\n");
         var reprDef = new StructDefinitionRepr(InternalName, DisplayName, Size, Alignment, PropStruct, SuperInternalName);
         sb.AppendLine(reprDef.Serialize(context));
@@ -67,6 +85,8 @@ public class ClassDefinition(
     }
     
     public override ObjectType Type => ObjectType.Class;
+    
+    public override string GetUnmanagedTypeName() => DisplayName + "_Repr";
 }
 
 public class StructDefinitionRepr(
@@ -89,7 +109,8 @@ public class StructDefinitionRepr(
         var (superName, superSize) = GetSuperInfo(context);
         var superNameFmt = superName != null ? $"{superName}_Repr" : null;
         WriteStructBase(sb, DisplayNameRepr, superNameFmt, superSize, context);
-        sb.AppendLine($"\n\tpublic {DisplayNameCS} ToManaged(IUnrealFactory factory)\n\t{{");
+        var sep = Properties.Count > 0 ? "\n" : string.Empty;
+        sb.AppendLine($"{sep}\tpublic {DisplayNameCS} ToManaged(IUnrealFactory factory)\n\t{{");
         sb.AppendLine($"\t\tfixed ({DisplayNameRepr}* self = &this) return new(factory.CreateUObject((nint)self));");
         sb.AppendLine("\t}\n}");
         return sb.ToString();

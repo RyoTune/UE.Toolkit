@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using UnrealEssentials.Interfaces;
 
 namespace UE.Toolkit.DumperMod.Definitions;
@@ -9,11 +10,17 @@ public class Builtins(IUnrealEssentials essentials)
 
     private List<string> GetDefaultUsings()
     {
-        List<string> Usings = [
+        List<string> Usings = [];
+        if (Mod.Config.Schema == DumpSchema.Dynamic)
+            Usings.Add("System.Runtime.CompilerServices");
+        Usings.AddRange([
             "System.Runtime.InteropServices",
             "UE.Toolkit.Core.Types",
             "UE.Toolkit.Core.Types.Unreal.UE5_4_4",
-        ];
+            "UE.Toolkit.Core.Types.Unreal.Factories",
+            "UE.Toolkit.Core.Types.Unreal.Factories.Interfaces",
+            "UE.Toolkit.Core.Types.Unreal.Common.FunctionParam",
+        ]);
         var VerParts = Essentials.GetEngineVersion().Split("-")[^1].Split(".");
         // FText definition is different for versions below UE 5.4
         if (int.Parse(VerParts[0]) < 5 || int.Parse(VerParts[1]) < 4)
@@ -62,11 +69,11 @@ public interface ITypeRepr<TRepr> where TRepr: unmanaged
 public abstract class ObjectImpl
 {
     public IUObject Inner { get; }
-    protected static Dictionary<string, int>? FieldOffsets;
+    protected static Dictionary<string, int> FieldOffsets;
     
     protected ObjectImpl(IUObject inner) {
         Inner = inner;
-        FieldOffsets ??= Inner.ClassPrivate.PropertyLink
+        FieldOffsets = Inner.ClassPrivate.PropertyLink
             .Select(x => (x.NamePrivate, x.Offset_Internal)).ToDictionary();
     }
 }
@@ -91,6 +98,7 @@ public abstract class ObjectImpl
         name = name.Replace(')', '_');
         name = name.Replace('[', '_');
         name = name.Replace(']', '_');
+        //name = name.Replace('>', '_');
         if (name == "object") name = "_object";
         
         if (char.IsDigit(name[0]))

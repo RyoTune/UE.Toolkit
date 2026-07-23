@@ -1,4 +1,9 @@
-﻿namespace UE.Toolkit.Core.Types.Interfaces;
+﻿using UE.Toolkit.Core.Types.Unreal.Common.FunctionParam;
+using UE.Toolkit.Core.Types.Unreal.Factories;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+
+namespace UE.Toolkit.Core.Types.Interfaces;
 
 public interface IFunctionParam
 {
@@ -24,7 +29,7 @@ public abstract class FunctionParamCopyable<T>(Ptr<T> rvalue, string propertyTyp
 
     public unsafe void Read(nint Destination) => Copy((T*)Destination, RValue.Value);
 
-    private bool IsDisposed;
+    protected bool IsDisposed;
 
     public void Dispose()
     {
@@ -37,11 +42,7 @@ public abstract class FunctionParamCopyable<T>(Ptr<T> rvalue, string propertyTyp
         if (!IsDisposed)
         {
             if (disposing) { }
-
-            if (Memory != null)
-            {
-                unsafe { Memory.Free((nint)RValue.Value); }
-            }
+            unsafe { Memory?.Free((nint)RValue.Value); }
             IsDisposed = true;
         }
     }
@@ -54,4 +55,58 @@ public enum ProcessEventResult
     Success,
     CouldNotFindFunction,
     ParameterTypeMismatch,
+}
+
+public static class FunctionParamFactory
+{
+
+    private static Dictionary<string, string> PropertyNameToParamName = [];
+    
+    private static IFunctionParam CreateStructParam(IFStructProperty property, IUnrealMemoryInternal? Memory) 
+        => new StructParam(Memory?.Malloc(property.ElementSize) ?? nint.Zero, property.ElementSize, Memory);
+
+    private static unsafe IFunctionParam CreateBoolParam(IFBoolProperty property, IUnrealMemoryInternal? Memory)
+        => new BoolParam(new((bool*)(Memory?.Malloc(sizeof(bool)) ?? nint.Zero)), property.FieldMask, Memory);
+    
+    public static unsafe IFunctionParam CreateParam(IFProperty property, IUnrealFactory factory, 
+        ITypeReflectionInternal reflection, IUnrealMemoryInternal? Memory)
+    {
+        return property.ClassPrivate.Name switch
+        {
+            "BoolProperty" => CreateBoolParam(factory.CreateFBoolProperty(property.Ptr), Memory),
+            "Int8Property" => new Int8Param(new((byte*)(Memory?.Malloc(sizeof(byte)) ?? nint.Zero)), Memory),
+            "Int16Property" => new Int16Param(new((short*)(Memory?.Malloc(sizeof(short)) ?? nint.Zero)), Memory),
+            "Int32Property" => new Int32Param(new((int*)(Memory?.Malloc(sizeof(int)) ?? nint.Zero)), Memory),
+            "IntProperty" => new IntParam(new((int*)(Memory?.Malloc(sizeof(int)) ?? nint.Zero)), Memory),
+            "Int64Property" => new Int64Param(new((long*)(Memory?.Malloc(sizeof(long)) ?? nint.Zero)), Memory),
+            "UInt16Property" => new UInt16Param(new((ushort*)(Memory?.Malloc(sizeof(ushort)) ?? nint.Zero)), Memory),
+            "UInt32Property" => new UInt32Param(new((uint*)(Memory?.Malloc(sizeof(uint)) ?? nint.Zero)), Memory),
+            "UInt64Property" => new UInt64Param(new((ulong*)(Memory?.Malloc(sizeof(ulong)) ?? nint.Zero)), Memory),
+            "FloatProperty" => new FloatParam(new((float*)(Memory?.Malloc(sizeof(float)) ?? nint.Zero)), Memory),
+            "DoubleProperty" => new DoubleParam(new((double*)(Memory?.Malloc(sizeof(double)) ?? nint.Zero)), Memory),
+            "NameProperty" => new NameParam(new((FName*)(Memory?.Malloc(sizeof(FName)) ?? nint.Zero)), Memory),
+            "StrProperty" => new StringParam(new((FString*)(Memory?.Malloc(sizeof(FString)) ?? nint.Zero)), Memory),
+            "StructProperty" => CreateStructParam(factory.CreateFStructProperty(property.Ptr), Memory),
+            "TextProperty" => new TextParam(Memory?.Malloc(reflection.GetFTextSize()) ?? nint.Zero, reflection.GetFTextSize(), Memory),
+            "ObjectProperty" or "ClassProperty" or "ClassPtrProperty" 
+                => new ObjectParam(new((nint*)(Memory?.Malloc(sizeof(nint)) ?? nint.Zero)), Memory),
+            _ => throw new NotSupportedException($"CreateParam with property {property.ClassPrivate.Name}")
+        };
+    }
+
+    public static string? GetParamNameFromProperty(IFProperty property, IUnrealFactory factory, ITypeReflectionInternal reflection)
+    {
+        try
+        {
+            var PropertyName = property.ClassPrivate.Name;
+            if (PropertyNameToParamName.TryGetValue(PropertyName, out var ParamName)) return ParamName;
+            var BlankParam = CreateParam(property, factory, reflection, null);
+            PropertyNameToParamName[PropertyName] = BlankParam.GetType().Name;
+            return PropertyNameToParamName[PropertyName];
+        }
+        catch (NotSupportedException ex)
+        {
+            return null;
+        }
+    }
 }

@@ -10,9 +10,10 @@ public interface ISerializable
     string Serialize(Context context);
 }
 
-public abstract class BaseObjectFactory(Context context) : IObjectFactory
+public abstract class BaseObjectFactory(Context context, ObjectType objectType) : IObjectFactory
 {
     protected Context Context = context;
+    protected ObjectType ObjectType = objectType;
 
     public abstract void Register();
 }
