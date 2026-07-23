@@ -2,6 +2,7 @@
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UE.Toolkit.Core.Types.Unreal.UE5_6_1;
 
 namespace UE.Toolkit.Core.Types.Interfaces;
 
@@ -75,6 +76,7 @@ public static class FunctionParamFactory
         {
             "BoolProperty" => CreateBoolParam(factory.CreateFBoolProperty(property.Ptr), Memory),
             "Int8Property" => new Int8Param(new((byte*)(Memory?.Malloc(sizeof(byte)) ?? nint.Zero)), Memory),
+            "ByteProperty" => new ByteParam(new((byte*)(Memory?.Malloc(sizeof(byte)) ?? nint.Zero)), Memory),
             "Int16Property" => new Int16Param(new((short*)(Memory?.Malloc(sizeof(short)) ?? nint.Zero)), Memory),
             "Int32Property" => new Int32Param(new((int*)(Memory?.Malloc(sizeof(int)) ?? nint.Zero)), Memory),
             "IntProperty" => new IntParam(new((int*)(Memory?.Malloc(sizeof(int)) ?? nint.Zero)), Memory),
@@ -90,6 +92,15 @@ public static class FunctionParamFactory
             "TextProperty" => new TextParam(Memory?.Malloc(reflection.GetFTextSize()) ?? nint.Zero, reflection.GetFTextSize(), Memory),
             "ObjectProperty" or "ClassProperty" or "ClassPtrProperty" 
                 => new ObjectParam(new((nint*)(Memory?.Malloc(sizeof(nint)) ?? nint.Zero)), Memory),
+            "ArrayProperty" => new ArrayParam(new((TArray<int>*)(Memory?.Malloc(sizeof(TArray<char>)) ?? nint.Zero)), Memory),
+            "EnumProperty" => new EnumParam(new(Memory?.Malloc(property.ElementSize) ?? nint.Zero), property.ElementSize, Memory),
+            "MapProperty" => new MapParam(new((TMap<int, int>*)(Memory?.Malloc(sizeof(TMap<int, int>)) ?? nint.Zero)), Memory),
+            "SetProperty" => new SetParam(new((TSet<int>*)(Memory?.Malloc(sizeof(TSet<int>)) ?? nint.Zero)), Memory),
+            "InterfaceProperty" => new InterfaceParam(new((TScriptInterface<int>*)(Memory?.Malloc(sizeof(TScriptInterface<char>)) ?? nint.Zero)), Memory),
+            "SoftClassProperty" => new SoftClassParam(new((TSoftClassPtr<int>*)(Memory?.Malloc(sizeof(TSoftClassPtr<char>)) ?? nint.Zero)), Memory),
+            "SoftObjectProperty" => new SoftObjectParam(new((TSoftObjectPtr<int>*)(Memory?.Malloc(sizeof(TSoftObjectPtr<char>)) ?? nint.Zero)), Memory),
+            "Utf8StrProperty" => new Utf8StringParam(new((FUtf8String*)(Memory?.Malloc(sizeof(FUtf8String)) ?? nint.Zero)), Memory),
+            "AnsiStrProperty" => new AnsiStringParam(new((FAnsiString*)(Memory?.Malloc(sizeof(FAnsiString)) ?? nint.Zero)), Memory),
             _ => throw new NotSupportedException($"CreateParam with property {property.ClassPrivate.Name}")
         };
     }

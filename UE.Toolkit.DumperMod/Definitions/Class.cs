@@ -8,11 +8,11 @@ public class ClassFactory(Context context, ObjectType objectType, IUClass uclass
 {
     public override void Register() {
         var innerName = uclass.NamePrivate.ToString();
-        var displayName = uclass.GetNativeName();
+        // TODO: Fix GetNativeName on UE4 to retrieve AActor attribute from classes
+        var displayName = (uclass.ClassCastFlags.HasFlag(EClassCastFlags.AActor) ? "A" : "U") + innerName;
         var size = uclass.PropertiesSize;
         var alignment = uclass.MinAlignment;
         
-        // TODO: Flag stuff?
         var super = uclass.GetSuperClass();
         var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
@@ -22,11 +22,9 @@ public class ClassFactory(Context context, ObjectType objectType, IUClass uclass
         var propClass = new PropertyClassFactory(Context).ResolveProperties(uclass.PropertyLink, superSize);
         var propStruct = new PropertyStructFactory(Context).ResolveProperties(uclass.PropertyLink, superSize);
 
-        // TODO
-        // var functions = new FunctionFactory(Context).ResolveFunctions(uclass);
-        
+        var functions = Mod.Config.DumpFunctions ? new FunctionFactory(Context).ResolveFunctions(uclass) : [];
         Context.Registry.Structs[innerName] =
-            new ClassDefinition(innerName, displayName, size, alignment, propClass, propStruct, [], superName);
+            new ClassDefinition(innerName, displayName, size, alignment, propClass, propStruct, functions, superName);
     }
 }
 
@@ -35,7 +33,7 @@ public class ClassFactoryStatic(Context context, ObjectType objectType, IUClass 
 {
     public override void Register() {
         var innerName = uclass.NamePrivate.ToString();
-        var displayName = uclass.GetNativeName();
+        var displayName = (uclass.ClassCastFlags.HasFlag(EClassCastFlags.AActor) ? "A" : "U") + innerName;
         var size = uclass.PropertiesSize;
         var alignment = uclass.MinAlignment;
         

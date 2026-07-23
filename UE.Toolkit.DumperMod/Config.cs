@@ -31,6 +31,10 @@ public class Config : Configurable<Config>
     [DisplayName("Single-File File Name")]
     [DefaultValue("")]
     public string SingleFileOutputName { get; set; } = string.Empty;
+    
+    [DisplayName("Dump Functions")]
+    [DefaultValue(true)]
+    public bool DumpFunctions { get; set; } = true;
 }
 
 public enum DumpFileMode

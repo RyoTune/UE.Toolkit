@@ -62,7 +62,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this, Memory);
     public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_6_1(ptr, this, Memory);
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this, Memory);
-    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this, Memory);
+    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_6_1(ptr, this, Memory);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
     public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
@@ -150,4 +150,23 @@ public unsafe class UClass_UE5_6_1(nint ptr, IUnrealFactory factory, IUnrealMemo
     public nint Constructor => _self->ClassConstructor;
     public EClassFlags ClassFlags => _self->ClassFlags;
     public EClassCastFlags ClassCastFlags => _self->ClassCastFlags;
+}
+
+public unsafe class UFunction_UE5_6_1(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UStruct_UE5_6_1(ptr, factory, memory), IUFunction
+{
+    private readonly UFunction* _self = (UFunction*)ptr;
+
+    public EFunctionFlags FunctionFlags => _self->FunctionFlags;
+    public int ParamCount => _self->NumParms;
+    public int ParamSize => _self->ParmsSize;
+    public int ReturnValueOffset => _self->ReturnValueOffset;
+    
+    public int GetTotalParameterSize()
+    {
+        var LastProperty = ChildProperties.Any() ? _factory.CreateFProperty(ChildProperties.Last().Ptr) : null;
+        return LastProperty != null ? LastProperty.Offset_Internal + LastProperty.ElementSize : 0;
+    }
+
+    public nint FunctionPtr => (nint)_self->Func;
 }

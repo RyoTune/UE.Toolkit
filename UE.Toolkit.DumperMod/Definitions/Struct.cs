@@ -61,7 +61,7 @@ public class StructDefinition(
             sb.AppendLine($"\t[FieldOffset(0x0)] public {SuperName} Super; // Size: 0x{SuperSize:X}");
         }
         foreach (var prop in Properties)
-            sb.AppendLine($"\t{prop.Serialize(context)}");       
+            sb.AppendLine($"\t{prop.Serialize(context)}");
     }
 
     protected (string?, int) GetSuperInfo(Context context)

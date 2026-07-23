@@ -25,6 +25,12 @@ public class Builtins(IUnrealEssentials essentials)
         // FText definition is different for versions below UE 5.4
         if (int.Parse(VerParts[0]) < 5 || int.Parse(VerParts[1]) < 4)
             Usings.Add("FText = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FText");
+        // Added FAnsiString and FUtf8String for UE 5.6+
+        if (int.Parse(VerParts[0]) == 5 && int.Parse(VerParts[1]) >= 6)
+        {
+            Usings.Add("FAnsiString = UE.Toolkit.Core.Types.Unreal.UE5_6_1.FAnsiString");
+            Usings.Add("FUtf8String = UE.Toolkit.Core.Types.Unreal.UE5_6_1.FUtf8String");
+        }
         return Usings;
     }
     
@@ -100,6 +106,8 @@ public abstract class ObjectImpl
         name = name.Replace(']', '_');
         //name = name.Replace('>', '_');
         if (name == "object") name = "_object";
+
+        // name = SanitizeForParam(name);
         
         if (char.IsDigit(name[0]))
         {
@@ -107,5 +115,19 @@ public abstract class ObjectImpl
         }
 
         return name;
+    }
+
+    // Extra sanitization step to prevent C# treating a parameter named after a primitive data type as a data type
+    public static string SanitizeForTypename(string name)
+    {
+        return name switch
+        {
+            "base" => "Base",
+            "bool" => "Bool",
+            "float" => "Float",
+            "ref" => "Ref",
+            "int" => "Int",
+            _ => name
+        };
     }
 }

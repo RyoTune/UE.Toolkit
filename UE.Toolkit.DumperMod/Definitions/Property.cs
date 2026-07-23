@@ -20,20 +20,21 @@ public class PropertyStructDefinition(string name, int size, int offset, Func<st
 }
 
 public class PropertyClassDefinition(string name, int size, int offset, Func<string> propTypeName,
-    Func<string, string> accessor, Func<string, string> mutator) 
+    Func<string, string> accessor, Func<string, string>? mutator) 
     : BasePropertyDefintion(name, size, offset, propTypeName)
 {
     private Func<string, string> Accessor => accessor;
-    private Func<string, string> Mutator => mutator;
+    private Func<string, string>? Mutator => mutator;
     
     public override string Serialize(Context context)
     {
-        var propName = Builtins.SanitizeName(Name);
+        var propName = Builtins.SanitizeForTypename(Builtins.SanitizeName(Name));
+        if (propName == "Inner") propName += "_";
         var sb = new StringBuilder();
         sb.AppendLine($"\tpublic unsafe {PropTypeName()} {propName}");
         sb.AppendLine("\t{");
         sb.AppendLine($"\t\t{Accessor(Name)}");
-        sb.AppendLine($"\t\t{Mutator(Name)}");
+        if (Mutator != null) sb.AppendLine($"\t\t{Mutator(Name)}");
         sb.AppendLine("\t}");
         return sb.ToString();
     }
@@ -176,7 +177,7 @@ public abstract class BasePropertyFactory(Context context)
                     var setPropType = GetPropTypenameStruct(context.Factory.Cast<IFSetProperty>(prop).ElementProp)();
                     var isPtrType = setPropType.EndsWith('*') || setPropType.Contains('<'); // Use nint for pointers and generic types.;
                     return isPtrType
-                        ? $"TSet<nint> /* TSet<{setPropType}> */"
+                        ? $"TSet<Ptr<{setPropType}>>"
                         : $"TSet<{Builtins.SanitizeName(setPropType.TrimEnd('*'))}>";
                 };
             case "OptionalProperty":
@@ -211,21 +212,20 @@ public abstract class BasePropertyFactory(Context context)
     
     protected (string Name, int Size, int Offset, string ClassName) GetBaseInfo(IFProperty prop)
     {
-        var name = Builtins.SanitizeName(prop.NamePrivate);
+        var name = Builtins.SanitizeForTypename(Builtins.SanitizeName(prop.NamePrivate));
         var size = prop.ElementSize;
         var offset = prop.Offset_Internal;
         var className = prop.ClassPrivate.Name;
+        // name = Builtins.SanitizeForParam(name);
         return (name, size, offset, className);
     }
 }
 
 public class PropertyStructFactory(Context context) : BasePropertyFactory(context)
 {
-    
     protected override BasePropertyDefintion ResolveProperty(IFProperty prop)
     {
         var (name, size, offset, _) = GetBaseInfo(prop);
-        if (name is "bool" or "float") name += '_';
         return new PropertyStructDefinition(name, size, offset, GetPropTypenameStruct(prop));
     }
 }
@@ -237,12 +237,16 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         var className = prop.ClassPrivate.Name;
         switch (className)
         {
+            // Pass by value
             case "ByteProperty" or "Int8Property" or "Int16Property" or "UInt16Property" or "IntProperty"
                 or "UInt32Property" or "Int64Property" or "UInt64Property" or "FloatProperty" or "DoubleProperty"
-                or "NameProperty" or "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
-                or "SoftObjectProperty" or "SoftClassProperty" or "EnumProperty" or "TextProperty"
-                or "WeakObjectProperty" or "SetProperty":
+                or "NameProperty" or "EnumProperty" :
                 return propName => $"get => *({getTypeName()}*)(Inner.Ptr + FieldOffsets[\"{propName}\"]);";
+            // Pass by reference
+            case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
+                or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
+                or "WeakObjectProperty" or "SetProperty":
+                return propName => $"get => ({getTypeName()})(Inner.Ptr + FieldOffsets[\"{propName}\"]);";
             case "BoolProperty":
                 var BoolProp = context.Factory.CreateFBoolProperty(prop.Ptr);
                 return (BoolProp.FieldMask == byte.MaxValue) switch
@@ -258,17 +262,21 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         }  
     }
 
-    private Func<string, string> GetPropMutator(IFProperty prop, Func<string> getTypeName)
+    private Func<string, string>? GetPropMutator(IFProperty prop, Func<string> getTypeName)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
         {
+            // Pass by value
             case "ByteProperty" or "Int8Property" or "Int16Property" or "UInt16Property" or "IntProperty"
                 or "UInt32Property" or "Int64Property" or "UInt64Property" or "FloatProperty" or "DoubleProperty"
-                or "NameProperty" or "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
-                or "SoftObjectProperty" or "SoftClassProperty" or "EnumProperty" or "TextProperty"
-                or "WeakObjectProperty" or "SetProperty":
+                or "NameProperty" or "EnumProperty":
                 return propName => $"set => *({getTypeName()}*)(Inner.Ptr + FieldOffsets[\"{propName}\"]) = value;";
+            // Pass by reference, don't create mutator
+            case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
+                or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
+                or "WeakObjectProperty" or "SetProperty":
+                return null;
             case "BoolProperty":
                 var BoolProp = context.Factory.CreateFBoolProperty(prop.Ptr);
                 return (BoolProp.FieldMask == byte.MaxValue) switch
@@ -283,16 +291,39 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         }
     }
 
+    private Func<string> GetClassPropTypenameManaged(IUClass classPropClass)
+    {
+        var classPropType = classPropClass != null ? classPropClass.NamePrivate.ToString() : "UClass";
+        return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : classPropType);
+    }
+
     private Func<string> GetPropTypenameClass(IFProperty prop)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
         {
-            case "ClassProperty":
-            case "ClassPtrProperty":
-                var classPropClass = context.Factory.Cast<IFClassProperty>(prop).MetaClass;
-                var classPropType = classPropClass != null ? classPropClass.NamePrivate.ToString() : "UClass";
-                return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : classPropType);
+            // Passed by reference
+            case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
+                or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
+                or "WeakObjectProperty" or "SetProperty":
+                return () => GetPropTypenameStruct(prop)() + "*";
+            case "ClassProperty" or "ClassPtrProperty":
+                return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
+            case "ObjectProperty":
+                var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
+                return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : $"{objPropType}");
+            default:
+                return GetPropTypenameStruct(prop);
+        }
+    }
+    
+    internal Func<string> GetPropTypenameFunctionParam(IFProperty prop)
+    {
+        var className = prop.ClassPrivate.Name;
+        switch (className)
+        {
+            case "ClassProperty" or "ClassPtrProperty":
+                return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
             case "ObjectProperty":
                 var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : $"{objPropType}");
@@ -304,7 +335,6 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
     protected override BasePropertyDefintion ResolveProperty(IFProperty prop)
     {
         var (name, size, offset, _) = GetBaseInfo(prop);
-        if (name is "bool" or "float") name += '_';
         var propTypename = GetPropTypenameClass(prop);
         var getAccessor = GetPropAccessor(prop, propTypename);
         var getMutator = GetPropMutator(prop, propTypename);
