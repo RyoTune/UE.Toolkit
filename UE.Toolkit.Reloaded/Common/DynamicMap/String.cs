@@ -17,7 +17,9 @@ public class StringDynamicMapKeyType(IFMapProperty property, IUnrealFactory fact
     
     public override unsafe bool FromString(string text, [NotNullWhen(true)] out IDynamicMapKey? key)
     {
-        key = new StringDynamicMapKey(*Objects.CreateFString(text), Memory);
+        var pString = Objects.CreateFString(text);
+        key = new StringDynamicMapKey(*pString, Memory);
+        Memory.Free((nint)pString);
         return true;
     }
     

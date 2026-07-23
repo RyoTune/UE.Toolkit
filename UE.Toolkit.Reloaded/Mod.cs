@@ -87,6 +87,8 @@ public class Mod : ModBase, IExports
         _address = new();
         _classes = new(_factory, _memory, _objects, _hooks, _address);
         _methods = new(_factory, _memory, _classes, _objects, _hooks);
+        _factory.ProcessEvent = _methods.CallProcessEvent;
+        _factory.CreateReturnParam = _methods.CreateReturnParam;
         _state = new(_factory, _classes);
         _spawning = new(_classes, _factory, _state);
         _writer = new(_objects, _tables, _memory, _classes, _factory);

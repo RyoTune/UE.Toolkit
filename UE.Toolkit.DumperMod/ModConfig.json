@@ -1,8 +1,8 @@
 {
   "ModId": "UE.Toolkit.DumperMod",
   "ModName": "UE Toolkit: Dumper",
-  "ModAuthor": "RyoTune",
-  "ModVersion": "1.9.0",
+  "ModAuthor": "RyoTune, Rirurin",
+  "ModVersion": "1.10.0",
   "ModDescription": "Unreal Engine object dumper to C# types.",
   "ModDll": "UE.Toolkit.DumperMod.dll",
   "ModIcon": "Preview.png",
@@ -44,6 +44,15 @@
             "AssetFileName": "Mod.zip"
           },
           "ReleaseMetadataName": "UE.Toolkit.Reloaded.ReleaseMetadata.json"
+        },
+        "UnrealEssentials": {
+          "Config": {
+            "UserName": "AnimatedSwine37",
+            "RepositoryName": "UnrealEssentials",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "UnrealEssentials.ReleaseMetadata.json"
         }
       }
     },
@@ -58,7 +67,8 @@
   "ModDependencies": [
     "reloaded.sharedlib.hooks",
     "Reloaded.Memory.SigScan.ReloadedII",
-    "UE.Toolkit.Reloaded"
+    "UE.Toolkit.Reloaded",
+    "UnrealEssentials"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [

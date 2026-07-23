@@ -8,9 +8,13 @@ public interface IUClass : IUStruct
 
     IUFunction? GetFunction(string Name);
 
+    IEnumerable<IUFunction> GetFunctions();
+
     IUObject? ClassDefaultObject { get; }
 
     nint Constructor { get; }
 
     EClassFlags ClassFlags { get; }
+    
+    EClassCastFlags ClassCastFlags { get; }
 }

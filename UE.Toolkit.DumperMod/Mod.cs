@@ -6,6 +6,7 @@ using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.DumperMod.Template;
 using UE.Toolkit.Interfaces;
+using UnrealEssentials.Interfaces;
 
 namespace UE.Toolkit.DumperMod;
 
@@ -33,6 +34,12 @@ public class Mod : ModBase
 #endif
         Project.Initialize(_modConfig, _modLoader, _log, true);
         Log.LogLevel = Config.LogLevel;
+        
+        if (!_modLoader.GetController<IUnrealEssentials>().TryGetTarget(out var _essentials))
+        {
+            throw new Exception(
+                "Unreal Essentials is missing! Download the latest version from https://github.com/AnimatedSwine37/UnrealEssentials/releases");
+        }
 
         _modLoader.GetController<IUnrealObjects>().TryGetTarget(out var objs);
         _modLoader.GetController<IUnrealStrings>().TryGetTarget(out var strs);
@@ -41,7 +48,7 @@ public class Mod : ModBase
 
         var dumpDir = Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump",
             _modLoader.GetAppConfig().AppId);
-        _dumper = new(factory!, objs!, strs!, classes!, dumpDir);
+        _dumper = new(factory!, objs!, strs!, classes!, dumpDir, _essentials);
     }
 
     #region Standard Overrides

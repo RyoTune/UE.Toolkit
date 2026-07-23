@@ -2,6 +2,7 @@ using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using UE.Toolkit.Core.Common;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
@@ -58,22 +59,23 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFOptionalProperty CreateFOptionalProperty(nint ptr) => new FOptionalProperty_UE5_4_4(ptr, this);
     public override IFDelegateProperty CreateFDelegateProperty(nint ptr) => new FDelegateProperty_UE5_4_4(ptr, this);
     public override IUObjectArray CreateUObjectArray(nint ptr) => new UObjectArray_UE5_4_4(ptr, this);
-    public override IUObject CreateUObject(nint ptr) => new UObject_UE5_4_4(ptr, this);
-    public override IUClass CreateUClass(nint ptr) => new UClass_UE5_4_4(ptr, this);
-    public override IUScriptStruct CreateUScriptStruct(nint ptr) => new UScriptStruct_UE5_4_4(ptr, this);
-    public override IUEnum CreateUEnum(nint ptr) => new UEnum_UE5_4_4(ptr, this);
-    public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this);
-    public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_4_4(ptr, this);
-    public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this);
-    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
+    public override IUObject CreateUObject(nint ptr) => new UObject_UE5_4_4(ptr, this, Memory);
+    public override IUClass CreateUClass(nint ptr) => new UClass_UE5_4_4(ptr, this, Memory);
+    public override IUScriptStruct CreateUScriptStruct(nint ptr) => new UScriptStruct_UE5_4_4(ptr, this, Memory);
+    public override IUEnum CreateUEnum(nint ptr) => new UEnum_UE5_4_4(ptr, this, Memory);
+    public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this, Memory);
+    public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_4_4(ptr, this, Memory);
+    public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this, Memory);
+    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this, Memory);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+    public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
     public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
-    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this);
-    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this);
+    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this, Memory);
+    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this, Memory);
     public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
         => new FStaticConstructObjectParameters_UE5_4_4(this);
     public override IFActorSpawnParameters CreateFActorSpawnParameters()
@@ -169,10 +171,26 @@ public unsafe class FField_UE5_4_4(nint ptr, IUnrealFactory factory)
     public nint Ptr => ptr;
     public nint VTable => _self->VTable;
     public IFFieldClass ClassPrivate => _factory.CreateFFieldClass((nint)_self->ClassPrivate);
-    public FFieldObjectUnion Owner => _self->Owner;
+    public IFFieldVariant Owner => factory.CreateFFieldVariant((nint)(&_self->Owner));
     public IFField? Next => _self->Next != null ? _factory.CreateFField((nint)_self->Next) : null;
     public string NamePrivate => _self->NamePrivate.ToString();
     public EObjectFlags FlagsPrivate => _self->FlagsPrivate;
+    
+    public void SetOwnerUObject(IUObject owner) => _self->Owner.Object = (UObjectBase*)(owner.Ptr + 1);
+
+    public void SetOwnerFField(IFField owner) => _self->Owner.Field = (FField*)owner.Ptr;
+}
+
+public unsafe class FFieldVariantUE5_4_4(nint ptr, IUnrealFactory factory)
+    : IFFieldVariant
+{
+    private readonly FFieldObjectUnion* _self = (FFieldObjectUnion*)ptr;
+    protected readonly IUnrealFactory _factory = factory;
+
+    public nint Ptr => ptr;
+    public IFField? Field => _self->Field != null ? _factory.CreateFField((nint)_self->Field) : null;
+    public IUObject? Object => _self->Object != null ? _factory.CreateUObject((nint)(_self->Object) + 1) : null;
+    public bool IsObject => ((nint)_self->Object & 1) != 0;
 }
 
 public unsafe class FProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
@@ -265,14 +283,14 @@ public unsafe class FByteProperty_UE5_4_4(nint ptr, IUnrealFactory factory)
     public IUEnum? Enum => ((FByteProperty*)Ptr)->Enum != null ? _factory.CreateUEnum((nint)((FByteProperty*)Ptr)->Enum) : null;
 }
 
-public unsafe class UUserDefinedEnum_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UEnum_UE5_4_4(ptr, factory), IUUserDefinedEnum
+public unsafe class UUserDefinedEnum_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UEnum_UE5_4_4(ptr, factory, memory), IUUserDefinedEnum
 {
     public TMap<FName, FText> DisplayNameMap => ((UUserDefinedEnum*)Ptr)->DisplayNameMap;
 }
 
-public unsafe class UEnum_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UField_UE5_4_4(ptr, factory), IUEnum
+public unsafe class UEnum_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UField_UE5_4_4(ptr, factory, memory), IUEnum
 {
     private readonly UEnum* _self = (UEnum*)ptr;
     public string CppType => _self->CppType.ToString();
@@ -302,8 +320,8 @@ public unsafe class UEnum_UE5_4_4(nint ptr, IUnrealFactory factory)
     }
 }
 
-public unsafe class UScriptStruct_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UStruct_UE5_4_4(ptr, factory), IUScriptStruct
+public unsafe class UScriptStruct_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UStruct_UE5_4_4(ptr, factory, memory), IUScriptStruct
 {
     private readonly UScriptStruct* _self = (UScriptStruct*)ptr;
     public EStructFlags StructFlags => _self->StructFlags;
@@ -311,8 +329,8 @@ public unsafe class UScriptStruct_UE5_4_4(nint ptr, IUnrealFactory factory)
     public nint CppStructOps => _self->CppStructOps;
 }
 
-public unsafe class UStruct_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UField_UE5_4_4(ptr, factory), IUStruct
+public unsafe class UStruct_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UField_UE5_4_4(ptr, factory, memory), IUStruct
 {
     private readonly UStruct* _self = (UStruct*)ptr;
 
@@ -405,8 +423,8 @@ public class IUFieldEnumerable(IUField? initial)
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public unsafe class UField_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UObject_UE5_4_4(ptr, factory), IUField
+public unsafe class UField_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UObject_UE5_4_4(ptr, factory, memory), IUField
 {
     private readonly UField* _self = (UField*)ptr;
 
@@ -414,36 +432,32 @@ public unsafe class UField_UE5_4_4(nint ptr, IUnrealFactory factory)
         => _self->Next != null ? _factory.CreateUField((nint)_self->Next) : null;
 }
 
-public unsafe class UObject_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObject
+public unsafe class UObject_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory) 
+    : BaseUObject<UObjectBase>(ptr, factory, memory)
 {
-    private readonly UObjectBase* _self = (UObjectBase*)ptr;
-    protected readonly IUnrealFactory _factory = factory;
+    public override nint VTable => _self->VTable;
 
-    public nint Ptr => (nint)_self;
+    public override EObjectFlags ObjectFlags => _self->ObjectFlags;
 
-    public nint VTable => _self->VTable;
+    public override int InternalIndex => _self->InternalIndex;
 
-    public EObjectFlags ObjectFlags => _self->ObjectFlags;
+    public override IUClass ClassPrivate => _factory.CreateUClass((nint)_self->ClassPrivate);
 
-    public int InternalIndex => _self->InternalIndex;
+    public override FName NamePrivate => _self->NamePrivate;
 
-    public IUClass ClassPrivate => _factory.CreateUClass((nint)_self->ClassPrivate);
+    public override IUObject? OuterPrivate => _self->OuterPrivate != null ? _factory.CreateUObject((nint)_self->OuterPrivate) : null;
 
-    public FName NamePrivate => _self->NamePrivate;
+    public override bool IsChildOf(string type) => _self->IsChildOf(type);
 
-    public IUObject? OuterPrivate => _self->OuterPrivate != null ? _factory.CreateUObject((nint)_self->OuterPrivate) : null;
+    public override IUObject GetOutermost() => _factory.CreateUObject((nint)_self->GetOutermost());
 
-    public bool IsChildOf(string type) => _self->IsChildOf(type);
-
-    public IUObject GetOutermost() => _factory.CreateUObject((nint)_self->GetOutermost());
-
-    public string GetNativeName() => ToolkitUtils.GetNativeName(this);
+    public override string GetNativeName() => ToolkitUtils.GetNativeName(this);
     
-    public string GetPathName() => ToolkitUtils.GetPathName(this);
+    public override string GetPathName() => ToolkitUtils.GetPathName(this);
 }
 
-public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UStruct_UE5_4_4(ptr, factory), IUClass
+public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UStruct_UE5_4_4(ptr, factory, memory), IUClass
 {
     private readonly UClass* _self = (UClass*)ptr;
 
@@ -460,15 +474,25 @@ public unsafe class UClass_UE5_4_4(nint ptr, IUnrealFactory factory)
             : null;
     }
     
+    public IEnumerable<IUFunction> GetFunctions()
+    {
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->FuncMap),
+            _factory.Memory
+        );
+        return FuncMapDict.Values.Select(x => _factory.CreateUFunction((nint)x.Value->Value));
+    }
+    
     public IUObject? ClassDefaultObject 
         => _self->ClassDefaultObject != null ? factory.CreateUObject((nint)_self->ClassDefaultObject ) : null;
 
     public nint Constructor => _self->ClassConstructor;
     public EClassFlags ClassFlags => _self->ClassFlags;
+    public EClassCastFlags ClassCastFlags => _self->ClassCastFlags;
 }
 
-public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UStruct_UE5_4_4(ptr, factory), IUFunction
+public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UStruct_UE5_4_4(ptr, factory, memory), IUFunction
 {
     private readonly UFunction* _self = (UFunction*)ptr;
 
@@ -480,7 +504,7 @@ public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory)
     public int GetTotalParameterSize()
     {
         var LastProperty = ChildProperties.Any() ? _factory.CreateFProperty(ChildProperties.Last().Ptr) : null;
-        return LastProperty != null ? LastProperty!.Offset_Internal + LastProperty!.ElementSize : 0;
+        return LastProperty != null ? LastProperty.Offset_Internal + LastProperty.ElementSize : 0;
     }
 
     public nint FunctionPtr => (nint)_self->Func;
@@ -629,8 +653,8 @@ public unsafe class FWorldContextEnumerator(UEngine_UE5_4_4 owner, IUnrealFactor
     #endregion
 }
 
-public unsafe class UEngine_UE5_4_4(nint ptr, IUnrealFactory factory) 
-    : UObject_UE5_4_4(ptr, factory), IUEngine
+public unsafe class UEngine_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory) 
+    : UObject_UE5_4_4(ptr, factory, memory), IUEngine
 {
     private readonly UEngine* _self = (UEngine*)ptr;
 
@@ -719,8 +743,8 @@ public unsafe class FActorSpawnParameters_UE5_4_4
     #endregion
 }
 
-public unsafe class UGameInstance_UE5_4_4(nint ptr, IUnrealFactory factory)
-    : UObject_UE5_4_4(ptr, factory), IUGameInstance
+public unsafe class UGameInstance_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UObject_UE5_4_4(ptr, factory, memory), IUGameInstance
 {
     private readonly UGameInstance* _self = (UGameInstance*)ptr;
 
