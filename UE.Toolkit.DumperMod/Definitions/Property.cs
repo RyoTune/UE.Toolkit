@@ -16,25 +16,26 @@ public abstract class BasePropertyDefintion(string name, int size, int offset, F
 public class PropertyStructDefinition(string name, int size, int offset, Func<string> propTypeName) 
     : BasePropertyDefintion(name, size, offset, propTypeName)
 {
-    public override string Serialize(Context context) => $"[FieldOffset(0x{Offset:X})] public {PropTypeName()} {Builtins.SanitizeName(Name)}; // Size: 0x{Size:X}";
+    public override string Serialize(Context context) => $"[FieldOffset(0x{Offset:X})] public {PropTypeName()} {Name}; // Size: 0x{Size:X}";
 }
 
-public class PropertyClassDefinition(string name, int size, int offset, Func<string> propTypeName,
-    Func<string, string> accessor, Func<string, string>? mutator) 
+public class PropertyClassDefinition(string name, string rawName, int size, int offset, Func<string> propTypeName,
+    Func<string, string, string> accessor, Func<string, string, string>? mutator) 
     : BasePropertyDefintion(name, size, offset, propTypeName)
 {
-    private Func<string, string> Accessor => accessor;
-    private Func<string, string>? Mutator => mutator;
+    private string RawName => rawName;
+    private Func<string, string, string> Accessor => accessor;
+    private Func<string, string, string>? Mutator => mutator;
     
     public override string Serialize(Context context)
     {
-        var propName = Builtins.SanitizeForTypename(Builtins.SanitizeName(Name));
+        var propName = Name;
         if (propName == "Inner") propName += "_";
         var sb = new StringBuilder();
         sb.AppendLine($"\tpublic unsafe {PropTypeName()} {propName}");
         sb.AppendLine("\t{");
-        sb.AppendLine($"\t\t{Accessor(Name)}");
-        if (Mutator != null) sb.AppendLine($"\t\t{Mutator(Name)}");
+        sb.AppendLine($"\t\t{Accessor(Name, RawName)}");
+        if (Mutator != null) sb.AppendLine($"\t\t{Mutator(Name, RawName)}");
         sb.AppendLine("\t}");
         return sb.ToString();
     }
@@ -61,6 +62,12 @@ public abstract class BasePropertyFactory(Context context)
     }
 
     protected abstract BasePropertyDefintion ResolveProperty(IFProperty prop);
+
+    private static string SafelyCreateGenericType(string Type, bool makeGeneric)
+        => makeGeneric ? Type : $"nint /* {Type} */";
+    
+    private static string SafelyCreatePointerType(string Type, bool makeGeneric)
+        => makeGeneric ? $"Ptr<{Type}>" : $"nint /* Ptr<{Type}> */";
     
     /// <summary>
     /// Gets the property type name, such as <c>byte</c> for <c>ByteProperty</c>.
@@ -69,7 +76,7 @@ public abstract class BasePropertyFactory(Context context)
     /// </summary>
     /// <param name="prop"></param>
     /// <returns>C++/C# property type name.</returns>
-    public Func<string> GetPropTypenameStruct(IFProperty prop)
+    public Func<string> GetPropTypenameStruct(IFProperty prop, bool makeGenerics)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
@@ -124,10 +131,15 @@ public abstract class BasePropertyFactory(Context context)
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.GetUnmanagedTypeName()}*" : $"{objPropType}*");
             case "SoftObjectProperty":
                 var softObjPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
-                return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(softObjPropType, out var knownStruct) ? $"TSoftObjectPtr<{knownStruct.GetUnmanagedTypeName()}>" : $"TSoftObjectPtr<{softObjPropType}>");
+                // return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(softObjPropType, out var knownStruct) ? $"TSoftObjectPtr<{knownStruct.GetUnmanagedTypeName()}>" : $"TSoftObjectPtr<{softObjPropType}>");
+                return () => context.Registry.Structs.TryGetValue(softObjPropType, out var knownStruct) ? 
+                    $"TSoftObjectPtr<{SafelyCreateGenericType(knownStruct.GetUnmanagedTypeName(), makeGenerics)}>" : 
+                    $"TSoftObjectPtr<{SafelyCreateGenericType(Builtins.SanitizeName(softObjPropType), makeGenerics)}>";
             case "SoftClassProperty":
                 var softClassPropType = context.Factory.Cast<IFSoftClassProperty>(prop).MetaClass.NamePrivate.ToString();
-                return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(softClassPropType, out var knownStruct) ? $"TSoftClassPtr<{knownStruct.GetUnmanagedTypeName()}>" : $"TSoftClassPtr<{softClassPropType}>");
+                return () => context.Registry.Structs.TryGetValue(softClassPropType, out var knownStruct) ? 
+                    $"TSoftClassPtr<{SafelyCreateGenericType(knownStruct.GetUnmanagedTypeName(), makeGenerics)}>" :
+                    $"TSoftClassPtr<{SafelyCreateGenericType(Builtins.SanitizeName(softClassPropType), makeGenerics)}>";
             case "StructProperty":
                 var structPropType = context.Factory.Cast<IFStructProperty>(prop).Struct.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(structPropType, out var knownStruct) ? knownStruct.GetUnmanagedTypeName() : structPropType);
@@ -145,16 +157,16 @@ public abstract class BasePropertyFactory(Context context)
                 var mapProp = context.Factory.Cast<IFMapProperty>(prop);
                 return () =>
                 {
-                    var mapPropKeyType = GetPropTypenameStruct(mapProp.KeyProp)();
-                    var mapPropValueType = GetPropTypenameStruct(mapProp.ValueProp)();
+                    var mapPropKeyType = GetPropTypenameStruct(mapProp.KeyProp, makeGenerics)();
+                    var mapPropValueType = GetPropTypenameStruct(mapProp.ValueProp, makeGenerics)();
                     var isKeyPtr = mapPropKeyType.EndsWith('*') || mapPropKeyType.Contains('<'); // Use nint for pointers and generic types.
                     var isValuePtr = mapPropValueType.EndsWith('*') || mapPropValueType.Contains('<');
 
                     var keyName = Builtins.SanitizeName(mapPropKeyType.TrimEnd('*'));
                     var valueName = Builtins.SanitizeName(mapPropValueType.TrimEnd('*'));
                     
-                    var keyType = isKeyPtr ? $"Ptr<{keyName}>" : keyName;
-                    var valueType = isValuePtr ? $"Ptr<{valueName}>" : valueName;
+                    var keyType = isKeyPtr ? SafelyCreatePointerType(keyName, makeGenerics) : keyName;
+                    var valueType = isValuePtr ? SafelyCreatePointerType(valueName, makeGenerics) : valueName;
                    
                     return $"TMap<{keyType}, {valueType}>";
                 };
@@ -164,26 +176,27 @@ public abstract class BasePropertyFactory(Context context)
             case "ArrayProperty":
                 return () =>
                 {
-                    var arrayPropType = GetPropTypenameStruct(context.Factory.Cast<IFArrayProperty>(prop).Inner)();
+                    var arrayPropType = GetPropTypenameStruct(context.Factory.Cast<IFArrayProperty>(prop).Inner, makeGenerics)();
                     var isPtrType = arrayPropType.EndsWith('*') || arrayPropType.Contains('<'); // Use nint for pointers and generic types.
                     var arrTypeSanitized = Builtins.SanitizeName(arrayPropType.TrimEnd('*'));
                     return isPtrType ?
-                        $"TArray<Ptr<{arrTypeSanitized}>>" :
+                        $"TArray<{SafelyCreatePointerType(arrTypeSanitized, makeGenerics)}>" :
                         $"TArray<{arrTypeSanitized}>";
                 };
             case "SetProperty":
                 return () =>
                 {
-                    var setPropType = GetPropTypenameStruct(context.Factory.Cast<IFSetProperty>(prop).ElementProp)();
+                    var setPropType = GetPropTypenameStruct(context.Factory.Cast<IFSetProperty>(prop).ElementProp, makeGenerics)();
                     var isPtrType = setPropType.EndsWith('*') || setPropType.Contains('<'); // Use nint for pointers and generic types.;
-                    return isPtrType
-                        ? $"TSet<Ptr<{setPropType}>>"
-                        : $"TSet<{Builtins.SanitizeName(setPropType.TrimEnd('*'))}>";
+                    var setPropTypeSanitized = Builtins.SanitizeName(setPropType.TrimEnd('*'));
+                    return isPtrType ?
+                        $"TSet<{SafelyCreatePointerType(setPropTypeSanitized, makeGenerics)}>" :
+                        $"TSet<{setPropTypeSanitized}>";
                 };
             case "OptionalProperty":
                 return () =>
                 {
-                    var optionalType = GetPropTypenameStruct(context.Factory.Cast<IFOptionalProperty>(prop).ValueProperty)();
+                    var optionalType = GetPropTypenameStruct(context.Factory.Cast<IFOptionalProperty>(prop).ValueProperty, makeGenerics)();
                     if (context.Registry.Structs.TryGetValue(optionalType, out var knownOptType))
                         optionalType = knownOptType.GetUnmanagedTypeName();
                     
@@ -198,7 +211,7 @@ public abstract class BasePropertyFactory(Context context)
                     if (context.Registry.Structs.TryGetValue(lazyObjType, out var knownLazyType))
                         lazyObjType = knownLazyType.GetUnmanagedTypeName();
                     
-                    return $"TLazyObjectPtr<{Builtins.SanitizeName(lazyObjType)}>";
+                    return $"TLazyObjectPtr<{SafelyCreateGenericType(Builtins.SanitizeName(lazyObjType), makeGenerics)}>";
                 };
             case "Utf8StrProperty":
                 return () => "FUtf8String";
@@ -226,13 +239,13 @@ public class PropertyStructFactory(Context context) : BasePropertyFactory(contex
     protected override BasePropertyDefintion ResolveProperty(IFProperty prop)
     {
         var (name, size, offset, _) = GetBaseInfo(prop);
-        return new PropertyStructDefinition(name, size, offset, GetPropTypenameStruct(prop));
+        return new PropertyStructDefinition(name, size, offset, GetPropTypenameStruct(prop, false));
     }
 }
 
 public class PropertyClassFactory(Context context) : BasePropertyFactory(context)
 {
-    private Func<string, string> GetPropAccessor(IFProperty prop, Func<string> getTypeName)
+    private Func<string, string, string> GetPropAccessor(IFProperty prop, Func<string> getTypeName)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
@@ -241,28 +254,29 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             case "ByteProperty" or "Int8Property" or "Int16Property" or "UInt16Property" or "IntProperty"
                 or "UInt32Property" or "Int64Property" or "UInt64Property" or "FloatProperty" or "DoubleProperty"
                 or "NameProperty" or "EnumProperty" :
-                return propName => $"get => *({getTypeName()}*)(Inner.Ptr + FieldOffsets[\"{propName}\"]);";
+                return (_, raw) => $"get => *({getTypeName()}*)(Inner.Ptr + FieldOffsets![\"{raw}\"]);";
             // Pass by reference
             case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
                 or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
-                or "WeakObjectProperty" or "SetProperty":
-                return propName => $"get => ({getTypeName()})(Inner.Ptr + FieldOffsets[\"{propName}\"]);";
+                or "WeakObjectProperty" or "SetProperty" or "DelegateProprety"
+                or "MulticastInlineDelegateProperty" or "MulticastSparseDelegateProperty":
+                return (_, raw) => $"get => ({getTypeName()})(Inner.Ptr + FieldOffsets![\"{raw}\"]);";
             case "BoolProperty":
                 var BoolProp = context.Factory.CreateFBoolProperty(prop.Ptr);
                 return (BoolProp.FieldMask == byte.MaxValue) switch
                 {
-                    true => propName => $"get => *(bool*)(Inner.Ptr + FieldOffsets[\"{propName}\"]);",
-                    false => propName => $"get => (*(byte*)(Inner.Ptr + FieldOffsets[\"{propName}\"]) & {BoolProp.FieldMask}) == 0;"
+                    true => (_, raw) => $"get => *(bool*)(Inner.Ptr + FieldOffsets![\"{raw}\"]);",
+                    false => (_, raw) => $"get => (*(byte*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) & {BoolProp.FieldMask}) == 0;"
                 };
             case "ObjectProperty" or "ClassProperty" or "ClassPtrProperty":
-                return propName =>
-                    $"get => new(Inner.GetFactory().CreateUObject(*(nint*)(Inner.Ptr + FieldOffsets[\"{propName}\"])));";
+                return (_, raw) =>
+                    $"get => new(Inner.GetFactory().CreateUObject(*(nint*)(Inner.Ptr + FieldOffsets![\"{raw}\"])));";
             default:
-                return _ => $"get => throw new NotSupportedException(\"!! GET TODO {className} !!\");";
+                return (_, _) => $"get => throw new NotSupportedException(\"!! GET TODO {className} !!\");";
         }  
     }
 
-    private Func<string, string>? GetPropMutator(IFProperty prop, Func<string> getTypeName)
+    private Func<string, string, string>? GetPropMutator(IFProperty prop, Func<string> getTypeName)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
@@ -271,23 +285,24 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             case "ByteProperty" or "Int8Property" or "Int16Property" or "UInt16Property" or "IntProperty"
                 or "UInt32Property" or "Int64Property" or "UInt64Property" or "FloatProperty" or "DoubleProperty"
                 or "NameProperty" or "EnumProperty":
-                return propName => $"set => *({getTypeName()}*)(Inner.Ptr + FieldOffsets[\"{propName}\"]) = value;";
+                return (_, raw) => $"set => *({getTypeName()}*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) = value;";
             // Pass by reference, don't create mutator
             case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
                 or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
-                or "WeakObjectProperty" or "SetProperty":
+                or "WeakObjectProperty" or "SetProperty" or "DelegateProprety"
+                or "MulticastInlineDelegateProperty" or "MulticastSparseDelegateProperty":
                 return null;
             case "BoolProperty":
                 var BoolProp = context.Factory.CreateFBoolProperty(prop.Ptr);
                 return (BoolProp.FieldMask == byte.MaxValue) switch
                 {
-                    true => propName => $"set => *(bool*)(Inner.Ptr + FieldOffsets[\"{propName}\"]) = value;",
-                    false => propName => $"set => *(byte*)(Inner.Ptr + FieldOffsets[\"{propName}\"]) ^= (byte)(Convert.ToByte({propName} != value) * {BoolProp.FieldMask});"
+                    true => (_, raw) => $"set => *(bool*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) = value;",
+                    false => (param, raw) => $"set => *(byte*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) ^= (byte)(Convert.ToByte({param} != value) * {BoolProp.FieldMask});"
                 };
             case "ObjectProperty" or "ClassProperty" or "ClassPtrProperty":
-                return propName => $"set => *(nint*)(Inner.Ptr + FieldOffsets[\"{propName}\"]) = value.Inner.Ptr;";
+                return (_, raw) => $"set => *(nint*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) = value.Inner.Ptr;";
             default:
-                return _ => $"set => throw new NotSupportedException(\"!! SET TODO {className} !!\");";
+                return (_, _) => $"set => throw new NotSupportedException(\"!! SET TODO {className} !!\");";
         }
     }
 
@@ -305,15 +320,16 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             // Passed by reference
             case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
                 or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
-                or "WeakObjectProperty" or "SetProperty":
-                return () => GetPropTypenameStruct(prop)() + "*";
+                or "WeakObjectProperty" or "SetProperty" or "DelegateProprety"
+                or "MulticastInlineDelegateProperty" or "MulticastSparseDelegateProperty":
+                return () => GetPropTypenameStruct(prop, true)() + "*";
             case "ClassProperty" or "ClassPtrProperty":
                 return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
             case "ObjectProperty":
                 var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : $"{objPropType}");
             default:
-                return GetPropTypenameStruct(prop);
+                return GetPropTypenameStruct(prop, true);
         }
     }
     
@@ -328,7 +344,7 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
                 var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : $"{objPropType}");
             default:
-                return GetPropTypenameStruct(prop);
+                return GetPropTypenameStruct(prop, true);
         }
     }
     
@@ -338,6 +354,6 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         var propTypename = GetPropTypenameClass(prop);
         var getAccessor = GetPropAccessor(prop, propTypename);
         var getMutator = GetPropMutator(prop, propTypename);
-        return new PropertyClassDefinition(name, size, offset, propTypename, getAccessor, getMutator);
+        return new PropertyClassDefinition(name, prop.NamePrivate, size, offset, propTypename, getAccessor, getMutator);
     }
 }

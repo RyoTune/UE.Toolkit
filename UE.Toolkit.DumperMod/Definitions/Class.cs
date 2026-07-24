@@ -14,7 +14,9 @@ public class ClassFactory(Context context, ObjectType objectType, IUClass uclass
         var alignment = uclass.MinAlignment;
         
         var super = uclass.GetSuperClass();
-        var superSize = super?.PropertiesSize ?? 0;
+        var superLastProp = super?.PropertyLink.MaxBy(x => x.Offset_Internal);
+        var superSize = superLastProp?.Offset_Internal + superLastProp?.ElementSize ?? 0;
+        // var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
         
         // TODO: Generate delegates.
@@ -69,8 +71,18 @@ public class ClassDefinition(
         StructDefinition? SuperDef = null;
         if (SuperInternalName != null) context.Registry.Structs.TryGetValue(SuperInternalName, out SuperDef);
         var SuperDefName = SuperDef != null ? Builtins.SanitizeName(SuperDef.DisplayName) : "ObjectImpl";
-        sb.AppendLine($"public class {DisplayNameCS}(IUObject inner) : {SuperDefName}(inner), ITypeRepr<{DisplayNameRepr}>\n{{");
-        var ReprNewModifier = SuperDef != null  ? "new " : string.Empty;
+        // sb.AppendLine($"public class {DisplayNameCS}(IUObject inner) : {SuperDefName}(inner), ITypeRepr<{DisplayNameRepr}>\n{{");
+        sb.AppendLine($"public class {DisplayNameCS} : {SuperDefName}, ITypeRepr<{DisplayNameRepr}>\n{{");
+        sb.AppendLine("\tprivate static Dictionary<string, int>? FieldOffsets;");
+        var callBaseCtor = SuperDef != null ? "base(inner, false)" : "base(inner)";
+        sb.AppendLine($"\tpublic {DisplayNameCS}(IUObject inner, bool genOffsets = true) : {callBaseCtor}\n\t{{");
+        sb.AppendLine("""
+        if (genOffsets)
+            FieldOffsets ??= Inner.ClassPrivate.PropertyLink
+                .Select(x => (x.NamePrivate, x.Offset_Internal)).ToDictionary();
+""");
+        sb.AppendLine("\t}");
+        var ReprNewModifier = SuperDef != null ? "new " : string.Empty;
         sb.AppendLine($"\tpublic {ReprNewModifier}unsafe {DisplayNameRepr}* Repr => ({DisplayNameRepr}*)Inner.Ptr;\n");
         foreach (var prop in Properties)
             sb.AppendLine(prop.Serialize(context));

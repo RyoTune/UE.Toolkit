@@ -17,10 +17,13 @@ public class Builtins(IUnrealEssentials essentials)
             "System.Runtime.InteropServices",
             "UE.Toolkit.Core.Types",
             "UE.Toolkit.Core.Types.Unreal.UE5_4_4",
-            "UE.Toolkit.Core.Types.Unreal.Factories",
-            "UE.Toolkit.Core.Types.Unreal.Factories.Interfaces",
-            "UE.Toolkit.Core.Types.Unreal.Common.FunctionParam",
         ]);
+        if (Mod.Config.Schema == DumpSchema.Dynamic)
+            Usings.AddRange([
+                "UE.Toolkit.Core.Types.Unreal.Factories",
+                "UE.Toolkit.Core.Types.Unreal.Factories.Interfaces",
+                "UE.Toolkit.Core.Types.Unreal.Common.FunctionParam",
+            ]);
         var VerParts = Essentials.GetEngineVersion().Split("-")[^1].Split(".");
         // FText definition is different for versions below UE 5.4
         if (int.Parse(VerParts[0]) < 5 || int.Parse(VerParts[1]) < 4)
@@ -72,16 +75,9 @@ public interface ITypeRepr<TRepr> where TRepr: unmanaged
     unsafe TRepr* Repr { get; }
 }
 
-public abstract class ObjectImpl
+public abstract class ObjectImpl(IUObject inner)
 {
-    public IUObject Inner { get; }
-    protected static Dictionary<string, int> FieldOffsets;
-    
-    protected ObjectImpl(IUObject inner) {
-        Inner = inner;
-        FieldOffsets = Inner.ClassPrivate.PropertyLink
-            .Select(x => (x.NamePrivate, x.Offset_Internal)).ToDictionary();
-    }
+    public IUObject Inner { get; } = inner;
 }
 
 """);
@@ -129,5 +125,12 @@ public abstract class ObjectImpl
             "int" => "Int",
             _ => name
         };
+    }
+
+    public static string SanitizeForFunctionName(string name)
+    {
+        name = name.Replace(".", "_");
+        name = name.Replace(">", "_");
+        return name;
     }
 }

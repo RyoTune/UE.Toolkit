@@ -101,6 +101,9 @@ public static class FunctionParamFactory
             "SoftObjectProperty" => new SoftObjectParam(new((TSoftObjectPtr<int>*)(Memory?.Malloc(sizeof(TSoftObjectPtr<char>)) ?? nint.Zero)), Memory),
             "Utf8StrProperty" => new Utf8StringParam(new((FUtf8String*)(Memory?.Malloc(sizeof(FUtf8String)) ?? nint.Zero)), Memory),
             "AnsiStrProperty" => new AnsiStringParam(new((FAnsiString*)(Memory?.Malloc(sizeof(FAnsiString)) ?? nint.Zero)), Memory),
+            "DelegateProperty" => new DelegateParam(new((FScriptDelegate*)(Memory?.Malloc(sizeof(FScriptDelegate)) ?? nint.Zero)), Memory),
+            "MulticastInlineDelegateProperty" => new MulticastInlineDelegateParam(new((FMulticastScriptDelegate*)(Memory?.Malloc(sizeof(FMulticastScriptDelegate)) ?? nint.Zero)), Memory),
+            "MulticastSparseDelegateProperty" => new MulticastSparseDelegateParam(new((FMulticastSparseDelegateProperty*)(Memory?.Malloc(sizeof(FMulticastSparseDelegateProperty)) ?? nint.Zero)), Memory),
             _ => throw new NotSupportedException($"CreateParam with property {property.ClassPrivate.Name}")
         };
     }

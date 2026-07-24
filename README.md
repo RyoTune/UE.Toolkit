@@ -25,7 +25,7 @@
 | Object Logging |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Object Editing |✅|❔|❔|✅|❔|✅|❔|❔|❔
 | `FMemory` Functions |✅|✅|✅|✅|✅|✅|✅|✅|✅
-| Dumper |✅|✅|✅|✅|✅|✅|✅|✅|⚠️️️️️️
+| Dumper |✅|✅|✅|✅|✅|✅|✅|✅|️️️️️️✅
 | Property Editing (Object XML) |✅|❔|❔|✅|❔|✅|❔|❔|❔
 | Add List Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
 | Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔

@@ -106,7 +106,9 @@ public class ReturnValueDefinition(Func<string> typeName, string metaName, strin
         {
             "StructProperty" or "EnumProperty" or "TextProperty" or "ArrayProperty" 
                 or "MapProperty" or "SetProperty" or "InterfaceProperty" 
-                or "SoftClassProperty" or "SoftObjectProperty" => CreateStructPropertyReturn(),
+                or "SoftClassProperty" or "SoftObjectProperty" or "DelegateProperty"
+                or "MulticastInlineDelegateProperty" or "MulticastSparseDelegateProperty"
+                => CreateStructPropertyReturn(),
             _ => CreateSingleLineReturn()
         };
     }
@@ -118,8 +120,11 @@ public class FunctionFactory(Context context)
     {
         var PropFactory = new PropertyClassFactory(context);
         return uclass.GetFunctions()
-            .Where(x => !x.NamePrivate.ToString().StartsWith("ExecuteUbergraph"))
-            .DistinctBy(x => x.NamePrivate.ToString())
+            .Where(x =>
+            {
+                var Name = x.NamePrivate.ToString();
+                return !(Name.StartsWith("ExecuteUbergraph") || Name.StartsWith("EvaluateGraphExposedInputs"));
+            })
             .Select(x =>
         {
             List<ParameterHeadDefinition> HeadParams = [];
@@ -145,20 +150,24 @@ public class FunctionFactory(Context context)
                 if (Param.ClassPrivate.Name is "ObjectProperty" or "ClassProperty" or "ClassPtrProperty")
                 {
                     BodyPrefix.Add($"nint {paramName}_Ptr = {paramName}.Inner.Ptr;");
-                    BodyPostfix.Add($"{paramName} = new(Inner.GetFactory().CreateUObject({paramName}_Ptr));");
+                    if (Param.PropertyFlags.HasFlag(EPropertyFlags.CPF_OutParm))
+                        BodyPostfix.Add($"{paramName} = new(Inner.GetFactory().CreateUObject({paramName}_Ptr));");
                 }
             }
             if (BodyParams.Count > 0) BodyParams.Last().IsLast = true;
-            return new FunctionDefinition(Builtins.SanitizeName(x.NamePrivate.ToString()), returnTypeName, HeadParams, BodyParams, ReturnValue, BodyPrefix, BodyPostfix);
+            var funcName = x.NamePrivate.ToString();
+            var funcNameSanitized = Builtins.SanitizeForFunctionName(Builtins.SanitizeName(funcName));
+            return new FunctionDefinition(funcNameSanitized, funcName, returnTypeName, HeadParams, BodyParams, ReturnValue, BodyPrefix, BodyPostfix);
         }).ToList();
     }
 }
 
-public class FunctionDefinition(string name, Func<string>? returnTypeName, List<ParameterHeadDefinition> headParams, 
+public class FunctionDefinition(string name, string rawName, Func<string>? returnTypeName, List<ParameterHeadDefinition> headParams, 
     List<ParameterBodyDefinition> bodyParams, ReturnValueDefinition? returnParam, List<string> bodyPrefix, List<string> bodyPostfix)
     : ISerializable
 {
     public string Name { get; } = name;
+    public string RawName { get; } = rawName;
     public Func<string>? ReturnTypeName { get; } = returnTypeName;
     public List<ParameterHeadDefinition> HeadParams { get; } = headParams;
     public List<ParameterBodyDefinition> BodyParams { get; } = bodyParams;
@@ -176,11 +185,12 @@ public class FunctionDefinition(string name, Func<string>? returnTypeName, List<
         var outVar = (ReturnTypeName != null ? "var Return" : "_");
         if (BodyParams.Count > 0)
         {
-            sb.AppendLine($"\t\t_ = Inner.ProcessEvent(\"{Name}\", [");
+            sb.AppendLine($"\t\t_ = Inner.ProcessEvent(\"{RawName}\", [");
             foreach (var bodyParam in BodyParams) sb.AppendLine($"\t\t\t{bodyParam.Serialize(context)}");
             sb.AppendLine($"\t\t], out {outVar});");
         }
-        else sb.AppendLine($"\t\t_ = Inner.ProcessEvent(\"{Name}\", [], out {outVar});");
+        else sb.AppendLine($"\t\t_ = Inner.ProcessEvent(\"{RawName}\", [], out {outVar});");
+        foreach (var postLine in BodyPostfix) sb.AppendLine($"\t\t{postLine}");
         if (ReturnParam != null) sb.AppendLine($"\t\t{ReturnParam.Serialize(context)}");
         sb.AppendLine("\t}");
         return sb.ToString();

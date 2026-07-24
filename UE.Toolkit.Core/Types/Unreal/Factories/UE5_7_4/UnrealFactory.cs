@@ -5,6 +5,7 @@ using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FFieldClass;
+using UClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UClass;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_7_4;
 
@@ -57,7 +58,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFDelegateProperty CreateFDelegateProperty(nint ptr) => new FDelegateProperty_UE5_4_4(ptr, this);
     public override IUObjectArray CreateUObjectArray(nint ptr) => new UObjectArray_UE5_7_4(ptr, this);
     public override IUObject CreateUObject(nint ptr) => new UObject_UE5_4_4(ptr, this, Memory);
-    public override IUClass CreateUClass(nint ptr) => new UE5_6_1.UClass_UE5_6_1(ptr, this, Memory);
+    public override IUClass CreateUClass(nint ptr) => new UClass_UE5_7_4(ptr, this, Memory);
     public override IUScriptStruct CreateUScriptStruct(nint ptr) => new UE5_6_1.UScriptStruct_UE5_6_1(ptr, this, Memory);
     public override IUEnum CreateUEnum(nint ptr) => new UEnum_UE5_7_4(ptr, this, Memory);
     public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this, Memory);
@@ -200,4 +201,39 @@ public unsafe class UEnum_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemor
         if (disposing && CachedNames.Value.AllocatorInstance != null)
             _factory.Memory.Free((nint)CachedNames.Value.AllocatorInstance);
     }
+}
+
+public unsafe class UClass_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UE5_6_1.UStruct_UE5_6_1(ptr, factory, memory), IUClass
+{
+    private readonly UClass* _self = (UClass*)ptr;
+
+    public IUClass? GetSuperClass()
+        => _self->GetSuperClass() != null ? _factory.CreateUClass((nint)_self->GetSuperClass()) : null;
+    
+    public IUFunction? GetFunction(string Name)
+    {
+        var FuncMapDict = new TMapDictionary<FName, UFunction>(
+            (TMap<FName, UFunction>*)(&_self->FuncMap), factory.Memory
+        );
+        return FuncMapDict.TryGetValue(new(Name), out var Function)
+            ? factory.CreateUFunction((nint)Function.Value)
+            : null;
+    }
+    
+    public IEnumerable<IUFunction> GetFunctions()
+    {
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->FuncMap),
+            _factory.Memory
+        );
+        return FuncMapDict.Values.Select(x => _factory.CreateUFunction((nint)x.Value->Value));
+    }
+    
+    public IUObject? ClassDefaultObject 
+        => _self->ClassDefaultObject != null ? factory.CreateUObject((nint)_self->ClassDefaultObject ) : null;
+
+    public nint Constructor => _self->ClassConstructor;
+    public EClassFlags ClassFlags => _self->ClassFlags;
+    public EClassCastFlags ClassCastFlags => _self->ClassCastFlags;
 }

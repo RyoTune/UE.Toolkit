@@ -9,10 +9,13 @@ public class StructFactory(Context context, ObjectType objectType, IUScriptStruc
     {
         var structName = scriptStruct.NamePrivate.ToString();
         var structNativeName = "F" + structName;
-        var size = scriptStruct.PropertiesSize;
         var alignment = scriptStruct.MinAlignment;
+        var align = alignment - 1;
+        var size = (scriptStruct.PropertiesSize + align) & ~align;
         var super = scriptStruct.SuperStruct;
-        var superSize = super?.PropertiesSize ?? 0;
+        var superLastProp = super?.PropertyLink.MaxBy(x => x.Offset_Internal);
+        var superSize = superLastProp?.Offset_Internal + superLastProp?.ElementSize ?? 0;
+        // var superSize = super?.PropertiesSize ?? 0;
         var superName = super?.NamePrivate.ToString();
         if ((superName ?? string.Empty) == structName)
         {
