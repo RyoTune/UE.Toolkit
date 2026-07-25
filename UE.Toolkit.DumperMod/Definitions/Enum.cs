@@ -100,5 +100,5 @@ public class EnumDefinition(string name, string underlyingType, Dictionary<strin
     
     public ObjectType Type => ObjectType.Enum;
     
-    private static string SanitizeEntryName(string name) => Builtins.SanitizeName(name.Split("::").Last());
+    private static string SanitizeEntryName(string name) => Builtins.SanitizeForEnum(Builtins.SanitizeName(name.Split("::").Last()));
 }

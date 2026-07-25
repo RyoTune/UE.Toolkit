@@ -76,12 +76,9 @@ public class ClassDefinition(
         sb.AppendLine("\tprivate static Dictionary<string, int>? FieldOffsets;");
         var callBaseCtor = SuperDef != null ? "base(inner, false)" : "base(inner)";
         sb.AppendLine($"\tpublic {DisplayNameCS}(IUObject inner, bool genOffsets = true) : {callBaseCtor}\n\t{{");
-        sb.AppendLine("""
-        if (genOffsets)
-            FieldOffsets ??= Inner.ClassPrivate.PropertyLink
-                .Select(x => (x.NamePrivate, x.Offset_Internal)).ToDictionary();
-""");
-        sb.AppendLine("\t}");
+        sb.AppendLine("\t\tif (genOffsets) FieldOffsets ??= CreateFieldOffsets();");
+        sb.AppendLine("\t}\n");
+        sb.AppendLine("\tprotected override int GetFieldOffset(string Name) => FieldOffsets![Name];\n");
         var ReprNewModifier = SuperDef != null ? "new " : string.Empty;
         sb.AppendLine($"\tpublic {ReprNewModifier}unsafe {DisplayNameRepr}* Repr => ({DisplayNameRepr}*)Inner.Ptr;\n");
         foreach (var prop in Properties)

@@ -78,6 +78,17 @@ public interface ITypeRepr<TRepr> where TRepr: unmanaged
 public abstract class ObjectImpl(IUObject inner)
 {
     public IUObject Inner { get; } = inner;
+    
+    protected Dictionary<string, int> CreateFieldOffsets()
+    {
+        Dictionary<string, int> Result = [];
+        foreach (var Prop in Inner.ClassPrivate.PropertyLink)
+            if (!Result.ContainsKey(Prop.NamePrivate))
+                Result[Prop.NamePrivate] = Prop.Offset_Internal;
+        return Result;
+    }
+    
+    protected abstract int GetFieldOffset(string Name);
 }
 
 """);
@@ -100,6 +111,8 @@ public abstract class ObjectImpl(IUObject inner)
         name = name.Replace(')', '_');
         name = name.Replace('[', '_');
         name = name.Replace(']', '_');
+        name = name.Replace("+", "_");
+        name = name.Replace("'", "_");
         //name = name.Replace('>', '_');
         if (name == "object") name = "_object";
 
@@ -131,6 +144,12 @@ public abstract class ObjectImpl(IUObject inner)
     {
         name = name.Replace(".", "_");
         name = name.Replace(">", "_");
+        return name;
+    }
+    
+    public static string SanitizeForEnum(string name)
+    {
+        name = name.Replace(".", "_");
         return name;
     }
 }

@@ -43,6 +43,8 @@ public class PropertyClassDefinition(string name, string rawName, int size, int 
 
 public abstract class BasePropertyFactory(Context context)
 {
+    protected virtual bool AllowGenerationForProperty(IFProperty prop) => true;
+    
     public List<BasePropertyDefintion> ResolveProperties(IEnumerable<IFProperty> propLink, int SuperStructEnd)
     {
         List<BasePropertyDefintion> props = [];
@@ -52,6 +54,7 @@ public abstract class BasePropertyFactory(Context context)
             // PropertyLink contains a list of fields declared by object in ascending order, then from it's super
             // object and so on.
             if (prop.Offset_Internal < SuperStructEnd) break;
+            if (!AllowGenerationForProperty(prop)) continue;
             var newProp = ResolveProperty(prop);
             var numSameName = props.Count(x => x.Name.StartsWith(newProp.Name)); // Compare against sanitized name, since that's what props are using.
             if (numSameName > 0) newProp.Name = $"{newProp.Name}_{numSameName + 1}";
@@ -254,23 +257,23 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             case "ByteProperty" or "Int8Property" or "Int16Property" or "UInt16Property" or "IntProperty"
                 or "UInt32Property" or "Int64Property" or "UInt64Property" or "FloatProperty" or "DoubleProperty"
                 or "NameProperty" or "EnumProperty" :
-                return (_, raw) => $"get => *({getTypeName()}*)(Inner.Ptr + FieldOffsets![\"{raw}\"]);";
+                return (_, raw) => $"get => *({getTypeName()}*)(Inner.Ptr + GetFieldOffset(\"{raw}\"));";
             // Pass by reference
             case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
                 or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
                 or "WeakObjectProperty" or "SetProperty" or "DelegateProprety"
                 or "MulticastInlineDelegateProperty" or "MulticastSparseDelegateProperty":
-                return (_, raw) => $"get => ({getTypeName()})(Inner.Ptr + FieldOffsets![\"{raw}\"]);";
+                return (_, raw) => $"get => ({getTypeName()})(Inner.Ptr + GetFieldOffset(\"{raw}\"));";
             case "BoolProperty":
                 var BoolProp = context.Factory.CreateFBoolProperty(prop.Ptr);
                 return (BoolProp.FieldMask == byte.MaxValue) switch
                 {
-                    true => (_, raw) => $"get => *(bool*)(Inner.Ptr + FieldOffsets![\"{raw}\"]);",
-                    false => (_, raw) => $"get => (*(byte*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) & {BoolProp.FieldMask}) == 0;"
+                    true => (_, raw) => $"get => *(bool*)(Inner.Ptr + GetFieldOffset(\"{raw}\"));",
+                    false => (_, raw) => $"get => (*(byte*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) & {BoolProp.FieldMask}) == 0;"
                 };
             case "ObjectProperty" or "ClassProperty" or "ClassPtrProperty":
                 return (_, raw) =>
-                    $"get => new(Inner.GetFactory().CreateUObject(*(nint*)(Inner.Ptr + FieldOffsets![\"{raw}\"])));";
+                    $"get => new(Inner.GetFactory().CreateUObject(*(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\"))));";
             default:
                 return (_, _) => $"get => throw new NotSupportedException(\"!! GET TODO {className} !!\");";
         }  
@@ -285,7 +288,7 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             case "ByteProperty" or "Int8Property" or "Int16Property" or "UInt16Property" or "IntProperty"
                 or "UInt32Property" or "Int64Property" or "UInt64Property" or "FloatProperty" or "DoubleProperty"
                 or "NameProperty" or "EnumProperty":
-                return (_, raw) => $"set => *({getTypeName()}*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) = value;";
+                return (_, raw) => $"set => *({getTypeName()}*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) = value;";
             // Pass by reference, don't create mutator
             case "StructProperty" or "StrProperty" or "ArrayProperty" or "MapProperty"
                 or "SoftObjectProperty" or "SoftClassProperty" or "TextProperty"
@@ -296,11 +299,11 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
                 var BoolProp = context.Factory.CreateFBoolProperty(prop.Ptr);
                 return (BoolProp.FieldMask == byte.MaxValue) switch
                 {
-                    true => (_, raw) => $"set => *(bool*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) = value;",
-                    false => (param, raw) => $"set => *(byte*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) ^= (byte)(Convert.ToByte({param} != value) * {BoolProp.FieldMask});"
+                    true => (_, raw) => $"set => *(bool*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) = value;",
+                    false => (param, raw) => $"set => *(byte*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) ^= (byte)(Convert.ToByte({param} != value) * {BoolProp.FieldMask});"
                 };
             case "ObjectProperty" or "ClassProperty" or "ClassPtrProperty":
-                return (_, raw) => $"set => *(nint*)(Inner.Ptr + FieldOffsets![\"{raw}\"]) = value.Inner.Ptr;";
+                return (_, raw) => $"set => *(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) = value.Inner.Ptr;";
             default:
                 return (_, _) => $"set => throw new NotSupportedException(\"!! SET TODO {className} !!\");";
         }

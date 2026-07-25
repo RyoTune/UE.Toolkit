@@ -68,7 +68,14 @@ public abstract unsafe class BaseUObject<TUObjectBase>(nint ptr, IUnrealFactory 
     public ProcessEventResult ProcessEvent(string Name, List<IFunctionParam> Params, out IFunctionParam? Return)
     {
         Return = null;
-        var Function = ClassPrivate.GetFunction(Name);
+        // var Function = ClassPrivate.GetFunction(Name);
+        var CurrentClass = ClassPrivate;
+        IUFunction? Function = null;
+        while (Function == null && CurrentClass != null)
+        {
+            Function = CurrentClass.GetFunction(Name);
+            CurrentClass = CurrentClass.GetSuperClass();
+        }
         if (Function == null)
         {
             return ProcessEventResult.CouldNotFindFunction;
