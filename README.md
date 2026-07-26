@@ -33,6 +33,7 @@
 | Custom Constructor |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Add Properties |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Register Struct |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Call Blueprint Methods |✅|✅|✅|✅|✅|✅|✅|✅|✅
 
 Features marked with ❔ are currently untested.
 

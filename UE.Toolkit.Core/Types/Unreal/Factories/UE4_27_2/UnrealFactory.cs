@@ -468,7 +468,6 @@ public class IUFieldEnumerable(IUField? initial)
 {
     private IUField? _current = initial;
     private bool isInitial = true;
-
     public bool MoveNext()
     {
         if (isInitial)

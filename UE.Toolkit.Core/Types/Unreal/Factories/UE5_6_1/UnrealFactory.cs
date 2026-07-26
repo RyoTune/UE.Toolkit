@@ -127,11 +127,11 @@ public unsafe class UClass_UE5_6_1(nint ptr, IUnrealFactory factory, IUnrealMemo
     
     public IUFunction? GetFunction(string Name)
     {
-        var FuncMapDict = new TMapDictionary<FName, UFunction>(
-            (TMap<FName, UFunction>*)(&_self->FuncMap), factory.Memory
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->FuncMap), factory.Memory
         );
         return FuncMapDict.TryGetValue(new(Name), out var Function)
-            ? factory.CreateUFunction((nint)Function.Value)
+            ? factory.CreateUFunction((nint)Function.Value->Value)
             : null;
     }
     
