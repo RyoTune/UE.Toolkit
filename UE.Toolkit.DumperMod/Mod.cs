@@ -48,6 +48,10 @@ public class Mod : ModBase
 
         var dumpDir = Path.Join(_modLoader.GetDirectoryForModId(_modConfig.ModId), "dump",
             _modLoader.GetAppConfig().AppId);
+        if (!Directory.Exists(dumpDir))
+        {
+            Directory.CreateDirectory(dumpDir);
+        }
         _dumper = new(factory!, objs!, strs!, classes!, dumpDir, _essentials);
     }
 

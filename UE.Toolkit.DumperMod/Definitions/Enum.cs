@@ -89,9 +89,20 @@ public class EnumDefinition(string name, string underlyingType, Dictionary<strin
         }
             
         sb.AppendLine($"public enum {Builtins.SanitizeName(Name)} : {UnderlyingType}\n{{");
+        Dictionary<string, int> UsageCount = [];
         foreach (var entry in Entries)
         {
-            sb.AppendLine($"    {SanitizeEntryName(entry.Key)} = {entry.Value},");
+            var variantName = SanitizeEntryName(entry.Key);
+            if (UsageCount.TryGetValue(variantName, out var count))
+            {
+                variantName += $"_{count}";
+                UsageCount[variantName] = count + 1;
+            }
+            else
+            {
+                UsageCount[variantName] = 1;
+            }
+            sb.AppendLine($"    {variantName} = {entry.Value},");
         }
 
         sb.AppendLine("}");

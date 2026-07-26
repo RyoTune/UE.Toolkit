@@ -50,7 +50,6 @@ public class Dumper(
             var singleFileOutput = string.IsNullOrEmpty(Mod.Config.SingleFileOutputName)
                 ? Path.Join(Context.DumpDirectory, "Types.cs")
                 : Path.Join(Context.DumpDirectory, $"{Mod.Config.SingleFileOutputName.Replace(".cs", string.Empty)}.cs");
-            
             File.WriteAllText(singleFileOutput, sb!.ToString());
             Log.Information($"{numDumped} objects dumped in {sw.ElapsedMilliseconds}ms.\nOutput File: {singleFileOutput}");
         }

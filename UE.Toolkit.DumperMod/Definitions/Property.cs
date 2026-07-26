@@ -56,6 +56,7 @@ public abstract class BasePropertyFactory(Context context)
             if (prop.Offset_Internal < SuperStructEnd) break;
             if (!AllowGenerationForProperty(prop)) continue;
             var newProp = ResolveProperty(prop);
+            if (newProp == null) continue;
             var numSameName = props.Count(x => x.Name.StartsWith(newProp.Name)); // Compare against sanitized name, since that's what props are using.
             if (numSameName > 0) newProp.Name = $"{newProp.Name}_{numSameName + 1}";
             props.Add(newProp);
@@ -64,7 +65,7 @@ public abstract class BasePropertyFactory(Context context)
         return props;
     }
 
-    protected abstract BasePropertyDefintion ResolveProperty(IFProperty prop);
+    protected abstract BasePropertyDefintion? ResolveProperty(IFProperty prop);
 
     private static string SafelyCreateGenericType(string Type, bool makeGeneric)
         => makeGeneric ? Type : $"nint /* {Type} */";
@@ -79,7 +80,7 @@ public abstract class BasePropertyFactory(Context context)
     /// </summary>
     /// <param name="prop"></param>
     /// <returns>C++/C# property type name.</returns>
-    public Func<string> GetPropTypenameStruct(IFProperty prop, bool makeGenerics)
+    public Func<string>? GetPropTypenameStruct(IFProperty prop, bool makeGenerics)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
@@ -130,7 +131,13 @@ public abstract class BasePropertyFactory(Context context)
             case "WeakObjectProperty":
                 return () => "FWeakObjectPtr";
             case "ObjectProperty":
-                var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
+                var propClass = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass;
+                if (propClass.Ptr == nint.Zero)
+                {
+                    Log.Error($"{nameof(GetPropTypenameStruct)} || {prop.NamePrivate}->PropertyClass (0x{prop.Ptr:x}) is null");
+                    return null;
+                }
+                var objPropType = propClass.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.GetUnmanagedTypeName()}*" : $"{objPropType}*");
             case "SoftObjectProperty":
                 var softObjPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
@@ -153,8 +160,14 @@ public abstract class BasePropertyFactory(Context context)
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.GetUnmanagedTypeName()}*" : classPropType);
             case "EnumProperty":
                 var enumProp = context.Factory.Cast<IFEnumProperty>(prop);
-                var enumPropName = enumProp.Enum.NamePrivate.ToString();
-                new EnumFactory(context, ObjectType.Enum, enumProp.Enum, context.Classes.GetPropertyTypeName(enumProp.UnderlyingProp)).Register();
+                var enumClass = enumProp.Enum;
+                if (enumClass.Ptr == nint.Zero)
+                {
+                    Log.Error($"{nameof(GetPropTypenameStruct)} || {prop.NamePrivate}->Enum (0x{prop.Ptr:x}) is null");
+                    return null;
+                }
+                var enumPropName = enumClass.NamePrivate.ToString();
+                new EnumFactory(context, ObjectType.Enum, enumClass, context.Classes.GetPropertyTypeName(enumProp.UnderlyingProp)).Register();
                 return () => Builtins.SanitizeName(enumPropName);
             case "MapProperty":
                 var mapProp = context.Factory.Cast<IFMapProperty>(prop);
@@ -239,10 +252,11 @@ public abstract class BasePropertyFactory(Context context)
 
 public class PropertyStructFactory(Context context) : BasePropertyFactory(context)
 {
-    protected override BasePropertyDefintion ResolveProperty(IFProperty prop)
+    protected override BasePropertyDefintion? ResolveProperty(IFProperty prop)
     {
         var (name, size, offset, _) = GetBaseInfo(prop);
-        return new PropertyStructDefinition(name, size, offset, GetPropTypenameStruct(prop, false));
+        var typename = GetPropTypenameStruct(prop, false);
+        return typename != null ? new PropertyStructDefinition(name, size, offset, typename) : null;
     }
 }
 
@@ -315,7 +329,7 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : classPropType);
     }
 
-    private Func<string> GetPropTypenameClass(IFProperty prop)
+    private Func<string>? GetPropTypenameClass(IFProperty prop)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
@@ -329,14 +343,20 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             case "ClassProperty" or "ClassPtrProperty":
                 return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
             case "ObjectProperty":
-                var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
+                var propClass = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass;
+                if (propClass.Ptr == nint.Zero)
+                {
+                    Log.Error($"{nameof(GetPropTypenameClass)} || {prop.NamePrivate}->PropertyClass (0x{prop.Ptr:x}) is null");
+                    return null;
+                }
+                var objPropType = propClass.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : $"{objPropType}");
             default:
                 return GetPropTypenameStruct(prop, true);
         }
     }
     
-    internal Func<string> GetPropTypenameFunctionParam(IFProperty prop)
+    internal Func<string>? GetPropTypenameFunctionParam(IFProperty prop)
     {
         var className = prop.ClassPrivate.Name;
         switch (className)
@@ -344,17 +364,25 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
             case "ClassProperty" or "ClassPtrProperty":
                 return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
             case "ObjectProperty":
-                var objPropType = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass.NamePrivate.ToString();
+                var propClass = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass;
+                if (propClass.Ptr == nint.Zero)
+                {
+                    Log.Error($"{nameof(GetPropTypenameClass)} || {prop.NamePrivate}->PropertyClass (0x{prop.Ptr:x}) is null");
+                    return null;
+                }
+                var objPropType = propClass.NamePrivate.ToString();
                 return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(objPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : $"{objPropType}");
             default:
                 return GetPropTypenameStruct(prop, true);
         }
     }
     
-    protected override BasePropertyDefintion ResolveProperty(IFProperty prop)
+    protected override BasePropertyDefintion? ResolveProperty(IFProperty prop)
     {
         var (name, size, offset, _) = GetBaseInfo(prop);
         var propTypename = GetPropTypenameClass(prop);
+        // Cannot continue
+        if (propTypename == null) return null;
         var getAccessor = GetPropAccessor(prop, propTypename);
         var getMutator = GetPropMutator(prop, propTypename);
         return new PropertyClassDefinition(name, prop.NamePrivate, size, offset, propTypename, getAccessor, getMutator);

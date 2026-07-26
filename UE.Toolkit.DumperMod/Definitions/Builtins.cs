@@ -100,6 +100,8 @@ public abstract class ObjectImpl(IUObject inner)
         if (parts.Last().Length == 32 && parts.Length > 2)
         {
             name = string.Join(string.Empty, parts[..^2]);
+            // SMT5V: Property that's a sequence of underscores becomes an empty string
+            if (name == string.Empty) name = "EMPTY";
         }
 
         name = name.Replace(' ', '_');
@@ -134,8 +136,12 @@ public abstract class ObjectImpl(IUObject inner)
             "base" => "Base",
             "bool" => "Bool",
             "float" => "Float",
+            "double" => "Double",
             "ref" => "Ref",
             "int" => "Int",
+            "return" => "Return",
+            "string" => "String",
+            "Inner" => "Inner_",
             _ => name
         };
     }

@@ -133,6 +133,7 @@ public class FunctionFactory(Context context)
             List<string> BodyPostfix = [];
             ReturnValueDefinition? ReturnValue = null;
             Func<string>? returnTypeName = null;
+            Dictionary<string, int> nameUse = [];
             foreach (var Field in x.ChildProperties)
             {
                 var Param = context.Factory.CreateFProperty(Field.Ptr);
@@ -144,7 +145,21 @@ public class FunctionFactory(Context context)
                     break;
                 }
                 var paramName = Builtins.SanitizeForTypename(Builtins.SanitizeName(Param.NamePrivate));
+                if (nameUse.TryGetValue(paramName, out var useCount))
+                {
+                    paramName += $"_{useCount}";
+                    nameUse[paramName] = useCount + 1;
+                }
+                else
+                {
+                    nameUse[paramName] = 1;
+                }
                 var propTypeName = PropFactory.GetPropTypenameFunctionParam(Param);
+                if (propTypeName == null)
+                {
+                    Log.Error($"{nameof(ResolveFunctions)} || Could not determine data types for all parameters in '{x.NamePrivate}'");
+                    return null;
+                }
                 HeadParams.Add(new ParameterHeadDefinition(paramName, propTypeName, Param ));
                 BodyParams.Add(new ParameterBodyDefinition(paramName, propTypeName, Param, false ));
                 if (Param.ClassPrivate.Name is "ObjectProperty" or "ClassProperty" or "ClassPtrProperty")
@@ -158,7 +173,9 @@ public class FunctionFactory(Context context)
             var funcName = x.NamePrivate.ToString();
             var funcNameSanitized = Builtins.SanitizeForFunctionName(Builtins.SanitizeName(funcName));
             return new FunctionDefinition(funcNameSanitized, funcName, returnTypeName, HeadParams, BodyParams, ReturnValue, BodyPrefix, BodyPostfix);
-        }).ToList();
+        })
+            .Where(x => x != null)
+            .ToList();
     }
 }
 
