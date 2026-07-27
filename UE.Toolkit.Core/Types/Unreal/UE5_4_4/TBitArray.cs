@@ -40,18 +40,21 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
     private int InlineAllocatorSize;
     protected bool OwnsInstance;
     protected bool Disposed = false;
+    protected bool InlineGoesFirst;
 
     /// <summary>
     /// Wraps a <c>TArrayList</c> around an existing <c>TBitArray</c> created in C++
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TBitArray</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TBitArray</c></param>
-    public TBitArrayList(byte* _Self, IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE)
+    public TBitArrayList(byte* _Self, IUnrealMemoryInternal _Allocator, int _InlineAllocatorSize = TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE, 
+        bool inlineGoesFirst = true)
     {
         Allocator = _Allocator;
         InlineAllocatorSize = _InlineAllocatorSize;
         Self = _Self;
         OwnsInstance = false;
+        InlineGoesFirst = inlineGoesFirst;
     }
 
     /// <summary>
@@ -65,19 +68,20 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
         Self = (byte*)Allocator.MallocZeroed(GetStructSize());
         ArrayMax = InlineBits;
         OwnsInstance = true;
+        InlineGoesFirst = true;
     }
 
     protected byte* Inline
     {
-        get => Self;
+        get => Self + (InlineGoesFirst ? 0 : InlineAllocatorSize);
     }
 
     internal int InlineBits => InlineAllocatorSize * TBitArrayConstants.BITS_PER_BYTE;
 
     protected byte* Allocation
     {
-        get => *(byte**)(Self + InlineAllocatorSize);
-        set => *(byte**)(Self + InlineAllocatorSize) = value;
+        get => *(byte**)(Self + (InlineGoesFirst ? InlineAllocatorSize : 0));
+        set => *(byte**)(Self + (InlineGoesFirst ? InlineAllocatorSize : 0)) = value;
     }
 
     protected byte* Data
@@ -94,17 +98,17 @@ public unsafe class TBitArrayList : IDisposable, IList<bool>
 
     public int ArrayNum
     {
-        get => *(int*)(Self + InlineAllocatorSize + sizeof(nint));
-        protected set => *(int*)(Self + InlineAllocatorSize + sizeof(nint)) = value;
+        get => *(int*)(Self + (InlineGoesFirst ? InlineAllocatorSize : 0) + sizeof(nint));
+        protected set => *(int*)(Self + (InlineGoesFirst ? InlineAllocatorSize : 0) + sizeof(nint)) = value;
     }
 
     public int ArrayMax
     {
-        get => *(int*)(Self + InlineAllocatorSize + sizeof(nint) + sizeof(int));
-        protected set => *(int*)(Self + InlineAllocatorSize + sizeof(nint) + sizeof(int)) = value;
+        get => *(int*)(Self + (InlineGoesFirst ? InlineAllocatorSize : 0) + sizeof(nint) + sizeof(int));
+        protected set => *(int*)(Self + (InlineGoesFirst ? InlineAllocatorSize : 0) + sizeof(nint) + sizeof(int)) = value;
     }
 
-    bool InBounds(int index) => index is >= 0 && index < ArrayNum;
+    bool InBounds(int index) => index >= 0 && index < ArrayNum;
     bool InBoundsForInsertion(int index) => index >= 0 && index <= ArrayNum;
     /// <summary>
     /// Relinquish ownership of this <c>TArray</c>. This is used in cases where you know that Unreal will deallocate it or it otherwise

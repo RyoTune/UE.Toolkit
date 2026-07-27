@@ -5,6 +5,7 @@ using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FFieldClass;
+using UClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UClass;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_7_4;
 
@@ -56,22 +57,23 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFOptionalProperty CreateFOptionalProperty(nint ptr) => new FOptionalProperty_UE5_4_4(ptr, this);
     public override IFDelegateProperty CreateFDelegateProperty(nint ptr) => new FDelegateProperty_UE5_4_4(ptr, this);
     public override IUObjectArray CreateUObjectArray(nint ptr) => new UObjectArray_UE5_7_4(ptr, this);
-    public override IUObject CreateUObject(nint ptr) => new UObject_UE5_4_4(ptr, this);
-    public override IUClass CreateUClass(nint ptr) => new UE5_6_1.UClass_UE5_6_1(ptr, this);
-    public override IUScriptStruct CreateUScriptStruct(nint ptr) => new UE5_6_1.UScriptStruct_UE5_6_1(ptr, this);
-    public override IUEnum CreateUEnum(nint ptr) => new UEnum_UE5_7_4(ptr, this);
-    public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this);
-    public override IUStruct CreateUStruct(nint ptr) => new UE5_6_1.UStruct_UE5_6_1(ptr, this);
-    public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this);
-    public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this);
+    public override IUObject CreateUObject(nint ptr) => new UObject_UE5_4_4(ptr, this, Memory);
+    public override IUClass CreateUClass(nint ptr) => new UClass_UE5_7_4(ptr, this, Memory);
+    public override IUScriptStruct CreateUScriptStruct(nint ptr) => new UE5_6_1.UScriptStruct_UE5_6_1(ptr, this, Memory);
+    public override IUEnum CreateUEnum(nint ptr) => new UEnum_UE5_7_4(ptr, this, Memory);
+    public override IUField CreateUField(nint ptr) => new UField_UE5_4_4(ptr, this, Memory);
+    public override IUStruct CreateUStruct(nint ptr) => new UE5_6_1.UStruct_UE5_6_1(ptr, this, Memory);
+    public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this, Memory);
+    public override IUFunction CreateUFunction(nint ptr) => new UE5_6_1.UFunction_UE5_6_1(ptr, this, Memory);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_7_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
+    public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
     public override IFStructParams CreateFStructParams(nint ptr) => new FStructParams_UE5_4_4(ptr, this);
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
     public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
-    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this);
-    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this);
+    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this, Memory);
+    public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this, Memory);
     public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
         => new FStaticConstructObjectParameters_UE5_4_4(this);
     public override IFActorSpawnParameters CreateFActorSpawnParameters()
@@ -126,8 +128,8 @@ public unsafe class UObjectArray_UE5_7_4(nint ptr, IUnrealFactory factory) : IUO
     }
 }
 
-public unsafe class UEnum_UE5_7_4(nint ptr, IUnrealFactory factory)
-    : UField_UE5_4_4(ptr, factory), IUEnum, IDisposable
+public unsafe class UEnum_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UField_UE5_4_4(ptr, factory, memory), IUEnum, IDisposable
 {
     private readonly Unreal.UE5_7_4.UEnum* _self = (Unreal.UE5_7_4.UEnum*)ptr;
     public string CppType => _self->CppType.ToString();
@@ -199,4 +201,39 @@ public unsafe class UEnum_UE5_7_4(nint ptr, IUnrealFactory factory)
         if (disposing && CachedNames.Value.AllocatorInstance != null)
             _factory.Memory.Free((nint)CachedNames.Value.AllocatorInstance);
     }
+}
+
+public unsafe class UClass_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UE5_6_1.UStruct_UE5_6_1(ptr, factory, memory), IUClass
+{
+    private readonly UClass* _self = (UClass*)ptr;
+
+    public IUClass? GetSuperClass()
+        => _self->GetSuperClass() != null ? _factory.CreateUClass((nint)_self->GetSuperClass()) : null;
+    
+    public IUFunction? GetFunction(string Name)
+    {
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->FuncMap), factory.Memory
+        );
+        return FuncMapDict.TryGetValue(new(Name), out var Function)
+            ? factory.CreateUFunction((nint)Function.Value->Value)
+            : null;
+    }
+    
+    public IEnumerable<IUFunction> GetFunctions()
+    {
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->FuncMap),
+            _factory.Memory
+        );
+        return FuncMapDict.Values.Select(x => _factory.CreateUFunction((nint)x.Value->Value));
+    }
+    
+    public IUObject? ClassDefaultObject 
+        => _self->ClassDefaultObject != null ? factory.CreateUObject((nint)_self->ClassDefaultObject ) : null;
+
+    public nint Constructor => _self->ClassConstructor;
+    public EClassFlags ClassFlags => _self->ClassFlags;
+    public EClassCastFlags ClassCastFlags => _self->ClassCastFlags;
 }

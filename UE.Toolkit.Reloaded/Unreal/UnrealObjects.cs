@@ -86,6 +86,13 @@ public unsafe class UnrealObjects : IUnrealObjects
 
     public IUObjectArray GUObjectArray { get; private set; } = null!;
 
+    // Remove ending _Repr from object types, to handle class based object dumps created in UE Toolkit 1.10+
+    private static string GetObjectTypeName<TObject>() where TObject : unmanaged
+    {
+        var Name = typeof(TObject).Name;
+        return Name.EndsWith("_Repr") ? Name[1..^5] : Name[1..];
+    }
+
     public void OnObjectLoadedByName<TObject>(string objName, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged
     {
@@ -101,7 +108,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     }
 
     public void OnObjectLoadedByName<TObject>(Action<ToolkitUObject<TObject>> callback)
-        where TObject : unmanaged => OnObjectLoadedByName(typeof(TObject).Name, callback);
+        where TObject : unmanaged => OnObjectLoadedByName(GetObjectTypeName<TObject>(), callback);
 
     public void OnObjectLoadedByClass<TObject>(string objClass, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged
@@ -113,7 +120,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     }
 
     public void OnObjectLoadedByClass<TObject>(Action<ToolkitUObject<TObject>> callback)
-        where TObject : unmanaged => OnObjectLoadedByClass(typeof(TObject).Name, callback);
+        where TObject : unmanaged => OnObjectLoadedByClass(GetObjectTypeName<TObject>(), callback);
     
     public void OnObjectLoadedByPath<TObject>(string objectPath, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged
@@ -148,7 +155,7 @@ public unsafe class UnrealObjects : IUnrealObjects
 
     public ToolkitUObject<TObject>? FindObjectByName<TObject>(string objectName) where TObject : unmanaged
     {
-        var Object = FindObjectByName(objectName, typeof(TObject).Name);
+        var Object = FindObjectByName(objectName, GetObjectTypeName<TObject>());
         return Object != null ? new ToolkitUObject<TObject>((TObject*)Object.Ptr) : null;
     }
 
@@ -165,7 +172,7 @@ public unsafe class UnrealObjects : IUnrealObjects
 
     public ToolkitUObject<TObject>? FindObjectByClass<TObject>() where TObject : unmanaged
     {
-        var Object = FindObjectByClass(typeof(TObject).Name);
+        var Object = FindObjectByClass(GetObjectTypeName<TObject>());
         return Object != null ? new ToolkitUObject<TObject>((TObject*)Object.Ptr) : null;
     }
 

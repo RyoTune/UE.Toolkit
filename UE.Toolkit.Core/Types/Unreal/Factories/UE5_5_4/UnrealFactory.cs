@@ -134,6 +134,11 @@ public class UnrealFactory : BaseUnrealFactory
         throw new NotImplementedException();
     }
 
+    public override IFFieldVariant CreateFFieldVariant(IntPtr ptr)
+    {
+        throw new NotImplementedException();
+    }
+
     public override IFStructParams CreateFStructParams(IntPtr ptr)
     {
         throw new NotImplementedException();

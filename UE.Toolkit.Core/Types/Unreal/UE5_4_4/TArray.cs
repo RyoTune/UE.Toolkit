@@ -12,6 +12,11 @@ public unsafe struct TArray<T> where T : unmanaged
     public T* AllocatorInstance;
     public int ArrayNum;
     public int ArrayMax;
+
+    public TArrayList<T> ToManaged(IUnrealMemoryInternal Memory)
+    {
+        fixed (TArray<T>* self = &this) return new TArrayList<T>(self, Memory);
+    }
 }
 
 public unsafe class TArrayListStatic

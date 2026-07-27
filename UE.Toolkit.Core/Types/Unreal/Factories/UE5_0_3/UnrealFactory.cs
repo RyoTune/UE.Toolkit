@@ -1,176 +1,47 @@
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories.UE5_2_1;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UClass = UE.Toolkit.Core.Types.Unreal.UE5_0_3.UClass;
+using UFunction = UE.Toolkit.Core.Types.Unreal.UE4_27_2.UFunction;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_0_3;
 
-public class UnrealFactory : BaseUnrealFactory
+public class UnrealFactory : UE.Toolkit.Core.Types.Unreal.Factories.UE5_2_1.UnrealFactory
 {
-    public override IntPtr SizeOf<T>()
-    {
-        throw new NotImplementedException();
-    }
+    public override IUClass CreateUClass(nint ptr) => new UClass_UE5_0_3(ptr, this, Memory);
+}
 
-    public override IFProperty CreateFProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
+public unsafe class UClass_UE5_0_3(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
+    : UStruct_UE5_2_1(ptr, factory, memory), IUClass
+{
+    private readonly UClass* _self = (UClass*)ptr;
 
-    public override IFBoolProperty CreateFBoolProperty(IntPtr ptr)
+    public IUClass? GetSuperClass()
+        => _self->_super.super_struct != null ? _factory.CreateUClass((nint)_self->_super.super_struct) : null;
+    
+    public IUFunction? GetFunction(string Name)
     {
-        throw new NotImplementedException();
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->func_map), factory.Memory
+        );
+        return FuncMapDict.TryGetValue(new(Name), out var Function)
+            ? factory.CreateUFunction((nint)Function.Value->Value)
+            : null;
     }
+    
+    public IEnumerable<IUFunction> GetFunctions()
+    {
+        var FuncMapDict = new TMapDictionary<FName, Ptr<UFunction>>(
+            (TMap<FName, Ptr<UFunction>>*)(&_self->func_map), _factory.Memory
+        );
+        return FuncMapDict.Values.Select(x => _factory.CreateUFunction((nint)x.Value->Value));
+    }
+    
+    public IUObject? ClassDefaultObject 
+        => _self->class_default_obj != null ? factory.CreateUObject((nint)_self->class_default_obj) : null;
 
-    public override IFByteProperty CreateFByteProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFEnumProperty CreateFEnumProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFObjectProperty CreateFObjectProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFSoftClassProperty CreateFSoftClassProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFClassProperty CreateFClassProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFStructProperty CreateFStructProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFMapProperty CreateFMapProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFInterfaceProperty CreateFInterfaceProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFArrayProperty CreateFArrayProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFSetProperty CreateFSetProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFOptionalProperty CreateFOptionalProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFDelegateProperty CreateFDelegateProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUObjectArray CreateUObjectArray(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUObject CreateUObject(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUClass CreateUClass(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUScriptStruct CreateUScriptStruct(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUEnum CreateUEnum(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUField CreateUField(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUStruct CreateUStruct(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUUserDefinedEnum CreateUUserDefinedEnum(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUFunction CreateUFunction(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFFieldClass CreateFFieldClass(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFField CreateFField(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFStructParams CreateFStructParams(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFPropertyParams CreateFPropertyParams(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFGenericPropertyParams CreateFGenericPropertyParams(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFWorldContext CreateFWorldContext(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUEngine CreateUEngine(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUGameInstance CreateUGameInstance(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFActorSpawnParameters CreateFActorSpawnParameters()
-    {
-        throw new NotImplementedException();
-    }
+    public nint Constructor => _self->class_ctor;
+    public EClassFlags ClassFlags => _self->class_flags;
+    public EClassCastFlags ClassCastFlags => _self->class_cast_flags;
 }

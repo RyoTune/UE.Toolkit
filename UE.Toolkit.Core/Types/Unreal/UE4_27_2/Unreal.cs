@@ -210,6 +210,7 @@ public unsafe struct FFieldObjectUnion
 {
     [FieldOffset(0x0)] public FField* Field;
     [FieldOffset(0x0)] public UObjectBase* Object;
+    [FieldOffset(0x8)] public bool bIsUObject;
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x78)]

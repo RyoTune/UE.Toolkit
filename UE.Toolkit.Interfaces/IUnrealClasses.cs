@@ -67,7 +67,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     
     #endregion
     
-    #region Struct Field Extension Methods
+    #region Struct Field Extension Methods (parented to object)
     
     /// <summary>
     /// Listen for the creation of an object's class, then extend it's allocation size and call a custom constructor
@@ -283,7 +283,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     public bool AddTextProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
-    /// Add a Array (TArray) containing elememts of the property defined in Inner to the object's class with the
+    /// Add a Array (TArray) containing elements of the property defined in Inner to the object's class with the
     /// specified name and offset. This will make the field exposable to blueprints and Object XML.
     /// </summary>
     /// <param name="Name">Name of the new field.</param>
@@ -294,6 +294,188 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, out IFArrayProperty? Property) 
         where TObject : unmanaged;
     
+    /*
+    /// <summary>
+    /// Add a map (TMap) with it's key and value types defined in Key and Value, and with the
+    /// specified name and offset. This will make the field exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Key">The property used for each key in the map.</param>
+    /// <param name="Value">The property used for each value in the map.</param>
+    /// <param name="Property">Return value.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    public bool AddMapProperty<TObject>(string Name, int Offset,
+        IFProperty Key, IFProperty Value, out IFArrayProperty? Property) where TObject : unmanaged;
+    */
+    
+    #endregion
+    
+    #region Struct Field Extension Methods (no parent)
+    
+    /// <summary>
+    /// Add an Int8 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddI8Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a Int16 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddI16Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a Int32 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddI32Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a Int64 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddI64Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a UInt8 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddU8Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a UInt16 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddU16Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a UInt32 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddU32Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a UInt64 property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddU64Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a float property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddF32Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a double property to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddF64Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a by-value struct to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    /// <typeparam name="TField">Field type.</typeparam>
+    public bool AddStructProperty<TField>(string Name, int Offset, out IFStructProperty? Out)
+        where TField : unmanaged;
+    
+    /// <summary>
+    /// Add a by-value struct to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="TypeName">Field type.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddStructProperty(string Name, string TypeName, int Offset, out IFStructProperty? Out);
+    
+    /// <summary>
+    /// Add a by-reference struct to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// This is constructed as an ObjectProperty, but with the object type set to a UScriptStruct instead of a UClass
+    /// to make the underlying table in a DataTable viewable by the type reflection system (big hack, but needed for
+    /// data table debugging tools).
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="TypeName">Field type.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddStructProperty_DataTableSpecial(string Name, string TypeName, int Offset, out IFObjectProperty? Out);
+    
+    /// <summary>
+    /// Add a FName to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddNameProperty(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a FString to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddStringProperty(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a FText to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddTextProperty(string Name, int Offset, out IFProperty? Out) ;
+    
+    
+    /// <summary>
+    /// Add a map (TMap) with it's key and value types defined in Key and Value, and with the
+    /// specified name and offset. This will make the field exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Key">The property used for each key in the map.</param>
+    /// <param name="Value">The property used for each value in the map.</param>
+    /// <param name="Property">Return value.</param>
+    public bool AddMapProperty(string Name, int Offset,
+        IFProperty Key, IFProperty Value, out IFMapProperty? Property);
     #endregion
     
     #region New Struct Construction

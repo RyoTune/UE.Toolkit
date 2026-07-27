@@ -2,6 +2,7 @@
 using Reloaded.Hooks.Definitions;
 using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Common.FunctionParam;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using EPropertyFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EPropertyFlags;
@@ -142,7 +143,7 @@ public class BoolInvocationParameter(bool value) : IInvocationParameter
 public class UnrealMethods : IUnrealMethods
 {
     
-    #region Function Invocation Parameters
+    #region Function Invocation Parameters (OLD)
 
     public IInvocationParameter CreateI8Param(sbyte Value = 0) => new I8InvocationParameter(Value);
     public IInvocationParameter CreateI16Param(short Value = 0) => new I16InvocationParameter(Value);
@@ -160,7 +161,7 @@ public class UnrealMethods : IUnrealMethods
     
     #endregion
     
-    #region Function Invocation Execute
+    #region Function Invocation Execute (OLD)
     
     private delegate void UObject_ProcessEvent(nint Object, nint TargetFunction, nint Params);
     private uint UObject_ProcessEvent_Offset;
@@ -177,6 +178,7 @@ public class UnrealMethods : IUnrealMethods
         ref List<IInvocationParameter> Parameters, out IUFunction? Function, out nint Alloc, ExecutionFlags Flags) 
         where TObject : unmanaged
     {
+        Log.Warning("IUnrealMethods::ProcessEvent is deprecated! Use IUObject::ProcessEvent instead!\n");
         // Get type reflection for object type
         Function = null;
         Alloc = nint.Zero;
@@ -223,11 +225,8 @@ public class UnrealMethods : IUnrealMethods
             }
             Parameter.ToAlloc(Alloc + Property.Offset_Internal);
         }
-        unsafe
-        {
-            var ProcessEventWrapper = Hooks.CreateWrapper<UObject_ProcessEvent>(*(nint*)(Function.VTable + UObject_ProcessEvent_Offset), out _);
-            ProcessEventWrapper((nint)Object.Self, Function.Ptr, Alloc);
-        }
+
+        unsafe { CallProcessEvent((nint)Object.Self, Function, Alloc); }
         return true;
     }
 
@@ -332,6 +331,15 @@ public class UnrealMethods : IUnrealMethods
     }
     
     #endregion
+
+    internal unsafe void CallProcessEvent(nint Object, IUFunction Function, nint Alloc)
+    {
+        var ProcessEventWrapper = Hooks.CreateWrapper<UObject_ProcessEvent>(*(nint*)(Function.VTable + UObject_ProcessEvent_Offset), out _);
+        ProcessEventWrapper(Object, Function.Ptr, Alloc);   
+    }
+
+    internal IFunctionParam CreateReturnParam(IFProperty property)
+        => FunctionParamFactory.CreateParam(property, Factory, Classes, Memory);
     
     #region Unreal Toolkit API References
 

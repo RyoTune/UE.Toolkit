@@ -36,7 +36,8 @@ public static class GameConfig
         {
             "++UE4+Release-4.27" => new UE4_27_2_P3R(),
             "++UE5+Release-5.0" => new UE5_0_3(),
-            "++UE5+Release-5.1" or "++UE5+Release-5.2" => new UE5_2_1(),
+            "++UE5+Release-5.1" => new UE5_1_1(),
+            "++UE5+Release-5.2" => new UE5_2_1(),
             "++UE5+Release-5.3" => new UE5_3_2(),
             "++UE5+Release-5.6" => new UE5_6_1(),
             "++UE5+Release-5.7" => new UE5_7_4(),

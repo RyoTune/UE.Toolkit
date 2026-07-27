@@ -7,6 +7,8 @@ public abstract class BaseUnrealFactory : IUnrealFactory
 {
     
     public IUnrealMemoryInternal? Memory { get; set; }
+    public Action<nint, IUFunction, nint>? ProcessEvent { get; set; }
+    public Func<IFProperty, IFunctionParam>? CreateReturnParam { get; set; }
     
     public T Cast<T>(IPtr obj)
     {
@@ -100,6 +102,7 @@ public abstract class BaseUnrealFactory : IUnrealFactory
     
     public abstract IFFieldClass CreateFFieldClass(nint ptr);
     public abstract IFField CreateFField(nint ptr);
+    public abstract IFFieldVariant CreateFFieldVariant(nint ptr); 
     
     public abstract IFStructParams CreateFStructParams(nint ptr);
     public abstract IFPropertyParams CreateFPropertyParams(nint ptr);

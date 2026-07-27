@@ -396,13 +396,13 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     /// </summary>
     /// <param name="_Self">Pointer to an existing <c>TMap</c></param>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
-    public TMapDictionary(TMap<TElemKey, TElemValue>* _Self, IUnrealMemoryInternal _Allocator, Action<string>? _DebugCallback = null)
+    public TMapDictionary(TMap<TElemKey, TElemValue>* _Self, IUnrealMemoryInternal _Allocator, Action<string>? _DebugCallback = null, bool inlineGoesFirst = true)
     {
         Self = (nint)_Self;
         Allocator = _Allocator;
         Elements = new(ElementsRaw, Allocator);
         OwnsInstance = false;
-        BitAllocator = new(BitAllocatorRaw, Allocator);
+        BitAllocator = new(BitAllocatorRaw, Allocator, TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE, inlineGoesFirst);
         DebugCallback = _DebugCallback;
     }
 
@@ -411,13 +411,13 @@ public unsafe class TMapDictionary<TElemKey, TElemValue> : IDictionary<TElemKey,
     /// taken out of scope.
     /// </summary>
     /// <param name="_Allocator">The Unreal allocator, used for methods that modify the <c>TMap</c></param>
-    public TMapDictionary(IUnrealMemoryInternal _Allocator)
+    public TMapDictionary(IUnrealMemoryInternal _Allocator, bool inlineGoesFirst = true)
     {
         Self = _Allocator.MallocZeroed(SizeOf);
         Allocator = _Allocator;
         Elements = new(ElementsRaw, Allocator);
         OwnsInstance = true;
-        BitAllocator = new(BitAllocatorRaw, Allocator);
+        BitAllocator = new(BitAllocatorRaw, Allocator, TBitArrayConstants.DEFAULT_ALLOCATOR_SIZE, inlineGoesFirst);
         // Sets ArrayMax for BitAllocator to number of inline bits (128)
         BitAllocator.Clear();
     }
