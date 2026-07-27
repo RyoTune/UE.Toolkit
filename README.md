@@ -168,10 +168,10 @@ First, we add an `Item` element with an `id` attribute. The ID is which item in 
 Inside the `Item` element, we're back to what's already been covered. In this example, items have an `EquipID` property and we're setting the `EquipID` of the __2nd__ item to `100`.
 
 #### Editing Items in a DataTable
-Finally,  _DataTables_! There's only two notable differences: the `row-struct` attribute and `id`s are now row names. This example is from _Clair Obscur_'s `DT_jRPG_CharacterDefinitions.uasset`.
+Finally,  _DataTables_! There's only one notable difference: the `id`s are now row names. This example is from _Clair Obscur_'s `DT_jRPG_CharacterDefinitions.uasset`.
 
 ```xml
-<DataTable row-struct="S_jRPG_CharacterDefinition">
+<DataTable>
   <Item id="Lune">
       <CharacterDisplayName value="TEST1"/>
   </Item>
@@ -186,9 +186,9 @@ Finally,  _DataTables_! There's only two notable differences: the `row-struct` a
 
 A DataTable's __Class__ is... `DataTable`! Who could've guessed? As such, the __Root Element__ in our XML has to be `DataTable`. 
 
-But, we also need to specify the __Class (Struct)__ for the __Items (Rows)__ in the DataTable so we can edit them. You do that by adding a `row-struct` attribute with the DataTable's __RowStruct__ name, `S_jRPG_CharacterDefinition` in this example.
-
 For our `Item` element's ID, instead of a number we use the __Row's name__ that we want to edit. Inside the `Item` element, it's no different than lists from earlier.
+
+You can optionally override the data type for a DataTable by specifying a struct name for the `row-struct` attribute on the root element. This used to be required in previous versions of UE Toolkit, but the data type is automatically retrived now.
 
 That covers everything, congrats on finishing this 🎉🎉🎉!
 
@@ -205,6 +205,8 @@ For enum properties (stuff like `EDataLayerType::Runtime`, where it starts with 
 Some Unreal types may not be generated and need to be supplied. `UE.Toolkit.Core` includes any types
 that were missing in my testing. Add it to your project using **NuGet** and add `UE.Toolkit.Core.Types.Unreal;`
 in the `File Usings` config before dumping.
+
+The dumper supports two different schemas: a `Structs Only` schema that only generates the types as unmanaged structs and `Structs and Classes`, which generates C# classes for types that inherit from UObject. Classes will also generate methods that are exposed to blueprints.
 
 ## Code Only Features
 
