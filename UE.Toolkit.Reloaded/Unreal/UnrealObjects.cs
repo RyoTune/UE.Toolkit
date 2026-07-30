@@ -87,7 +87,7 @@ public unsafe class UnrealObjects : IUnrealObjects
     public IUObjectArray GUObjectArray { get; private set; } = null!;
 
     // Remove ending _Repr from object types, to handle class based object dumps created in UE Toolkit 1.10+
-    private static string GetObjectTypeName<TObject>() where TObject : unmanaged
+    internal static string GetObjectTypeName<TObject>() where TObject : unmanaged
     {
         var Name = typeof(TObject).Name;
         return Name.EndsWith("_Repr") ? Name[1..^5] : Name[1..];

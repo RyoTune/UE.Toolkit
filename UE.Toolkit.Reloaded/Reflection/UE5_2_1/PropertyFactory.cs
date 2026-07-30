@@ -16,6 +16,14 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
     IUnrealClasses classes, IPropertyFlagsBuilder flags)
     : BasePropertyFactory(factory, memory, classes, flags)
 {
+    
+    private static unsafe void InsertPropertyLink(IFProperty Target, IFProperty Prop)
+    {
+        var pProperty = (FProperty*)Prop.Ptr;
+        var pTargetProp = (FProperty*)Target.Ptr;
+        pTargetProp->prop_link_next = pProperty;
+        ((FField*)pTargetProp)->next = (FField*)pProperty;
+    }
 
     protected override unsafe void LinkToPropertyList(IFProperty Property, IUClass? Reflect)
     {
@@ -25,14 +33,16 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         pProperty->dtor_link_next = null;
         pProperty->post_ct_link_next = null;
 
-        if (Reflect == null)
-        {
-            return;
-        }
-        
+        if (Reflect == null) return;
         var pClass = (UClass*)Reflect.Ptr;
-        if (((UStruct*)pClass)->PropertyLink == null)
+        // Is this the only field?
+        if (!AnyDirectlyDefinedProperties(Reflect))
         {
+            if (Reflect.PropertyLink.Any())
+            {
+                var TargetProp = Reflect.PropertyLink.First();
+                InsertPropertyLink(Property, TargetProp);
+            }
             ((UStruct*)pClass)->PropertyLink = (UE.Toolkit.Core.Types.Unreal.UE5_4_4.FProperty*)pProperty;
             ((UStruct*)pClass)->ChildProperties = (UE.Toolkit.Core.Types.Unreal.UE5_4_4.FField*)pProperty;
         }
@@ -40,15 +50,8 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         {
             var TargetProp = GetPreviousProperty(Property, Reflect);
             var NextProp = TargetProp.PropertyLinkNext.Any() ? TargetProp.PropertyLinkNext.First() : null;
-            var pTargetProp = (FProperty*)TargetProp.Ptr;
-            pTargetProp->prop_link_next = pProperty;
-            ((FField*)pTargetProp)->next = (FField*)pProperty;
-            if (NextProp != null)
-            {
-                var pNextProp = (FProperty*)NextProp.Ptr;
-                pProperty->prop_link_next = pNextProp;
-                ((FField*)pProperty)->next = (FField*)pNextProp;
-            }
+            InsertPropertyLink(TargetProp, Property);
+            if (NextProp != null) InsertPropertyLink(Property, NextProp);
         }       
     }
     
@@ -291,6 +294,52 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         unsafe { ((FObjectProperty*)NewProperty.Ptr)->PropertyClass = (UClass*)FieldClass!.Ptr; }
         return true;
     }
+    
+        public override bool CreateObject<TField>(out IFObjectProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility)
+    {
+        NewProperty = null;
+        if (!GetProperty("ObjectProperty", out var PropertyClass)
+            || !Classes.GetClassInfoFromClass<TField>(out var Class))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FObjectProperty>(), FIELD_ALIGNMENT);
+        NewProperty = Factory.CreateFObjectProperty(Alloc);
+        SetPropertySuperFieldsNoOwner(Factory.CreateFField(Alloc), Name, PropertyClass!);
+        unsafe
+        {
+            var pProperty = (FProperty*)Alloc;
+            pProperty->array_dim = 1;
+            pProperty->element_size = Marshal.SizeOf<nint>(); // FExampleStruct mExampleField; 
+            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            SetPropertyFieldDefaults(pProperty, Offset);
+        }
+        LinkToPropertyList(NewProperty, null);
+        unsafe { ((FObjectProperty*)NewProperty.Ptr)->PropertyClass = (UClass*)Class!.Ptr; }
+        return true;
+    }
+    
+    public override bool CreateObject(out IFObjectProperty? NewProperty, string Name, string TypeName, int Offset,
+        PropertyVisibility Visibility)
+    {
+        NewProperty = null;
+        if (!GetProperty("ObjectProperty", out var PropertyClass)
+            || !Classes.GetClassInfoFromName($"U{TypeName}", out var Class))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FObjectProperty>(), FIELD_ALIGNMENT);
+        NewProperty = Factory.CreateFObjectProperty(Alloc);
+        SetPropertySuperFieldsNoOwner(Factory.CreateFField(Alloc), Name, PropertyClass!);
+        unsafe
+        {
+            var pProperty = (FProperty*)Alloc;
+            pProperty->array_dim = 1;
+            pProperty->element_size = Marshal.SizeOf<nint>(); // FExampleStruct mExampleField; 
+            pProperty->property_flags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.None);
+            SetPropertyFieldDefaults(pProperty, Offset);
+        }
+        LinkToPropertyList(NewProperty, null);
+        unsafe { ((FObjectProperty*)NewProperty.Ptr)->PropertyClass = (UClass*)Class!.Ptr; }
+        return true;
+    }
 
     public override bool CreateName<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
         => CreateCopyPropertyInner<TOwner, FName, FProperty>(out NewProperty, Name, Offset, "NameProperty", Visibility);
@@ -329,6 +378,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         }
         LinkToPropertyList(NewProperty, ClassReflection!);
         unsafe { ((FArrayProperty*)Alloc)->Inner = (UE.Toolkit.Core.Types.Unreal.UE5_4_4.FProperty*)Inner.Ptr; }
+        Inner.SetOwnerFField(NewProperty);
         return true;
     }
     
@@ -338,7 +388,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         NewProperty = null;
         if (!GetProperty("MapProperty", out var PropertyClass))
             return false;
-        var Alloc = Memory.Malloc(Marshal.SizeOf<FArrayProperty>(), FIELD_ALIGNMENT);
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FMapProperty>(), FIELD_ALIGNMENT);
         NewProperty = Factory.CreateFMapProperty(Alloc);
         SetPropertySuperFieldsNoOwner(Factory.CreateFField(Alloc), Name, PropertyClass!);
         unsafe

@@ -438,6 +438,27 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     public bool AddStructProperty_DataTableSpecial(string Name, string TypeName, int Offset, out IFObjectProperty? Out);
     
     /// <summary>
+    /// Add a by-value struct to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    /// <typeparam name="TField">Field type.</typeparam>
+    public bool AddObjectProperty<TField>(string Name, int Offset, out IFObjectProperty? Out)
+        where TField : unmanaged;
+    
+    /// <summary>
+    /// Add a by-value struct to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="TypeName">Field type.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    public bool AddObjectProperty(string Name, string TypeName, int Offset, out IFObjectProperty? Out);
+    
+    /// <summary>
     /// Add a FName to the object's class with the specified name and offset. This will make the field
     /// exposable to blueprints and Object XML.
     /// </summary>

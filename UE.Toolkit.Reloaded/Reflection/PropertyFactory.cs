@@ -1,9 +1,11 @@
 ﻿using System.Runtime.InteropServices;
+using Reloaded.Hooks.Definitions;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common;
 using UE.Toolkit.Reloaded.Reflection.UE5_4_4;
 
 namespace UE.Toolkit.Reloaded.Reflection;
@@ -191,26 +193,41 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         return true;
     }
 
-    protected IFProperty GetPreviousProperty(IFProperty Property, IUClass Reflect)
+    private IFProperty GetPreviousPropertyInner(IFProperty Property, IUClass Reflect,
+        Func<IUStruct, IEnumerable<IFProperty>> FirstProperty, Func<IFProperty, IEnumerable<IFProperty>> NextProperty)
     {
         IFProperty? TargetProp = null;
         var MinimumOffset = Reflect.SuperStruct?.PropertiesSize ?? 0;
-        foreach (var Prop in Reflect.PropertyLink)
+        foreach (var Prop in FirstProperty(Reflect))
         {
             // We're the last element in the chain
-            var StopConditions = !Prop.PropertyLinkNext.Any() ||
+            var StopConditions = !NextProperty(Prop).Any() ||
                                  // The next element will have a larger offset than our new field, so insert before them
-                                 Prop.PropertyLinkNext.First().Offset_Internal > Property.Offset_Internal ||
+                                 NextProperty(Prop).First().Offset_Internal > Property.Offset_Internal ||
                                  // The next element is from the super class, stop since the property chain of a supertype
                                  // is shared between it and all subtypes
-                                 Prop.PropertyLinkNext.First().Offset_Internal < MinimumOffset;
+                                 NextProperty(Prop).First().Offset_Internal < MinimumOffset;
             if (StopConditions)
             {
                 TargetProp = Prop;
                 break;               
             }
         }
-        return TargetProp!;
+        return TargetProp!;       
+    }
+    
+    protected IFProperty GetPreviousProperty(IFProperty Property, IUClass Reflect)
+        => GetPreviousPropertyInner(Property, Reflect, 
+            x => x.PropertyLink, x => x.PropertyLinkNext);
+    
+    protected IFProperty GetPreviousRefProperty(IFProperty Property, IUClass Reflect)
+        => GetPreviousPropertyInner(Property, Reflect, 
+            x => x.RefLink, x => x.NextRef);
+
+    protected bool AnyDirectlyDefinedProperties(IUClass Reflect)
+    {
+        var SuperSize = Reflect.SuperStruct?.PropertiesSize ?? 0;
+        return Reflect.PropertyLink.Any() && Reflect.PropertyLink.First().Offset_Internal >= SuperSize;
     }
     
     #endregion
@@ -317,6 +334,13 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         string Name, int Offset, PropertyVisibility Visibility)
         where TOwner : unmanaged
         where TField : unmanaged;
+    
+    public abstract bool CreateObject<TField>(out IFObjectProperty? NewProperty,
+        string Name, int Offset, PropertyVisibility Visibility)
+        where TField : unmanaged;
+
+    public abstract bool CreateObject(out IFObjectProperty? NewProperty,
+        string Name, string TypeName, int Offset, PropertyVisibility Visibility);
 
     public bool CreateClass<TOwner, TField>(out IFClassProperty? NewProperty,
         string Name, int Offset, PropertyVisibility Visibility)
@@ -357,6 +381,10 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
      public abstract bool CreateMap(out IFMapProperty? NewProperty, string Name, int Offset,
          PropertyVisibility Visibility, IFProperty Key, IFProperty Value);
     #endregion
+    
+    protected delegate byte FProperty_ContainsObjectReference(nint self, nint EncounteredStructProps, EPropertyObjectReferenceType InReferenceType);
+
+    protected int FProperty_ContainsObjectReference_Offset;
 
     protected readonly IUnrealFactory Factory = factory;
     protected readonly IUnrealMemory Memory = memory;

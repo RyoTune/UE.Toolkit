@@ -251,14 +251,14 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     public void AddExtension<TObject>(uint ExtraSize, Action<ToolkitUObject<TObject>> callback)
         where TObject : unmanaged 
-        => ClassExtensions.GetOrAdd(typeof(TObject).Name[1..], new ClassExtension(ExtraSize, 
+        => ClassExtensions.GetOrAdd(UnrealObjects.GetObjectTypeName<TObject>(), new ClassExtension(ExtraSize, 
             obj => callback(new((TObject*)*(nint*)obj))));
 
     public bool GetClassInfoFromClass<TObject>(out IUClass? Value) where TObject : unmanaged
         => GetClassInfoFromName(typeof(TObject).Name, out Value);
 
     public bool GetClassInfoFromName(string Name, out IUClass? Value)
-        => Classes.TryGetValue(Name[1..], out Value);
+        => Classes.TryGetValue(Name.EndsWith("_Repr") ? Name[1..^5] : Name[1..], out Value);
     
     public bool GetScriptStructInfoFromType<TObject>(out IUScriptStruct? Value) where TObject : unmanaged
         => GetScriptStructInfoFromName(typeof(TObject).Name, out Value);
@@ -544,6 +544,19 @@ public unsafe class UnrealClasses : IUnrealClasses
     {
         Property = null;
         return PropertyFactory.CreateStructDTSpecial(out Property, Name, TypeName, Offset, PropertyVisibility.Public);       
+    }
+    
+    public bool AddObjectProperty<TField>(string Name, int Offset, out IFObjectProperty? Property)
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateObject<TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+    
+    public bool AddObjectProperty(string Name, string TypeName, int Offset, out IFObjectProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateObject(out Property, Name, TypeName, Offset, PropertyVisibility.Public);
     }
     
     public bool AddNameProperty(string Name, int Offset, out IFProperty? Property)
