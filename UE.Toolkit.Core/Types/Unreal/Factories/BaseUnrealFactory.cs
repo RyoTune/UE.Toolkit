@@ -67,8 +67,9 @@ public abstract class BaseUnrealFactory : IUnrealFactory
             "Int16Property" or "UInt16Property" => 2,
             "IntProperty" or "Int32Property" or "UInt32Property" or "FloatProperty" or "NameProperty" => 4,
             "Int64Property" or "UInt64Property" or "DoubleProperty" or "StrProperty" or "TextProperty" or "ObjectProperty" 
-                or "SoftObjectProperty" or "SoftClassProperty" or "ArrayProperty" => 8,
+                or "SoftObjectProperty" or "SoftClassProperty" or "ArrayProperty" or "MapProperty" => 8,
             "StructProperty" => CreateFStructProperty(prop.Ptr).Struct.MinAlignment,
+            "EnumProperty" => prop.ElementSize,
             _ => throw new NotSupportedException(prop.ClassPrivate.Name)
         };
     }

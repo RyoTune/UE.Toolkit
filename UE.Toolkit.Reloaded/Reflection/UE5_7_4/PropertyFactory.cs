@@ -132,7 +132,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         => CreateCopyPropertyInner<TOwner, long, FProperty>(out NewProperty, Name, Offset, "Int64Property", Visibility);
     
     public override bool CreateU8<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<TOwner, byte, FProperty>(out NewProperty, Name, Offset, "UInt8Property", Visibility);
+        => CreateCopyPropertyInner<TOwner, byte, FProperty>(out NewProperty, Name, Offset, "Int8Property", Visibility);
     
     public override bool CreateU16<TOwner>(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
         => CreateCopyPropertyInner<TOwner, short, FProperty>(out NewProperty, Name, Offset, "UInt16Property", Visibility);
@@ -162,7 +162,7 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         => CreateCopyPropertyInner<long, FProperty>(out NewProperty, Name, Offset, "Int64Property", Visibility);
     
     public override bool CreateU8(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
-        => CreateCopyPropertyInner<byte, FProperty>(out NewProperty, Name, Offset, "UInt8Property", Visibility);
+        => CreateCopyPropertyInner<byte, FProperty>(out NewProperty, Name, Offset, "Int8Property", Visibility);
     
     public override bool CreateU16(out IFProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility) 
         => CreateCopyPropertyInner<short, FProperty>(out NewProperty, Name, Offset, "UInt16Property", Visibility);
@@ -380,6 +380,31 @@ public class PropertyFactory(IUnrealFactory factory, IUnrealMemory memory,
         LinkToPropertyList(NewProperty, ClassReflection!);
         unsafe { ((FArrayProperty*)Alloc)->Inner = (FProperty*)Inner.Ptr; }
         Inner.SetOwnerFField(NewProperty);
+        return true;
+    }
+    
+    public override bool CreateMap<TOwner>(out IFMapProperty? NewProperty, string Name, int Offset, PropertyVisibility Visibility,
+        IFProperty Key, IFProperty Value)
+    {
+        NewProperty = null;
+        if (!TryGetClassAndProperty<TOwner>("MapProperty", out var ClassReflection, out var PropertyClass))
+            return false;
+        var Alloc = Memory.Malloc(Marshal.SizeOf<FMapProperty>(), FIELD_ALIGNMENT);
+        NewProperty = Factory.CreateFMapProperty(Alloc);
+        SetPropertySuperFields(Factory.CreateFField(Alloc), Name, ClassReflection!, PropertyClass!);
+        unsafe
+        {
+            var pProperty = (FProperty*)Alloc;
+            pProperty->ArrayDim = 1;
+            pProperty->ElementSize = 0x50; // sizeof(TMap<K, V>), usually
+            pProperty->PropertyFlags = Flags.CreatePropertyFlags(Visibility, PropertyBuilderFlags.NoCtor);
+            SetPropertyFieldDefaults(pProperty, Offset);
+        }
+        unsafe { ((FMapProperty*)Alloc)->KeyProp = (FProperty*)Key.Ptr; }
+        unsafe { ((FMapProperty*)Alloc)->ValueProp = (FProperty*)Value.Ptr; }
+        LinkToPropertyList(NewProperty, ClassReflection);
+        Key.SetOwnerFField(NewProperty);
+        Value.SetOwnerFField(NewProperty);
         return true;
     }
     

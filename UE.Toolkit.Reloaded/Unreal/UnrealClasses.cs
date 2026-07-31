@@ -488,14 +488,12 @@ public unsafe class UnrealClasses : IUnrealClasses
         return PropertyFactory.CreateArray<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Inner);
     }
 
-    /*
     public bool AddMapProperty<TObject>(string Name, int Offset,
         IFProperty Key, IFProperty Value, out IFMapProperty? Property) where TObject : unmanaged
     {
         Property = null;
         return PropertyFactory.CreateMap<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Key, Value);
     }
-    */
 
     public IFGenericPropertyParams? CreateI8Param(string Name, int Offset)
         => TypeFactory.CreateI8Param(Name, Offset, out var Out) ? Out : null;

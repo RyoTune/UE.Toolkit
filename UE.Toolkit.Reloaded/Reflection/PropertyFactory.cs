@@ -375,8 +375,8 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     public abstract bool CreateArray<TObject>(out IFArrayProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility, IFProperty Inner) where TObject : unmanaged;
     
-    // public abstract bool CreateMap<TObject>(out IFArrayProperty? NewProperty, string Name, int Offset,
-    //     PropertyVisibility Visibility, IFProperty Key, IFProperty Value) where TObject : unmanaged;
+    public abstract bool CreateMap<TObject>(out IFMapProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility, IFProperty Key, IFProperty Value) where TObject : unmanaged;
     
      public abstract bool CreateMap(out IFMapProperty? NewProperty, string Name, int Offset,
          PropertyVisibility Visibility, IFProperty Key, IFProperty Value);

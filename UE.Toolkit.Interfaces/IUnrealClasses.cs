@@ -294,7 +294,6 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, out IFArrayProperty? Property) 
         where TObject : unmanaged;
     
-    /*
     /// <summary>
     /// Add a map (TMap) with it's key and value types defined in Key and Value, and with the
     /// specified name and offset. This will make the field exposable to blueprints and Object XML.
@@ -306,8 +305,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Property">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     public bool AddMapProperty<TObject>(string Name, int Offset,
-        IFProperty Key, IFProperty Value, out IFArrayProperty? Property) where TObject : unmanaged;
-    */
+        IFProperty Key, IFProperty Value, out IFMapProperty? Property) where TObject : unmanaged;
     
     #endregion
     
