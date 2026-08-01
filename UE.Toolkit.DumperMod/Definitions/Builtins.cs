@@ -40,7 +40,7 @@ public class Builtins(IUnrealEssentials essentials)
     public void AddHeader(StringBuilder sb)
     {
         sb.AppendLine("""
-/* Generated with UE Toolkit: Dumper (1.10.0)    */
+/* Generated with UE Toolkit: Dumper (1.10.1)    */
 /* GitHub: https://github.com/RyoTune/UE.Toolkit */
 /* Author: RyoTune and Rirurin                   */
 /* Special thanks to UE4SS team whose code was   */

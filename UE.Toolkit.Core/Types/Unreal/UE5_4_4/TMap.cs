@@ -101,7 +101,7 @@ public struct HashableInt : IMapHashable, IEquatable<HashableInt>
 {
     public int Value;
     public HashableInt(int value) { Value = value; }
-    public uint GetTypeHash() => (uint)Value;
+    public uint GetTypeHash() => IntegerHashing.TypeHashForInt(Value);
     public bool Equals(HashableInt other) => other.Value == Value;
     public override string ToString() => Value.ToString();
 }

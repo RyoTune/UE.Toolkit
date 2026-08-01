@@ -5,10 +5,18 @@ using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.Core.Types.Unreal.Common.DynamicMap;
 
+public static class IntegerHashing
+{
+    public static uint TypeHashForByte(byte Value) => Value;
+    public static uint TypeHashForShort(short Value) => (uint)Value;
+    public static uint TypeHashForInt(int Value) => (uint)Value;
+    public static uint TypeHashForLong(long Value) => (uint)(Value + ((Value >> 32) * 23));
+}
+
 public struct HashableByte(byte value) : IMapHashable, IEquatable<HashableByte>
 {
     public byte Value = value;
-    public uint GetTypeHash() => Value;
+    public uint GetTypeHash() => IntegerHashing.TypeHashForByte(Value);
     public bool Equals(HashableByte other) => other.Value == Value;
     public override string ToString() => Value.ToString();
 }
@@ -16,7 +24,7 @@ public struct HashableByte(byte value) : IMapHashable, IEquatable<HashableByte>
 public struct HashableShort(short value) : IMapHashable, IEquatable<HashableShort>
 {
     public short Value = value;
-    public uint GetTypeHash() => (uint)Value;
+    public uint GetTypeHash() => IntegerHashing.TypeHashForShort(Value);
     public bool Equals(HashableShort other) => other.Value == Value;
     public override string ToString() => Value.ToString();
 }
@@ -24,7 +32,7 @@ public struct HashableShort(short value) : IMapHashable, IEquatable<HashableShor
 public struct HashableLong(long value) : IMapHashable, IEquatable<HashableLong>
 {
     public long Value = value;
-    public uint GetTypeHash() => (uint)(Value + (Value >> 32 * 23));
+    public uint GetTypeHash() => IntegerHashing.TypeHashForLong(Value);
     public bool Equals(HashableLong other) => other.Value == Value;
     public override string ToString() => Value.ToString();
 }

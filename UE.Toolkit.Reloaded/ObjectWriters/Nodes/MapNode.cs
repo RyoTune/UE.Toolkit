@@ -19,6 +19,7 @@ public static class MapNodeFactory
             "IntProperty" or "UInt32Property" => new IntDynamicMapKeyType(property, factory.Factory),
             "Int64Property" or "UInt64Property" => new Int64DynamicMapKeyType(property, factory.Factory),
             "NameProperty" => new NameDynamicMapKeyType(property, factory.Factory),
+            "EnumProperty" => new EnumDynamicMapKeyType(property, factory.Factory, factory.Factory.CreateFEnumProperty(Key.Ptr)),
             "StrProperty" => new StringDynamicMapKeyType(property, factory.Factory, factory.Objects, factory.Memory),
             "StructProperty" => StructDynamicMapKeyType.Create(
                 property, factory.Factory.CreateFStructProperty(Key.Ptr), 

@@ -2,7 +2,7 @@
   "ModId": "UE.Toolkit.DumperMod",
   "ModName": "UE Toolkit: Dumper",
   "ModAuthor": "RyoTune, Rirurin",
-  "ModVersion": "1.10.0",
+  "ModVersion": "1.10.1",
   "ModDescription": "Unreal Engine object dumper to C# types.",
   "ModDll": "UE.Toolkit.DumperMod.dll",
   "ModIcon": "Preview.png",
