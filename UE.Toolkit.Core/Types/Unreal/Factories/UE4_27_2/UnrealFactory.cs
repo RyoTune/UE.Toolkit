@@ -381,6 +381,8 @@ public unsafe class UEnumUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemor
         {
             var Discriminant = pDiscriminant.Value;
             var CheckName = Discriminant->Key.ToString();
+            var CheckNameParts = CheckName.Split("::");
+            CheckName = CheckNameParts.Length > 1 ? CheckNameParts[1] : CheckName;
             if (ignoreCase)
                 CheckName = CheckName.ToLower();
             if (CheckName == name)
