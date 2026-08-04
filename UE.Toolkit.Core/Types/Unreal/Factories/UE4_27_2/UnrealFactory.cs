@@ -367,7 +367,7 @@ public unsafe class UEnumUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemor
 {
     private readonly UEnum* _self = (UEnum*)ptr;
     public string CppType => _self->cpp_type.ToString();
-    public UE.Toolkit.Core.Types.Unreal.UE5_4_4.TArray<UE.Toolkit.Core.Types.Unreal.UE5_4_4.TPair<FName, long>> Names => _self->entries;
+    public TArray<TPair<FName, long>> Names => _self->entries;
 
     public bool TryParse(string name, bool ignoreCase, [NotNullWhen(true)] out long? value)
     {
@@ -381,8 +381,9 @@ public unsafe class UEnumUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemor
         {
             var Discriminant = pDiscriminant.Value;
             var CheckName = Discriminant->Key.ToString();
-            var CheckNameParts = CheckName.Split("::");
-            CheckName = CheckNameParts.Length > 1 ? CheckNameParts[1] : CheckName;
+            var CheckNameParts = CheckName.Split("::", 2);
+            // 1.10.2: Don't break fully qualified names in case there are mods out there that define their enums like that
+            CheckName = CheckNameParts.Length > 1 && !name.Contains("::") ? CheckNameParts[1] : CheckName;
             if (ignoreCase)
                 CheckName = CheckName.ToLower();
             if (CheckName == name)
