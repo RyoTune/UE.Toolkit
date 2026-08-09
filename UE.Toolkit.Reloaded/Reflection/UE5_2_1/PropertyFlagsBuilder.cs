@@ -5,8 +5,14 @@ namespace UE.Toolkit.Reloaded.Reflection.UE5_2_1;
 
 public class PropertyFlagsBuilder : IPropertyFlagsBuilder
 {
+    private PropertyBuilderFlags FlagsForNextProperty;
+
+    public void SkipInitializationForNextProperty() => FlagsForNextProperty |= PropertyBuilderFlags.Skip;
+    
     public EPropertyFlags CreatePropertyFlags(PropertyVisibility Visibility, PropertyBuilderFlags InFlags)
     {
+        InFlags |= FlagsForNextProperty;
+        FlagsForNextProperty = PropertyBuilderFlags.None;
         var Flags = EPropertyFlags.CPF_Edit | EPropertyFlags.CPF_BlueprintVisible;
         if (InFlags.HasFlag(PropertyBuilderFlags.NoCtor)) Flags |= EPropertyFlags.CPF_ZeroConstructor;
         if (InFlags.HasFlag(PropertyBuilderFlags.Copy)) Flags |= EPropertyFlags.CPF_IsPlainOldData;

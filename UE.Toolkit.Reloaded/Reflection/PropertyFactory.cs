@@ -17,35 +17,36 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     
     // Lazy load property name cache, we need to do this to ensure that FName::FName() is valid
     private static Dictionary<string, FName> InitializePropertyNames() => new()
-        {
-            { "ByteProperty", new FName("ByteProperty", EFindName.FNAME_Find) },
-            { "IntProperty", new FName("IntProperty", EFindName.FNAME_Find) },
-            { "BoolProperty", new FName("BoolProperty", EFindName.FNAME_Find) },
-            { "FloatProperty", new FName("FloatProperty", EFindName.FNAME_Find) },
-            { "ObjectProperty", new FName("ObjectProperty", EFindName.FNAME_Find) },
-            { "NameProperty", new FName("NameProperty", EFindName.FNAME_Find) },
-            { "DelegateProperty", new FName("DelegateProperty", EFindName.FNAME_Find) },
-            { "DoubleProperty", new FName("DoubleProperty", EFindName.FNAME_Find) },
-            { "ArrayProperty", new FName("ArrayProperty", EFindName.FNAME_Find) },
-            { "StructProperty", new FName("StructProperty", EFindName.FNAME_Find) },
-            { "VectorProperty", new FName("VectorProperty", EFindName.FNAME_Find) },
-            { "RotatorProperty", new FName("RotatorProperty", EFindName.FNAME_Find) },
-            { "StrProperty", new FName("StrProperty", EFindName.FNAME_Find) },
-            { "TextProperty", new FName("TextProperty", EFindName.FNAME_Find) },
-            { "InterfaceProperty", new FName("InterfaceProperty", EFindName.FNAME_Find) },
-            { "MulticastDelegateProperty", new FName("MulticastDelegateProperty", EFindName.FNAME_Find) },
-            { "LazyObjectProperty", new FName("LazyObjectProperty", EFindName.FNAME_Find) },
-            { "SoftObjectProperty", new FName("SoftObjectProperty", EFindName.FNAME_Find) },
-            { "Int64Property", new FName("Int64Property", EFindName.FNAME_Find) },
-            { "Int32Property", new FName("Int32Property", EFindName.FNAME_Find) },
-            { "Int16Property", new FName("Int16Property", EFindName.FNAME_Find) },
-            { "Int8Property", new FName("Int8Property", EFindName.FNAME_Find) },
-            { "UInt64Property", new FName("UInt64Property", EFindName.FNAME_Find) },
-            { "UInt32Property", new FName("UInt32Property", EFindName.FNAME_Find) },
-            { "UInt16Property", new FName("UInt16Property", EFindName.FNAME_Find) },
-            { "MapProperty", new FName("MapProperty", EFindName.FNAME_Find) },
-            { "SetProperty", new FName("SetProperty", EFindName.FNAME_Find) },
-        };
+    {
+        { "ByteProperty", new FName("ByteProperty", EFindName.FNAME_Find) },
+        { "IntProperty", new FName("IntProperty", EFindName.FNAME_Find) },
+        { "BoolProperty", new FName("BoolProperty", EFindName.FNAME_Find) },
+        { "FloatProperty", new FName("FloatProperty", EFindName.FNAME_Find) },
+        { "ObjectProperty", new FName("ObjectProperty", EFindName.FNAME_Find) },
+        { "NameProperty", new FName("NameProperty", EFindName.FNAME_Find) },
+        { "DelegateProperty", new FName("DelegateProperty", EFindName.FNAME_Find) },
+        { "DoubleProperty", new FName("DoubleProperty", EFindName.FNAME_Find) },
+        { "ArrayProperty", new FName("ArrayProperty", EFindName.FNAME_Find) },
+        { "StructProperty", new FName("StructProperty", EFindName.FNAME_Find) },
+        { "VectorProperty", new FName("VectorProperty", EFindName.FNAME_Find) },
+        { "RotatorProperty", new FName("RotatorProperty", EFindName.FNAME_Find) },
+        { "StrProperty", new FName("StrProperty", EFindName.FNAME_Find) },
+        { "TextProperty", new FName("TextProperty", EFindName.FNAME_Find) },
+        { "InterfaceProperty", new FName("InterfaceProperty", EFindName.FNAME_Find) },
+        { "MulticastDelegateProperty", new FName("MulticastDelegateProperty", EFindName.FNAME_Find) },
+        { "LazyObjectProperty", new FName("LazyObjectProperty", EFindName.FNAME_Find) },
+        { "SoftObjectProperty", new FName("SoftObjectProperty", EFindName.FNAME_Find) },
+        { "Int64Property", new FName("Int64Property", EFindName.FNAME_Find) },
+        { "Int32Property", new FName("Int32Property", EFindName.FNAME_Find) },
+        { "Int16Property", new FName("Int16Property", EFindName.FNAME_Find) },
+        { "Int8Property", new FName("Int8Property", EFindName.FNAME_Find) },
+        { "UInt64Property", new FName("UInt64Property", EFindName.FNAME_Find) },
+        { "UInt32Property", new FName("UInt32Property", EFindName.FNAME_Find) },
+        { "UInt16Property", new FName("UInt16Property", EFindName.FNAME_Find) },
+        { "MapProperty", new FName("MapProperty", EFindName.FNAME_Find) },
+        { "SetProperty", new FName("SetProperty", EFindName.FNAME_Find) },
+        { "EnumProperty", new FName("EnumProperty", EFindName.FNAME_Find) },
+    };
 
     public bool CheckPropertyEquality(string Name, uint OtherValue)
     {
@@ -63,22 +64,26 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
                && Classes.GetFieldClassGlobal(SerialName, out FieldClass);
     }
     
-    protected bool TryGetClassAndProperty<TOwner>(string PropertyName, out IUClass? ClassReflection,
+    protected bool TryGetClassAndProperty<TOwner>(string PropertyName, out IUStruct? Reflection,
         out FieldClassGlobal? PropertyClass) where TOwner: unmanaged
     {
-        ClassReflection = null;
+        Reflection = null;
         PropertyClass = null;
-        return Classes.GetClassInfoFromClass<TOwner>(out ClassReflection)
-               && GetProperty(PropertyName, out PropertyClass);
+        var IsClass = Classes.GetClassInfoFromClass<TOwner>(out var ClassReflection);
+        var IsStruct = Classes.GetScriptStructInfoFromType<TOwner>(out var StructReflection);
+        GetProperty(PropertyName, out PropertyClass);
+        if ((!IsClass && !IsStruct) || PropertyClass == null) return false;
+        Reflection = IsClass ? ClassReflection : StructReflection;
+        return true;
     }
     
     #region INTERNAL INTERFACE
     
-    protected abstract void LinkToPropertyList(IFProperty Property, IUClass? Reflect);
+    protected abstract void LinkToPropertyList(IFProperty Property, IUStruct? Reflect);
     
     #region Properties Owned by a Class
 
-    protected abstract void SetPropertySuperFields(IFField Field, string Name, IUClass ClassReflection,
+    protected abstract void SetPropertySuperFields(IFField Field, string Name, IUStruct ClassReflection,
         FieldClassGlobal PropertyClass);
     
     protected abstract void SetCopyPropertyFields<T>(IFProperty Property, int Offset, PropertyVisibility Visibility)
@@ -192,8 +197,20 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         SetBoolPropertyFields(NewProperty, Mask);
         return true;
     }
+    
+    protected bool CreateBoolPropertyInner(out IFBoolProperty? NewProperty, string Name, int Offset, 
+        PropertyVisibility Visibility, BooleanMask Mask)
+    {
+        NewProperty = null;
+        if (!CreateCopyPropertyInner<byte, FBoolProperty>(out var BaseProperty, Name, Offset, 
+                "BoolProperty", Visibility))
+            return false;
+        NewProperty = Factory.CreateFBoolProperty(BaseProperty!.Ptr);
+        SetBoolPropertyFields(NewProperty, Mask);
+        return true;
+    }
 
-    private IFProperty GetPreviousPropertyInner(IFProperty Property, IUClass Reflect,
+    private IFProperty GetPreviousPropertyInner(IFProperty Property, IUStruct Reflect,
         Func<IUStruct, IEnumerable<IFProperty>> FirstProperty, Func<IFProperty, IEnumerable<IFProperty>> NextProperty)
     {
         IFProperty? TargetProp = null;
@@ -216,15 +233,15 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         return TargetProp!;       
     }
     
-    protected IFProperty GetPreviousProperty(IFProperty Property, IUClass Reflect)
+    protected IFProperty GetPreviousProperty(IFProperty Property, IUStruct Reflect)
         => GetPreviousPropertyInner(Property, Reflect, 
             x => x.PropertyLink, x => x.PropertyLinkNext);
     
-    protected IFProperty GetPreviousRefProperty(IFProperty Property, IUClass Reflect)
+    protected IFProperty GetPreviousRefProperty(IFProperty Property, IUStruct Reflect)
         => GetPreviousPropertyInner(Property, Reflect, 
             x => x.RefLink, x => x.NextRef);
 
-    protected bool AnyDirectlyDefinedProperties(IUClass Reflect)
+    protected bool AnyDirectlyDefinedProperties(IUStruct Reflect)
     {
         var SuperSize = Reflect.SuperStruct?.PropertiesSize ?? 0;
         return Reflect.PropertyLink.Any() && Reflect.PropertyLink.First().Offset_Internal >= SuperSize;
@@ -297,6 +314,10 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
     public bool CreateCBool<TOwner>(out IFBoolProperty? NewProperty, string Name, int Offset, 
         PropertyVisibility Visibility) where TOwner: unmanaged
         => CreateBoolPropertyInner<TOwner>(out NewProperty, Name, Offset, Visibility, new(1, 255));
+    
+    public bool CreateCBool(out IFBoolProperty? NewProperty, string Name, int Offset, 
+        PropertyVisibility Visibility)
+        => CreateBoolPropertyInner(out NewProperty, Name, Offset, Visibility, new(1, 255));
 
     public bool CreateBitBool<TOwner>(out IFBoolProperty? NewProperty, string Name, int Offset, 
         int Bit, PropertyVisibility Visibility) where TOwner: unmanaged
@@ -306,14 +327,15 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
         var Mask = (byte)(1 << Bit);
         return CreateBoolPropertyInner<TOwner>(out NewProperty, Name, Offset, Visibility, new(Mask, Mask));
     }
-   
-    /*
-    public abstract bool CreateCBool<TOwner>(out IFBoolProperty? NewProperty, string Name, int Offset,
-        PropertyVisibility Visibility) where TOwner : unmanaged;
     
-    public abstract bool CreateBitBool<TOwner>(out IFBoolProperty? NewProperty, string Name, int Offset,
-        int Bit, PropertyVisibility Visibility) where TOwner : unmanaged;
-    */
+    public bool CreateBitBool(out IFBoolProperty? NewProperty, string Name, int Offset, 
+        int Bit, PropertyVisibility Visibility)
+    {
+        NewProperty = null;
+        if (Bit > 7) return false;
+        var Mask = (byte)(1 << Bit);
+        return CreateBoolPropertyInner(out NewProperty, Name, Offset, Visibility, new(Mask, Mask));
+    }
 
     public abstract bool CreateStruct<TOwner, TField>(out IFStructProperty? NewProperty,
         string Name, int Offset, PropertyVisibility Visibility)
@@ -374,12 +396,30 @@ public abstract class BasePropertyFactory(IUnrealFactory factory, IUnrealMemory 
 
     public abstract bool CreateArray<TObject>(out IFArrayProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility, IFProperty Inner) where TObject : unmanaged;
+
+    public abstract bool CreateArray(out IFArrayProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility, IFProperty Inner);
     
     public abstract bool CreateMap<TObject>(out IFMapProperty? NewProperty, string Name, int Offset,
         PropertyVisibility Visibility, IFProperty Key, IFProperty Value) where TObject : unmanaged;
     
-     public abstract bool CreateMap(out IFMapProperty? NewProperty, string Name, int Offset,
-         PropertyVisibility Visibility, IFProperty Key, IFProperty Value);
+    public abstract bool CreateMap(out IFMapProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility, IFProperty Key, IFProperty Value);
+     
+    public abstract bool CreateEnum<TOwner, TEnum>(out IFEnumProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility)
+        where TOwner : unmanaged
+        where TEnum : unmanaged;
+    
+    protected delegate bool CreateEnumUnderlyingType(out IFProperty? Property, string Name, int Offset,
+        PropertyVisibility Visibility);
+    
+    public abstract bool CreateEnum<TEnum>(out IFEnumProperty? NewProperty, string Name, int Offset,
+        PropertyVisibility Visibility) where TEnum : unmanaged;
+    
+    public abstract bool CreateEnum(out IFEnumProperty? NewProperty, string Name, string TypeName, int Offset,
+        PropertyVisibility Visibility);
+    
     #endregion
     
     protected delegate byte FProperty_ContainsObjectReference(nint self, nint EncounteredStructProps, EPropertyObjectReferenceType InReferenceType);
@@ -402,6 +442,7 @@ public enum PropertyBuilderFlags
     Copy = 1 << 1, // If property can be memcpy'd.
     NoDtor = 1 << 2, // No destructor
     Hash = 1 << 3, // Can be hashed
+    Skip = 1 << 4, // Skip serialization
 }
 
 public struct BooleanMask(byte byteMask, byte fieldMask)

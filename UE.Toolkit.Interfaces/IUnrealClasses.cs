@@ -100,6 +100,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI8Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -110,6 +111,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI16Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -120,6 +122,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI32Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -130,6 +133,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI64Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -140,6 +144,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU8Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -150,6 +155,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU16Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -160,6 +166,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU32Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -170,6 +177,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU64Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -180,6 +188,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddF32Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -190,6 +199,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddF64Property<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
 
     /// <summary>
@@ -200,6 +210,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddCBoolProperty<TObject>(string Name, int Offset, out IFBoolProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -211,6 +222,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Bit">Bit offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddBitBoolProperty<TObject>(string Name, int Offset, int Bit, out IFBoolProperty? Out) where TObject : unmanaged;
 
     /// <summary>
@@ -222,6 +234,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddStructProperty<TObject, TField>(string Name, int Offset, out IFStructProperty? Out)
         where TObject : unmanaged
         where TField : unmanaged;
@@ -235,6 +248,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddObjectProperty<TObject, TField>(string Name, int Offset, out IFObjectProperty? Out)
         where TObject : unmanaged
         where TField : unmanaged;
@@ -248,6 +262,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
     /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddClassProperty<TObject, TField>(string Name, int Offset, out IFClassProperty? Out)
         where TObject : unmanaged
         where TField : unmanaged;
@@ -260,6 +275,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddNameProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -270,6 +286,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddStringProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -280,6 +297,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddTextProperty<TObject>(string Name, int Offset, out IFProperty? Out) where TObject : unmanaged;
     
     /// <summary>
@@ -291,6 +309,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Inner">The inner property used for each entry in the array.</param>
     /// <param name="Property">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, out IFArrayProperty? Property) 
         where TObject : unmanaged;
     
@@ -304,9 +323,23 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Value">The property used for each value in the map.</param>
     /// <param name="Property">Return value.</param>
     /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddMapProperty<TObject>(string Name, int Offset,
         IFProperty Key, IFProperty Value, out IFMapProperty? Property) where TObject : unmanaged;
-    
+
+    /// <summary>
+    /// Add an enum (UEnum) to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Property">Return value.</param>
+    /// <typeparam name="TOwner">Object type.</typeparam>
+    /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
+    public bool AddEnumProperty<TOwner, TField>(string Name, int Offset, out IFEnumProperty? Property)
+        where TOwner : unmanaged
+        where TField : unmanaged;
     #endregion
     
     #region Struct Field Extension Methods (no parent)
@@ -318,6 +351,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI8Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -327,6 +361,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI16Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -336,6 +371,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI32Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -345,6 +381,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddI64Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -354,6 +391,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU8Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -363,6 +401,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU16Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -372,6 +411,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU32Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -381,6 +421,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddU64Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -390,6 +431,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddF32Property(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -399,7 +441,29 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddF64Property(string Name, int Offset, out IFProperty? Out) ;
+    
+    /// <summary>
+    /// Add a C-style boolean to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
+    public bool AddCBoolProperty(string Name, int Offset, out IFBoolProperty? Out);
+    
+    /// <summary>
+    /// Add a bitflag-style boolean to the object's class with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Byte offset of the new field.</param>
+    /// <param name="Bit">Bit offset of the new field.</param>
+    /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
+    public bool AddBitBoolProperty(string Name, int Offset, int Bit, out IFBoolProperty? Out);
     
     /// <summary>
     /// Add a by-value struct to the object's class with the specified name and offset. This will make the field
@@ -409,6 +473,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddStructProperty<TField>(string Name, int Offset, out IFStructProperty? Out)
         where TField : unmanaged;
     
@@ -420,6 +485,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="TypeName">Field type.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddStructProperty(string Name, string TypeName, int Offset, out IFStructProperty? Out);
     
     /// <summary>
@@ -433,6 +499,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="TypeName">Field type.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddStructProperty_DataTableSpecial(string Name, string TypeName, int Offset, out IFObjectProperty? Out);
     
     /// <summary>
@@ -443,6 +510,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
     /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddObjectProperty<TField>(string Name, int Offset, out IFObjectProperty? Out)
         where TField : unmanaged;
     
@@ -454,6 +522,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="TypeName">Field type.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddObjectProperty(string Name, string TypeName, int Offset, out IFObjectProperty? Out);
     
     /// <summary>
@@ -463,6 +532,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddNameProperty(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -472,6 +542,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddStringProperty(string Name, int Offset, out IFProperty? Out) ;
     
     /// <summary>
@@ -481,7 +552,20 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Name">Name of the new field.</param>
     /// <param name="Offset">Offset of the new field.</param>
     /// <param name="Out">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddTextProperty(string Name, int Offset, out IFProperty? Out) ;
+
+    /// <summary>
+    /// Add a Array (TArray) containing elements of the property defined in Inner to the object's class with the
+    /// specified name and offset. This will make the field exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Inner">The inner property used for each entry in the array.</param>
+    /// <param name="Property">Return value.</param>
+    /// <typeparam name="TObject">Object type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
+    public bool AddArrayProperty(string Name, int Offset, IFProperty Inner, out IFArrayProperty? Property);
     
     
     /// <summary>
@@ -493,9 +577,41 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Key">The property used for each key in the map.</param>
     /// <param name="Value">The property used for each value in the map.</param>
     /// <param name="Property">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
     public bool AddMapProperty(string Name, int Offset,
         IFProperty Key, IFProperty Value, out IFMapProperty? Property);
+    
+    /// <summary>
+    /// Add an enum (UEnum) with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Property">Return value.</param>
+    /// <typeparam name="TField">Field type.</typeparam>
+    /// <returns>True if the property was created successfully</returns>
+    public bool AddEnumProperty<TField>(string Name, int Offset, out IFEnumProperty? Property)
+        where TField : unmanaged;
+
+    /// <summary>
+    /// Add an enum (UEnum) with the specified name and offset. This will make the field
+    /// exposable to blueprints and Object XML.
+    /// </summary>
+    /// <param name="Name">Name of the new field.</param>
+    /// <param name="TypeName">Typename of the enum.</param>
+    /// <param name="Offset">Offset of the new field.</param>
+    /// <param name="Property">Return value.</param>
+    /// <returns>True if the property was created successfully</returns>
+    public bool AddEnumProperty(string Name, string TypeName, int Offset, out IFEnumProperty? Property);
+    
     #endregion
+
+    /// <summary>
+    /// Prevents FObjectInitializer::InitProperties from overwriting the uninitialized value at a field. Used in cases where the
+    /// value of a field is initialized before FObjectInitializser::InitProperties is called such as in the class's
+    /// C++ constructor (e.g UActorComponent::OwnerPrivate)
+    /// </summary>
+    public void SkipInitializationForNextProperty();
     
     #region New Struct Construction
 
@@ -599,6 +715,7 @@ public interface IUnrealClasses : IUnrealClassesInternal, ITypeReflection
     /// <param name="Size">Size of the new struct.</param>
     /// <param name="Fields">A list of exposed fields within this struct.</param>
     /// <param name="Out">New script struct.</param>
+    /// <returns>True if the struct was created successfully</returns>
     public bool CreateScriptStruct(string Name, int Size, List<IFPropertyParams> Fields, out IUScriptStruct? Out);
 
     #endregion

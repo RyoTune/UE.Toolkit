@@ -30,4 +30,25 @@ public interface IUEnum : IUField
         }
         return false;
     }
+
+    int SizeOf()
+    {
+        long maxValue = 0;
+        for (var i = 0; i < Names.ArrayNum; i++)
+        {
+            unsafe
+            {
+                var currentValue = Names.AllocatorInstance[i].Value;
+                if (currentValue > maxValue)
+                    maxValue = currentValue;
+            }
+        }
+        return maxValue switch
+        {
+            <= byte.MaxValue => 1,
+            <= ushort.MaxValue => 2,
+            <= uint.MaxValue => 4,
+            _ => 8
+        };   
+    }
 }

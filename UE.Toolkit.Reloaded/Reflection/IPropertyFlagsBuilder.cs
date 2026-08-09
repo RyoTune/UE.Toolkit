@@ -6,4 +6,5 @@ namespace UE.Toolkit.Reloaded.Reflection;
 public interface IPropertyFlagsBuilder
 {
     EPropertyFlags CreatePropertyFlags(PropertyVisibility Visibility, PropertyBuilderFlags InFlags);
+    void SkipInitializationForNextProperty();
 }

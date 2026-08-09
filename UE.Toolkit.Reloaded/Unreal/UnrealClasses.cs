@@ -353,6 +353,89 @@ public unsafe class UnrealClasses : IUnrealClasses
         return PropertyFactory.CreateF64<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
     }
     
+    public bool AddCBoolProperty<TObject>(string Name, int Offset, out IFBoolProperty? Property)
+        where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateCBool<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddBitBoolProperty<TObject>(string Name, int Offset, int Bit,
+        out IFBoolProperty? Property) where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateBitBool<TObject>(out Property, Name, Offset, Bit, PropertyVisibility.Public);
+    }
+
+    public bool AddStructProperty<TObject, TField>(string Name, int Offset, out IFStructProperty? Property)
+        where TObject : unmanaged
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateStruct<TObject, TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddObjectProperty<TObject, TField>(string Name, int Offset, out IFObjectProperty? Property)
+        where TObject : unmanaged
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateObject<TObject, TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddClassProperty<TClass, TField>(string Name, int Offset, out IFClassProperty? Property)
+        where TClass : unmanaged
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateClass<TClass, TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddNameProperty<TObject>(string Name, int Offset, out IFProperty? Property)
+        where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateName<TObject>(out Property, Name, Offset, PropertyVisibility.Public);   
+    }
+
+    public bool AddStringProperty<TObject>(string String, int Offset, out IFProperty? Property)
+        where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateString<TObject>(out Property, String, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddTextProperty<TObject>(string Text, int Offset, out IFProperty? Property)
+        where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateText<TObject>(out Property, Text, Offset, PropertyVisibility.Public);
+    }
+
+    public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, 
+        out IFArrayProperty? Property) where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateArray<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Inner);
+    }
+
+    public bool AddMapProperty<TObject>(string Name, int Offset,
+        IFProperty Key, IFProperty Value, out IFMapProperty? Property) where TObject : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateMap<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Key, Value);
+    }
+
+    public bool AddEnumProperty<TOwner, TField>(string Name, int Offset, out IFEnumProperty? Property)
+        where TOwner : unmanaged
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateEnum<TOwner, TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+    
+    // Struct Field Extension Methods (no parent)
+    
     public bool AddI8Property(string Name, int Offset, out IFProperty? Property)
     {
         Property = null;
@@ -421,109 +504,17 @@ public unsafe class UnrealClasses : IUnrealClasses
         return PropertyFactory.CreateF64(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
-    public bool AddCBoolProperty<TObject>(string Name, int Offset, out IFBoolProperty? Property)
-        where TObject : unmanaged
+    public bool AddCBoolProperty(string Name, int Offset, out IFBoolProperty? Property)
     {
         Property = null;
-        return PropertyFactory.CreateCBool<TObject>(out Property, Name, Offset, PropertyVisibility.Public);
+        return PropertyFactory.CreateCBool(out Property, Name, Offset, PropertyVisibility.Public);
     }
 
-    public bool AddBitBoolProperty<TObject>(string Name, int Offset, int Bit,
-        out IFBoolProperty? Property) where TObject : unmanaged
+    public bool AddBitBoolProperty(string Name, int Offset, int Bit, out IFBoolProperty? Property)
     {
         Property = null;
-        return PropertyFactory.CreateBitBool<TObject>(out Property, Name, Offset, Bit, PropertyVisibility.Public);
+        return PropertyFactory.CreateBitBool(out Property, Name, Offset, Bit, PropertyVisibility.Public);
     }
-
-
-    public bool AddStructProperty<TObject, TField>(string Name, int Offset, out IFStructProperty? Property)
-        where TObject : unmanaged
-        where TField : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateStruct<TObject, TField>(out Property, Name, Offset, PropertyVisibility.Public);
-    }
-
-    public bool AddObjectProperty<TObject, TField>(string Name, int Offset, out IFObjectProperty? Property)
-        where TObject : unmanaged
-        where TField : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateObject<TObject, TField>(out Property, Name, Offset, PropertyVisibility.Public);
-    }
-
-    public bool AddClassProperty<TClass, TField>(string Name, int Offset, out IFClassProperty? Property)
-        where TClass : unmanaged
-        where TField : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateClass<TClass, TField>(out Property, Name, Offset, PropertyVisibility.Public);
-    }
-
-    public bool AddNameProperty<TObject>(string Name, int Offset, out IFProperty? Property)
-        where TObject : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateName<TObject>(out Property, Name, Offset, PropertyVisibility.Public);   
-    }
-
-    public bool AddStringProperty<TObject>(string String, int Offset, out IFProperty? Property)
-        where TObject : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateString<TObject>(out Property, String, Offset, PropertyVisibility.Public);
-    }
-
-    public bool AddTextProperty<TObject>(string Text, int Offset, out IFProperty? Property)
-        where TObject : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateText<TObject>(out Property, Text, Offset, PropertyVisibility.Public);
-    }
-
-    public bool AddArrayProperty<TObject>(string Name, int Offset, IFProperty Inner, 
-        out IFArrayProperty? Property) where TObject : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateArray<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Inner);
-    }
-
-    public bool AddMapProperty<TObject>(string Name, int Offset,
-        IFProperty Key, IFProperty Value, out IFMapProperty? Property) where TObject : unmanaged
-    {
-        Property = null;
-        return PropertyFactory.CreateMap<TObject>(out Property, Name, Offset, PropertyVisibility.Public, Key, Value);
-    }
-
-    public IFGenericPropertyParams? CreateI8Param(string Name, int Offset)
-        => TypeFactory.CreateI8Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateI16Param(string Name, int Offset)
-        => TypeFactory.CreateI16Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateI32Param(string Name, int Offset)
-        => TypeFactory.CreateI32Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateI64Param(string Name, int Offset)
-        => TypeFactory.CreateI64Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateU8Param(string Name, int Offset)
-        => TypeFactory.CreateU8Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateU16Param(string Name, int Offset)
-        => TypeFactory.CreateU16Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateU32Param(string Name, int Offset)
-        => TypeFactory.CreateU32Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateU64Param(string Name, int Offset)
-        => TypeFactory.CreateU64Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateF32Param(string Name, int Offset)
-        => TypeFactory.CreateF32Param(Name, Offset, out var Out) ? Out : null;
-    
-    public IFGenericPropertyParams? CreateF64Param(string Name, int Offset)
-        => TypeFactory.CreateF64Param(Name, Offset, out var Out) ? Out : null;
     
     public bool AddStructProperty<TField>(string Name, int Offset, out IFStructProperty? Property)
         where TField : unmanaged
@@ -578,12 +569,76 @@ public unsafe class UnrealClasses : IUnrealClasses
         return PropertyFactory.CreateText(out Property, Text, Offset, PropertyVisibility.Public);
     }
     
+    public bool AddArrayProperty(string Name, int Offset, IFProperty Inner, 
+        out IFArrayProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateArray(out Property, Name, Offset, PropertyVisibility.Public, Inner);
+    }
+    
     public bool AddMapProperty(string Name, int Offset,
         IFProperty Key, IFProperty Value, out IFMapProperty? Property)
     {
         Property = null;
         return PropertyFactory.CreateMap(out Property, Name, Offset, PropertyVisibility.Public, Key, Value);
     }
+    
+    public bool AddEnumProperty<TField>(string Name, int Offset, out IFEnumProperty? Property)
+        where TField : unmanaged
+    {
+        Property = null;
+        return PropertyFactory.CreateEnum<TField>(out Property, Name, Offset, PropertyVisibility.Public);
+    }
+    
+    public bool AddEnumProperty(string Name, string TypeName, int Offset, out IFEnumProperty? Property)
+    {
+        Property = null;
+        return PropertyFactory.CreateEnum(out Property, Name, TypeName, Offset, PropertyVisibility.Public);
+    }
+    
+    #endregion
+    
+    #region IUnrealClasses Add Property Controls
+
+    public void SkipInitializationForNextProperty() => FlagsBuilder.SkipInitializationForNextProperty();
+    
+    #endregion
+    
+    #region IUnrealClasses Create Property Params
+    
+    public IFGenericPropertyParams? CreateI8Param(string Name, int Offset)
+        => TypeFactory.CreateI8Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateI16Param(string Name, int Offset)
+        => TypeFactory.CreateI16Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateI32Param(string Name, int Offset)
+        => TypeFactory.CreateI32Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateI64Param(string Name, int Offset)
+        => TypeFactory.CreateI64Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU8Param(string Name, int Offset)
+        => TypeFactory.CreateU8Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU16Param(string Name, int Offset)
+        => TypeFactory.CreateU16Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU32Param(string Name, int Offset)
+        => TypeFactory.CreateU32Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateU64Param(string Name, int Offset)
+        => TypeFactory.CreateU64Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateF32Param(string Name, int Offset)
+        => TypeFactory.CreateF32Param(Name, Offset, out var Out) ? Out : null;
+    
+    public IFGenericPropertyParams? CreateF64Param(string Name, int Offset)
+        => TypeFactory.CreateF64Param(Name, Offset, out var Out) ? Out : null;
+    
+    #endregion
+    
+    #region IUnrealClasses Create Object Types
 
     public bool CreateScriptStruct(string Name, int Size, List<IFPropertyParams> Fields, out IUScriptStruct? Out)
     {
@@ -593,6 +648,9 @@ public unsafe class UnrealClasses : IUnrealClasses
         var pScriptStruct = nint.Zero;
         ConstructUScriptStructImpl((nint)(&pScriptStruct), Param.Ptr);
         Out = Factory.CreateUScriptStruct(pScriptStruct);
+        // Immediately insert new ScriptStructs into the map so we can add additional properties to it without
+        // waiting for UStruct::Link
+        ScriptStructs.TryAdd(Out.NamePrivate.ToString(), Out);
         return true;
     }
 
@@ -707,6 +765,7 @@ public unsafe class UnrealClasses : IUnrealClasses
 
     private BasePropertyFactory PropertyFactory;
     private BaseTypeFactory TypeFactory;
+    private IPropertyFlagsBuilder FlagsBuilder;
 
     public UnrealClasses(IUnrealFactory _Factory, IUnrealMemory _Memory, IUnrealObjects _Objects, IReloadedHooks _Hooks, ResolveAddress _Address)
     {
@@ -716,7 +775,7 @@ public unsafe class UnrealClasses : IUnrealClasses
         Hooks = _Hooks;
         Address = _Address;
 
-        var FlagsBuilder = GameConfig.Instance.FlagsBuilder;
+        FlagsBuilder = GameConfig.Instance.FlagsBuilder;
         PropertyFactory = GameConfig.Instance.PropertyFactory(this);
         TypeFactory = GameConfig.Instance.TypeFactory(this);
         
