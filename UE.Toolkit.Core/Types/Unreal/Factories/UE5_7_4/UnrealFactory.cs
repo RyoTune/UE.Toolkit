@@ -165,28 +165,6 @@ public unsafe class UEnum_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemor
             return CachedNames.Value;
         }
     }
-    
-    public bool TryParse(string name, bool ignoreCase, [NotNullWhen(true)] out long? value)
-    {
-        value = null;
-        if (ignoreCase)
-        {
-            name = name.ToLower();
-        }
-        for (var i = 0; i < Names.ArrayNum; i++)
-        {
-            var Discriminant = &Names.AllocatorInstance[i];
-            var CheckName = Discriminant->Key.ToString();
-            if (ignoreCase)
-                CheckName = CheckName.ToLower();
-            if (CheckName == name)
-            {
-                value = Discriminant->Value;
-                return true;
-            }   
-        }
-        return false;
-    }
 
     ~UEnum_UE5_7_4() => Dispose(false);
 

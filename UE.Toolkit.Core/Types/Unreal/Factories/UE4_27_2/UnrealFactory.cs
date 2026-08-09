@@ -368,32 +368,6 @@ public unsafe class UEnumUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemor
     private readonly UEnum* _self = (UEnum*)ptr;
     public string CppType => _self->cpp_type.ToString();
     public TArray<TPair<FName, long>> Names => _self->entries;
-
-    public bool TryParse(string name, bool ignoreCase, [NotNullWhen(true)] out long? value)
-    {
-        value = null;
-        if (ignoreCase)
-        {
-            name = name.ToLower();
-        }
-        var NamesArray = new TArrayList<TPair<FName, long>>(&_self->entries, _factory.Memory);
-        foreach (var pDiscriminant in NamesArray)
-        {
-            var Discriminant = pDiscriminant.Value;
-            var CheckName = Discriminant->Key.ToString();
-            var CheckNameParts = CheckName.Split("::", 2);
-            // 1.10.2: Don't break fully qualified names in case there are mods out there that define their enums like that
-            CheckName = CheckNameParts.Length > 1 && !name.Contains("::") ? CheckNameParts[1] : CheckName;
-            if (ignoreCase)
-                CheckName = CheckName.ToLower();
-            if (CheckName == name)
-            {
-                value = Discriminant->Value;
-                return true;
-            }
-        }
-        return false;
-    }
 }
 
 public unsafe class UScriptStructUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)
