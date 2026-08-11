@@ -25,7 +25,7 @@ public abstract class BasePrimitiveNode<TProperty, TValue>(TProperty property, P
         SetField(fieldValue);
         
         reader.Read(); // Consume node.
-        Log.Verbose($"{nameof(BasePrimitiveNode<TProperty, TValue>)} || Field '{property.NamePrivate}' node consumed.");
+        Log.Verbose($"{nameof(BasePrimitiveNode<TProperty, TValue>)}<{Property.ClassPrivate.Name}> || Field '{Property.NamePrivate}' node consumed.");
     }
     
     protected string GetFieldValue(XmlReader reader)

@@ -33,7 +33,7 @@ public unsafe class DataTablesService : IDataTables
     {
         _onDataTableChanged += table =>
         {
-            if (ToolkitUtils.GetPathName((nint)table.Self) == objectPath)
+            if (string.Equals(ToolkitUtils.GetPathName((nint)table.Self), objectPath, StringComparison.InvariantCultureIgnoreCase))
                 callback(new((UDataTable<TRow>*)table.Self));
         };
     }

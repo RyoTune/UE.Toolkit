@@ -26,10 +26,6 @@ public class PropertyFlagsBuilder : IPropertyFlagsBuilder
             PropertyVisibility.Protected => EPropertyFlags.CPF_NativeAccessSpecifierProtected,
             _ => EPropertyFlags.CPF_NativeAccessSpecifierPrivate,
         };
-        if (ListFlags)
-        {
-            Log.Debug($"CreatePropertyFlags: {Flags}");
-        }
         return Flags;
     }
 }
