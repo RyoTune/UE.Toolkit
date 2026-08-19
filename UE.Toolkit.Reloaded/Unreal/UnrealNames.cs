@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Structs;
+using UE.Toolkit.Core.Types;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 
@@ -13,6 +14,7 @@ public unsafe class UnrealNames : IUnrealNames
 {
     private static IHook<FNameCtorWideFunction>? _fnameCtorWideHook;
     private static readonly Dictionary<string, string> _redirectedFNames = [];
+    private static IHook<FNamePoolStoreFunction>? _fnamePoolStoreHook;
     
     public UnrealNames()
     {
@@ -36,6 +38,11 @@ public unsafe class UnrealNames : IUnrealNames
                 if (Mod.Config.FNamesEnabled)
                     _fnameCtorWideHook = hooks.CreateHook<FNameCtorWideFunction>((delegate* unmanaged[Stdcall]<nint, nint, EFindName, nint>)&FName_Ctor_Wide, result).Activate();
             });
+        
+        Project.Scans.AddScanHook(nameof(FNamePool_Store), (result, hooks) =>
+        {
+            _fnamePoolStoreHook = hooks.CreateHook<FNamePoolStoreFunction>((delegate* unmanaged[Stdcall]<Ptr<FNamePool>, nint, nint, int>)&FNamePool_Store, result).Activate();
+        });
     }
 
     public void RedirectFName(string modName, string fname, string newValue)
@@ -71,9 +78,21 @@ public unsafe class UnrealNames : IUnrealNames
         return _fnameCtorWideHook!.OriginalFunction.Value.Invoke(self, name, findType);
     }
     
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+    private static int FNamePool_Store(Ptr<FNamePool> self, nint a2, nint a3)
+    {
+        FName.GFNamePool = self.Value;
+        return _fnamePoolStoreHook!.OriginalFunction.Value.Invoke(self, a2, a3);
+    }
+    
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
     private struct FNameCtorWideFunction
     {
         public FuncPtr<nint, nint, EFindName, nint> Value;
+    }
+
+    private struct FNamePoolStoreFunction
+    {
+        public FuncPtr<Ptr<FNamePool>, nint, nint, int> Value;
     }
 }

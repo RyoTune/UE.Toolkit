@@ -148,13 +148,16 @@ public unsafe class UnrealClasses : IUnrealClasses
         {
             { "Class", new FName("Class", EFindName.FNAME_Find) },
             { "ScriptStruct", new FName("ScriptStruct", EFindName.FNAME_Find) },
+            { "UserDefinedStruct", new FName("UserDefinedStruct", EFindName.FNAME_Find) },
             { "Function", new FName("Function", EFindName.FNAME_Find) },
         };
         _StructLink!.OriginalFunction(pThis, Ar, bRelinkExistingProperties);
         var This = Factory.CreateUStruct((nint)pThis);
         var TypeEnum = StructType.None;
-        if (This.ClassPrivate.NamePrivate.Equals(ObjectWithLinkTypes["Class"])) TypeEnum |= StructType.Class;
-        else if (This.ClassPrivate.NamePrivate.Equals(ObjectWithLinkTypes["ScriptStruct"])) TypeEnum |= StructType.ScriptStruct;
+        var ClassName = This.ClassPrivate.NamePrivate;
+        if (ClassName.Equals(ObjectWithLinkTypes["Class"])) TypeEnum |= StructType.Class;
+        else if (ClassName.Equals(ObjectWithLinkTypes["ScriptStruct"]) 
+                 || ClassName.Equals(ObjectWithLinkTypes["UserDefinedStruct"])) TypeEnum |= StructType.ScriptStruct;
         if (TypeEnum.HasFlag(StructType.ScriptStruct)) // Add to ScriptStruct list
             ScriptStructs.TryAdd(This.NamePrivate.ToString(), Factory.CreateUScriptStruct(This.Ptr));
         if (TypeEnum != StructType.None)

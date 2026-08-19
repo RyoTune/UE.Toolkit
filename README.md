@@ -23,12 +23,12 @@
 | Feature | 4.27 | 5.0 | 5.1 | 5.2 | 5.3 | 5.4 | 5.5 | 5.6 | 5.7
 | - | - | - | - | - | - | - | - | - | - |
 | Object Logging |✅|✅|✅|✅|✅|✅|✅|✅|✅
-| Object Editing |✅|❔|❔|✅|❔|✅|❔|❔|❔
+| Object Editing |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | `FMemory` Functions |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Dumper |✅|✅|✅|✅|✅|✅|✅|✅|️️️️️️✅
-| Property Editing (Object XML) |✅|❔|❔|✅|❔|✅|❔|❔|❔
+| Property Editing (Object XML) |✅|❔|❔|✅|❔|✅|❔|✅|❔
 | Add List Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
-| Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|❔|❔
+| Add Map Entry (Object XML) |✅|❔|❔|❔|❔|❔|❔|✅|❔
 | Type Information |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Custom Constructor |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Add Properties |✅|✅|✅|✅|✅|✅|✅|✅|✅
