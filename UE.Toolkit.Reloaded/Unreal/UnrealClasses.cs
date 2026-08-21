@@ -750,7 +750,9 @@ public unsafe class UnrealClasses : IUnrealClasses
                 return className;
         }
     }
-    
+
+    public int GetOffsetFor_UScriptStruct_GetCustomGuid() => UUserDefinedStruct_GetCustomGuid_Offset;
+
     #endregion
 
     private ConcurrentDictionary<string, ClassExtension> ClassExtensions = new();

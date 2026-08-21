@@ -24,6 +24,7 @@ public class TypeFactory(IUnrealFactory factory, IUnrealMemory memory,
     private static unsafe nint InitializeCppStructOps()
     {
         var Alloc = (ICppStructOps*)FMemory_Malloc_Static!(Marshal.SizeOf<ICppStructOps>(), 0);
+        // TODO: UE 5.7 uses a Fake VTable
         Alloc->VTable = CurrentCppStructOpsVtable;
         Alloc->Size = CurrentCppStructOpsSize;
         Alloc->Alignment = CPP_STRUCT_OPS_ALIGNMENT;

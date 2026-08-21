@@ -11,3 +11,16 @@ public struct UScriptStruct
     public bool bPrepareCppStructOpsCompleted;
     public nint CppStructOps;
 }
+
+[StructLayout(LayoutKind.Sequential, Size = 0x18)]
+public struct FStructOpsFakeVTable
+{
+    
+}
+
+public unsafe struct ICppStructOps
+{
+    public FStructOpsFakeVTable* FakeVTable;
+    public int Size;
+    public int Alignment;
+}

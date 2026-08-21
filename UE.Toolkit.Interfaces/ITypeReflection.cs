@@ -30,4 +30,15 @@ public interface ITypeReflection : ITypeReflectionInternal
     string GetPropertyTypeName(IFProperty prop);
     
     #endregion
+    
+    #region UScriptStruct
+
+    /// <summary>
+    /// Returns the offset from the beginning of the UScriptStruct vtable for the method GetCustomGuid.
+    /// Used to determine if the row type for a DataTable is a UserDefinedStruct, which don't have C++ vtables.
+    /// </summary>
+    /// <returns>The offset from the beginning of the vtable</returns>
+    int GetOffsetFor_UScriptStruct_GetCustomGuid();
+
+    #endregion
 }

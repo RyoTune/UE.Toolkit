@@ -128,6 +128,8 @@ public class UnrealFactory : BaseUnrealFactory
     
     public override IUFunction CreateUFunction(nint ptr) => new UFunctionUE4_27_2(ptr, this, Memory);
 
+    public override IICppStructOps CreateICppStructOps(IntPtr ptr) => new ICppStructOpsUE4_27_2(ptr, Memory);
+
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClassUE4_27_2(ptr, this);
 
     public override IFField CreateFField(nint ptr) => new FFieldUE4_27_2(ptr, this);
@@ -558,6 +560,24 @@ public unsafe class UFunctionUE4_27_2(nint ptr, IUnrealFactory factory, IUnrealM
     }
 
     public nint FunctionPtr => _self->exec_func_ptr;
+}
+
+public unsafe class ICppStructOpsUE4_27_2(nint ptr, IUnrealMemoryInternal memory) : IICppStructOps
+{
+    private readonly ICppStructOps* _self = (ICppStructOps*)ptr;
+
+    public IntPtr Ptr => (nint)_self;
+    public IntPtr VTable => _self->VTable;
+    public int Size => (int)_self->Size;
+    public int Alignment => (int)_self->Alignment;
+
+    public nint Construct()
+    {
+        var Function = (delegate* unmanaged[Stdcall]<ICppStructOps*, nint, void>)*(nint*)(VTable + 0x18);
+        var Alloc = memory.Malloc(Size);
+        Function(_self, Alloc);
+        return Alloc;
+    }
 }
 
 public unsafe class UObjectArrayUE4_27_2(nint ptr, IUnrealFactory factory) : IUObjectArray

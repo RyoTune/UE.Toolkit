@@ -26,11 +26,13 @@ public enum CapabilityFlags : uint
     HasStructuredSerializeFromMismatchedTag = 1 << 19,
     HasGetTypeHash = 1 << 20,
     IsAbstract = 1 << 21,
+    HasFindInnerPropertyInstance = 1 << 22,
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct FCapabilities
 {
     public EPropertyFlags ComputedPropertyFlags;
+    public EPropertyObjectReferenceType HasSerializerObjectReferences;
     public CapabilityFlags CapabilityFlags;
 }

@@ -1,5 +1,6 @@
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories.UE4_27_2;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_2_1;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UClass = UE.Toolkit.Core.Types.Unreal.UE5_0_3.UClass;
@@ -10,6 +11,7 @@ namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_0_3;
 public class UnrealFactory : UE.Toolkit.Core.Types.Unreal.Factories.UE5_2_1.UnrealFactory
 {
     public override IUClass CreateUClass(nint ptr) => new UClass_UE5_0_3(ptr, this, Memory);
+    public override IICppStructOps CreateICppStructOps(nint ptr) => new ICppStructOpsUE4_27_2(ptr, Memory);
 }
 
 public unsafe class UClass_UE5_0_3(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory)

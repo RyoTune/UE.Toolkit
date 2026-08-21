@@ -124,6 +124,11 @@ public class UnrealFactory : BaseUnrealFactory
         throw new NotImplementedException();
     }
 
+    public override IICppStructOps CreateICppStructOps(IntPtr ptr)
+    {
+        throw new NotImplementedException();
+    }
+
     public override IFFieldClass CreateFFieldClass(IntPtr ptr)
     {
         throw new NotImplementedException();

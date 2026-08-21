@@ -67,6 +67,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_4_4(ptr, this, Memory);
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this, Memory);
     public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_4_4(ptr, this, Memory);
+    public override IICppStructOps CreateICppStructOps(IntPtr ptr) => new ICppStructOps_UE5_4_4(ptr, Memory);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
     public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
@@ -485,6 +486,24 @@ public unsafe class UFunction_UE5_4_4(nint ptr, IUnrealFactory factory, IUnrealM
     }
 
     public nint FunctionPtr => (nint)_self->Func;
+}
+
+public unsafe class ICppStructOps_UE5_4_4(nint ptr, IUnrealMemoryInternal memory) : IICppStructOps
+{
+    private readonly ICppStructOps* _self = (ICppStructOps*)ptr;
+    
+    public IntPtr Ptr => (nint)_self;
+    public IntPtr VTable => _self->VTable;
+    public int Size => (int)_self->Size;
+    public int Alignment => (int)_self->Alignment;
+    
+    public nint Construct()
+    {
+        var Function = (delegate* unmanaged[Stdcall]<ICppStructOps*, nint, void>)*(nint*)(VTable + 0x18);
+        var Alloc = memory.Malloc(Size);
+        Function(_self, Alloc);
+        return Alloc;
+    }
 }
 
 public unsafe class UObjectArray_UE5_4_4(nint ptr, IUnrealFactory factory) : IUObjectArray

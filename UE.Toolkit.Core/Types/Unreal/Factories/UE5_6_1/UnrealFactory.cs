@@ -63,6 +63,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUStruct CreateUStruct(nint ptr) => new UStruct_UE5_6_1(ptr, this, Memory);
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this, Memory);
     public override IUFunction CreateUFunction(nint ptr) => new UFunction_UE5_6_1(ptr, this, Memory);
+    public override IICppStructOps CreateICppStructOps(IntPtr ptr) => new ICppStructOps_UE5_4_4(ptr, Memory);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_4_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
     public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);

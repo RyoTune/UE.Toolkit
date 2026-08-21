@@ -6,6 +6,7 @@ using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FFieldClass;
 using UClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UClass;
+using ICppStructOps = UE.Toolkit.Core.Types.Unreal.UE5_7_4.ICppStructOps;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_7_4;
 
@@ -65,6 +66,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IUStruct CreateUStruct(nint ptr) => new UE5_6_1.UStruct_UE5_6_1(ptr, this, Memory);
     public override IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr) => new UUserDefinedEnum_UE5_4_4(ptr, this, Memory);
     public override IUFunction CreateUFunction(nint ptr) => new UE5_6_1.UFunction_UE5_6_1(ptr, this, Memory);
+    public override IICppStructOps CreateICppStructOps(IntPtr ptr) => new ICppStructOps_UE5_7_4(ptr);
     public override IFFieldClass CreateFFieldClass(nint ptr) => new FFieldClass_UE5_7_4(ptr, this);
     public override IFField CreateFField(nint ptr) => new FField_UE5_4_4(ptr, this);
     public override IFFieldVariant CreateFFieldVariant(nint ptr) => new FFieldVariantUE5_4_4(ptr, this);
@@ -78,6 +80,19 @@ public class UnrealFactory : BaseUnrealFactory
         => new FStaticConstructObjectParameters_UE5_4_4(this);
     public override IFActorSpawnParameters CreateFActorSpawnParameters()
         => new FActorSpawnParameters_UE5_4_4(this);
+}
+
+public unsafe class ICppStructOps_UE5_7_4(nint ptr) : IICppStructOps
+{
+    private readonly ICppStructOps* _self = (ICppStructOps*)ptr;
+    
+    public IntPtr Ptr => (nint)_self;
+    // UE 5.7 onwards uses a "Fake VTable" instead
+    public IntPtr VTable => nint.Zero;
+    public int Size => _self->Size;
+    public int Alignment => _self->Alignment;
+
+    public nint Construct() => nint.Zero;
 }
 
 public unsafe class FFieldClass_UE5_7_4(nint ptr, IUnrealFactory factory)

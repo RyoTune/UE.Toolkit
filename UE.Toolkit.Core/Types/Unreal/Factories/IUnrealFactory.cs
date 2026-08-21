@@ -41,6 +41,7 @@ public interface IUnrealFactory
     IUUserDefinedEnum CreateUUserDefinedEnum(nint ptr);
     // IUPackage CreateUPackage(nint ptr); 
     IUFunction CreateUFunction(nint ptr);
+    IICppStructOps CreateICppStructOps(IntPtr ptr);
     
     IFFieldClass CreateFFieldClass(nint ptr);
     IFField CreateFField(nint ptr);
