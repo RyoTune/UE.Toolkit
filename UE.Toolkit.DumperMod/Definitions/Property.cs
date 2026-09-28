@@ -20,7 +20,7 @@ public class PropertyStructDefinition(string name, int size, int offset, Func<st
 }
 
 public class PropertyClassDefinition(string name, string rawName, int size, int offset, Func<string> propTypeName,
-    Func<string, string, string> accessor, Func<string, string, string>? mutator) 
+    Func<string, string, string> accessor, Func<string, string, string>? mutator, bool isNullable) 
     : BasePropertyDefintion(name, size, offset, propTypeName)
 {
     private string RawName => rawName;
@@ -32,7 +32,7 @@ public class PropertyClassDefinition(string name, string rawName, int size, int 
         var propName = Name;
         if (propName == "Inner") propName += "_";
         var sb = new StringBuilder();
-        sb.AppendLine($"\tpublic unsafe {PropTypeName()} {propName}");
+        sb.AppendLine($"\tpublic unsafe {PropTypeName()}{(isNullable ? "?" : string.Empty)} {propName}");
         sb.AppendLine("\t{");
         sb.AppendLine($"\t\t{Accessor(Name, RawName)}");
         if (Mutator != null) sb.AppendLine($"\t\t{Mutator(Name, RawName)}");
@@ -287,7 +287,7 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
                 };
             case "ObjectProperty" or "ClassProperty" or "ClassPtrProperty":
                 return (_, raw) =>
-                    $"get => new(Inner.GetFactory().CreateUObject(*(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\"))));";
+                    $"get => *(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) != nint.Zero ? new(Inner.GetFactory().CreateUObject(*(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\")))) : null;";
             default:
                 return (_, _) => $"get => throw new NotSupportedException(\"!! GET TODO {className} !!\");";
         }  
@@ -317,13 +317,13 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
                     false => (param, raw) => $"set => *(byte*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) ^= (byte)(Convert.ToByte({param} != value) * {BoolProp.FieldMask});"
                 };
             case "ObjectProperty" or "ClassProperty" or "ClassPtrProperty":
-                return (_, raw) => $"set => *(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) = value.Inner.Ptr;";
+                return (_, raw) => $"set => *(nint*)(Inner.Ptr + GetFieldOffset(\"{raw}\")) = value?.Inner.Ptr ?? nint.Zero;";
             default:
                 return (_, _) => $"set => throw new NotSupportedException(\"!! SET TODO {className} !!\");";
         }
     }
 
-    private Func<string> GetClassPropTypenameManaged(IUClass classPropClass)
+    private Func<string> GetClassPropTypenameManaged(IUClass? classPropClass)
     {
         var classPropType = classPropClass != null ? classPropClass.NamePrivate.ToString() : "UClass";
         return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : classPropType);
@@ -385,6 +385,6 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         if (propTypename == null) return null;
         var getAccessor = GetPropAccessor(prop, propTypename);
         var getMutator = GetPropMutator(prop, propTypename);
-        return new PropertyClassDefinition(name, prop.NamePrivate, size, offset, propTypename, getAccessor, getMutator);
+        return new PropertyClassDefinition(name, prop.NamePrivate, size, offset, propTypename, getAccessor, getMutator, Builtins.IsNullableProperty(prop));
     }
 }

@@ -16,10 +16,10 @@ public abstract class ParameterDefinition(string name, Func<string> propTypeName
     public abstract string Serialize(Context context);
 }
 
-public class ParameterHeadDefinition(string name, Func<string> propTypeName, IFProperty meta) 
+public class ParameterHeadDefinition(string name, Func<string> propTypeName, IFProperty meta, bool isNullable) 
     : ParameterDefinition(name, propTypeName, meta)
 {
-    public override string Serialize(Context context) => $"{(IsReference ? "ref" : string.Empty)} {PropTypeName()} {Name}";
+    public override string Serialize(Context context) => $" {(IsReference ? "ref " : string.Empty)}{PropTypeName()}{(isNullable ? "?" : string.Empty)} {Name}";
 }
 
 public class ParameterBodyDefinition(string name, Func<string> propTypeName, IFProperty meta, bool isLast) 
@@ -73,11 +73,12 @@ public class ParameterBodyDefinition(string name, Func<string> propTypeName, IFP
     }
 }
 
-public class ReturnValueDefinition(Func<string> typeName, string metaName, string? paramTypeName) : ISerializable
+public class ReturnValueDefinition(Func<string> typeName, string metaName, string? paramTypeName, bool isNullable) : ISerializable
 {
     public Func<string> TypeName => typeName;
     public string MetaName => metaName;
     public string? ParamTypeName => paramTypeName;
+    public bool IsNullable => isNullable;
 
     private string CreateStructPropertyReturn()
     {
@@ -92,7 +93,7 @@ public class ReturnValueDefinition(Func<string> typeName, string metaName, strin
         var ConstructValue = MetaName switch
         {
             "ObjectProperty" or "ClassProperty" or "ClassPtrProperty" 
-                => $"new(Inner.GetFactory().CreateUObject((({ParamTypeName}?)Return)!.Value))",
+                => $"(({ParamTypeName}?)Return)!.Value != nint.Zero ? new(Inner.GetFactory().CreateUObject((({ParamTypeName}?)Return)!.Value)) : null",
             "ByteProperty" => $"({TypeName()})((({ParamTypeName}?)Return)!.Value)",
             _ => $"(({ParamTypeName}?)Return)!.Value"
         };
@@ -141,7 +142,7 @@ public class FunctionFactory(Context context)
                 {
                     returnTypeName = PropFactory.GetPropTypenameFunctionParam(Param);
                     var returnParamName = FunctionParamFactory.GetParamNameFromProperty(Param, context.Factory, context.Classes);
-                    ReturnValue = new(returnTypeName, Param.ClassPrivate.Name, returnParamName);
+                    ReturnValue = new(returnTypeName, Param.ClassPrivate.Name, returnParamName, Builtins.IsNullableProperty(Param));
                     break;
                 }
                 var paramName = Builtins.SanitizeForTypename(Builtins.SanitizeName(Param.NamePrivate));
@@ -160,19 +161,20 @@ public class FunctionFactory(Context context)
                     Log.Error($"{nameof(ResolveFunctions)} || Could not determine data types for all parameters in '{x.NamePrivate}'");
                     return null;
                 }
-                HeadParams.Add(new ParameterHeadDefinition(paramName, propTypeName, Param ));
+                HeadParams.Add(new ParameterHeadDefinition(paramName, propTypeName, Param, Builtins.IsNullableProperty(Param) ));
                 BodyParams.Add(new ParameterBodyDefinition(paramName, propTypeName, Param, false ));
                 if (Param.ClassPrivate.Name is "ObjectProperty" or "ClassProperty" or "ClassPtrProperty")
                 {
-                    BodyPrefix.Add($"nint {paramName}_Ptr = {paramName}.Inner.Ptr;");
+                    BodyPrefix.Add($"nint {paramName}_Ptr = {paramName}?.Inner.Ptr ?? nint.Zero;");
                     if (Param.PropertyFlags.HasFlag(EPropertyFlags.CPF_OutParm))
-                        BodyPostfix.Add($"{paramName} = new(Inner.GetFactory().CreateUObject({paramName}_Ptr));");
+                        BodyPostfix.Add($"{paramName} = {paramName}_Ptr != nint.Zero ? new(Inner.GetFactory().CreateUObject({paramName}_Ptr)) : null;");
                 }
             }
             if (BodyParams.Count > 0) BodyParams.Last().IsLast = true;
             var funcName = x.NamePrivate.ToString();
             var funcNameSanitized = Builtins.SanitizeForFunctionName(Builtins.SanitizeName(funcName));
-            return new FunctionDefinition(funcNameSanitized, funcName, returnTypeName, HeadParams, BodyParams, ReturnValue, BodyPrefix, BodyPostfix);
+            return new FunctionDefinition(funcNameSanitized, funcName, returnTypeName, HeadParams, BodyParams, 
+                ReturnValue, BodyPrefix, BodyPostfix);
         })
             .Where(x => x != null)
             .ToList();
@@ -196,7 +198,7 @@ public class FunctionDefinition(string name, string rawName, Func<string>? retur
     {
         var sb = new StringBuilder();
         var returnType = ReturnTypeName?.Invoke() ?? "void";
-        sb.AppendLine($"\tpublic unsafe {returnType} {Name}({string.Join(",", HeadParams.Select(x => x.Serialize(context)))})");
+        sb.AppendLine($"\tpublic unsafe {returnType}{(ReturnParam?.IsNullable ?? false ? "?" : string.Empty)} {Name}({string.Join(",", HeadParams.Select(x => x.Serialize(context)))})");
         sb.AppendLine("\t{");
         foreach (var preLine in BodyPrefix) sb.AppendLine($"\t\t{preLine}");
         var outVar = (ReturnTypeName != null ? "var Return" : "_");

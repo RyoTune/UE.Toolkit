@@ -1,5 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
+using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UnrealEssentials.Interfaces;
 
 namespace UE.Toolkit.DumperMod.Definitions;
@@ -39,8 +42,8 @@ public class Builtins(IUnrealEssentials essentials)
     
     public void AddHeader(StringBuilder sb)
     {
-        sb.AppendLine("""
-/* Generated with UE Toolkit: Dumper (1.10.1)    */
+        sb.AppendLine($"""
+/* Generated with UE Toolkit: Dumper (1.10.4)    */
 /* GitHub: https://github.com/RyoTune/UE.Toolkit */
 /* Author: RyoTune and Rirurin                   */
 /* Special thanks to UE4SS team whose code was   */
@@ -58,6 +61,11 @@ public class Builtins(IUnrealEssentials essentials)
                 .Select(x => x.Replace("using ", string.Empty));
             foreach (var use in usings) sb.AppendLine($"using {use};");
         }
+
+        sb.AppendLine();
+        if (Mod.Config.DisableXMLCommentWarning)
+            sb.AppendLine("#pragma warning disable CS1591");
+        sb.AppendLine("#nullable enable");
 
         sb.AppendLine();
         if (!string.IsNullOrEmpty(Mod.Config.FileNamespace))
@@ -157,5 +165,15 @@ public abstract class ObjectImpl(IUObject inner)
     {
         name = name.Replace(".", "_");
         return name;
+    }
+    
+    public static bool IsNullableProperty(IFProperty prop)
+    {
+        var className = prop.ClassPrivate.Name;
+        return className switch
+        {
+            "ClassProperty" or "ClassPtrProperty" or "ObjectProperty" => true,
+            _ => false
+        };
     }
 }

@@ -35,6 +35,10 @@ public class Config : Configurable<Config>
     [DisplayName("Dump Functions")]
     [DefaultValue(true)]
     public bool DumpFunctions { get; set; } = true;
+    
+    [DisplayName("Disable XML Comment Warning")]
+    [DefaultValue(true)]
+    public bool DisableXMLCommentWarning { get; set; } = true;
 }
 
 public enum DumpFileMode
