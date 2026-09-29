@@ -323,12 +323,6 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         }
     }
 
-    private Func<string> GetClassPropTypenameManaged(IUClass? classPropClass)
-    {
-        var classPropType = classPropClass != null ? classPropClass.NamePrivate.ToString() : "UClass";
-        return () => Builtins.SanitizeName(context.Registry.Structs.TryGetValue(classPropType, out var knownStruct) ? $"{knownStruct.DisplayName}" : classPropType);
-    }
-
     private Func<string>? GetPropTypenameClass(IFProperty prop)
     {
         var className = prop.ClassPrivate.Name;
@@ -341,7 +335,7 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
                 or "MulticastInlineDelegateProperty" or "MulticastSparseDelegateProperty":
                 return () => GetPropTypenameStruct(prop, true)() + "*";
             case "ClassProperty" or "ClassPtrProperty":
-                return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
+                return () => "UClass";
             case "ObjectProperty":
                 var propClass = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass;
                 if (propClass.Ptr == nint.Zero)
@@ -362,7 +356,7 @@ public class PropertyClassFactory(Context context) : BasePropertyFactory(context
         switch (className)
         {
             case "ClassProperty" or "ClassPtrProperty":
-                return GetClassPropTypenameManaged(context.Factory.Cast<IFClassProperty>(prop).MetaClass);
+                return () => "UClass";
             case "ObjectProperty":
                 var propClass = context.Factory.Cast<IFObjectProperty>(prop).PropertyClass;
                 if (propClass.Ptr == nint.Zero)

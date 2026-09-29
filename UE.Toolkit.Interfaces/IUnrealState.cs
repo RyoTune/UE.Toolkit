@@ -8,9 +8,8 @@ namespace UE.Toolkit.Interfaces;
 public interface IUnrealState
 {
     /// <summary>
-    /// Try to get the currently active world. It's recommended to use a World Context Object - a UObject that
-    /// belongs to a particular world and call GetWorld() from there. This is useful in cases where there is no
-    /// World Context Object.
+    /// Try to get the currently active world. This is useful in cases where there is no available
+    /// World Context Object, which is usually the recommended approach.
     /// </summary>
     /// <param name="TargetWorld">The target world.</param>
     /// <returns>If a target world could be found.</returns>
