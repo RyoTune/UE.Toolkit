@@ -1,4 +1,5 @@
 ﻿using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
 
 namespace UE.Toolkit.Interfaces;
 
@@ -25,15 +26,20 @@ public interface IUnrealSpawning
     /// <returns>The new object if it was successfully created</returns>
     IUObject? SpawnObject(string Name, IUClass Class, IUObject? Owner);
     
-    /*
-
     IUObject? SpawnActor<TObject>(string Name) where TObject : unmanaged;
 
     IUObject? SpawnActor(string Name, IUClass Class);
+    
+    IUObject? SpawnActor<TObject>(string Name, FTransform Transform) where TObject : unmanaged;
+
+    IUObject? SpawnActor(string Name, IUClass Class, FTransform Transform);
     
     IUObject? SpawnActor<TObject>(string Name, IUObject World) where TObject : unmanaged;
 
     IUObject? SpawnActor(string Name, IUClass Class, IUObject World);
     
-    */
+    IUObject? SpawnActor<TObject>(string Name, IUObject World, FTransform Transform) where TObject : unmanaged;
+
+    IUObject? SpawnActor(string Name, IUClass Class, IUObject World, FTransform Transform);
+    
 }

@@ -670,7 +670,7 @@ public unsafe class FStaticConstructObjectParameters_UE5_4_4
     public FStaticConstructObjectParameters_UE5_4_4(IUnrealFactory factory)
     {
         _factory = factory;
-        _self = (FStaticConstructObjectParameters*)_factory.Memory.MallocZeroed(sizeof(FStaticConstructObjectParameters));
+        _self = (FStaticConstructObjectParameters*)_factory.Memory!.MallocZeroed(sizeof(FStaticConstructObjectParameters));
     }
 
     public void SetParams(IUClass Class, IUObject? Owner, FName Name)
@@ -691,7 +691,7 @@ public unsafe class FStaticConstructObjectParameters_UE5_4_4
     protected virtual void Disposing()
     {
         if (Disposed) return;
-        _factory.Memory.Free(Ptr);
+        _factory.Memory!.Free(Ptr);
         Disposed = true;
     }
 
@@ -711,7 +711,7 @@ public unsafe class FActorSpawnParameters_UE5_4_4
     public FActorSpawnParameters_UE5_4_4(IUnrealFactory factory)
     {
         _factory = factory;
-        _self = (FActorSpawnParameters*)_factory.Memory.MallocZeroed(sizeof(FActorSpawnParameters));
+        _self = (FActorSpawnParameters*)_factory.Memory!.MallocZeroed(sizeof(FActorSpawnParameters));
     }
     
     public void SetParams(EObjectFlags Flags)
@@ -730,7 +730,7 @@ public unsafe class FActorSpawnParameters_UE5_4_4
     protected virtual void Disposing()
     {
         if (Disposed) return;
-        _factory.Memory.Free(Ptr);
+        _factory.Memory!.Free(Ptr);
         Disposed = true;
     }
 

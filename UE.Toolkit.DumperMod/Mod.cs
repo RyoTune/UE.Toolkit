@@ -52,7 +52,7 @@ public class Mod : ModBase
         {
             Directory.CreateDirectory(dumpDir);
         }
-        _dumper = new(factory!, objs!, strs!, classes!, dumpDir, _essentials);
+        _dumper = new(factory!, objs!, strs!, classes!, dumpDir, _essentials, _modConfig);
     }
 
     #region Standard Overrides

@@ -1,5 +1,7 @@
-﻿using UE.Toolkit.Core.Types.Unreal.Factories;
+﻿using System.Numerics;
+using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
 // using UE.Toolkit.Reloaded.Common.GameConfigs;
@@ -30,23 +32,42 @@ public class UnrealSpawning : IUnrealSpawning
         return Factory.CreateUObject(_StaticConstructObjectInternal.Wrapper(Params.Ptr));
     }
     
-    /*
     public IUObject? SpawnActor<TObject>(string Name) where TObject : unmanaged
         => Classes.GetClassInfoFromClass<TObject>(out var Class) ? SpawnActor(Name, Class) : null;
 
     public IUObject? SpawnActor(string Name, IUClass Class)
         => State.GetCurrentPlayWorld(out var World) ? SpawnActor(Name, Class, World) : null;
+    
+    public IUObject? SpawnActor<TObject>(string Name, FTransform Transform) where TObject : unmanaged
+        => Classes.GetClassInfoFromClass<TObject>(out var Class) ? SpawnActor(Name, Class, Transform) : null;
+
+    public IUObject? SpawnActor(string Name, IUClass Class, FTransform Transform)
+        => State.GetCurrentPlayWorld(out var World) ? SpawnActor(Name, Class, World, Transform) : null;
 
     public IUObject? SpawnActor<TObject>(string Name, IUObject World) where TObject : unmanaged
         => Classes.GetClassInfoFromClass<TObject>(out var Class) ? SpawnActor(Name, Class, World) : null;
 
     public IUObject? SpawnActor(string Name, IUClass Class, IUObject World)
+        => SpawnActor(Name, Class, World, new());
+    
+    public IUObject? SpawnActor<TObject>(string Name, IUObject World, FTransform Transform) where TObject : unmanaged
+        => Classes.GetClassInfoFromClass<TObject>(out var Class) ? SpawnActor(Name, Class, World, Transform) : null;
+
+    public IUObject? SpawnActor(string Name, IUClass Class, IUObject World, FTransform Transform)
     {
         var SpawnParams = Factory.CreateFActorSpawnParameters();
         SpawnParams.SetParams(EObjectFlags.RF_Transactional);
-        return Factory.CreateUObject(_SpawnActor.Wrapper(World.Ptr, Class.Ptr, nint.Zero, SpawnParams.Ptr));
+        unsafe
+        {
+            var pTransform = (FTransform*)Factory.Memory!.Malloc(sizeof(FTransform), 16);
+            pTransform->Rotation = Transform.Rotation;
+            pTransform->Position = Transform.Position;
+            pTransform->Scale3D = Transform.Scale3D;
+            var Result = _SpawnActor.Wrapper(World.Ptr, Class.Ptr, (nint)pTransform, SpawnParams.Ptr);
+            Factory.Memory!.Free((nint)pTransform);
+            return Result != nint.Zero ? Factory.CreateUObject(Result) : null;   
+        }
     }
-    */
 
     public UnrealSpawning(IUnrealClasses classes, IUnrealFactory factory, IUnrealState state)
     {
@@ -54,6 +75,7 @@ public class UnrealSpawning : IUnrealSpawning
         Factory = factory;
         State = state;
 
+        _SpawnActor = new();
         _StaticConstructObjectInternal = new();
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories;
-using UE.Toolkit.DumperMod.Definitions;
 using UE.Toolkit.Interfaces;
 using UnrealEssentials.Interfaces;
 
@@ -13,9 +13,10 @@ public class Dumper(
     IUnrealStrings strs,
     IUnrealClasses classes,
     string dumpDir,
-    IUnrealEssentials essentials)
+    IUnrealEssentials essentials,
+    IModConfig modConfig)
 {
-    private Context Context = new(factory, uobjs, strs, classes, dumpDir, essentials);
+    private Context Context = new(factory, uobjs, strs, classes, dumpDir, essentials, modConfig);
 
     public void DumpObjects()
     {

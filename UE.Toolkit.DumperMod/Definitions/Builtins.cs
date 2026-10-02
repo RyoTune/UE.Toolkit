@@ -1,15 +1,14 @@
-﻿using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
+using Reloaded.Mod.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UnrealEssentials.Interfaces;
 
 namespace UE.Toolkit.DumperMod.Definitions;
 
-public class Builtins(IUnrealEssentials essentials)
+public class Builtins(IUnrealEssentials essentials, IModConfig modConfig)
 {
     private IUnrealEssentials Essentials = essentials;
+    private IModConfig ModConfig = modConfig;
 
     private List<string> GetDefaultUsings()
     {
@@ -43,7 +42,7 @@ public class Builtins(IUnrealEssentials essentials)
     public void AddHeader(StringBuilder sb)
     {
         sb.AppendLine($"""
-/* Generated with UE Toolkit: Dumper (1.10.4)    */
+/* Generated with UE Toolkit: Dumper ({ModConfig.ModVersion})    */
 /* GitHub: https://github.com/RyoTune/UE.Toolkit */
 /* Author: RyoTune and Rirurin                   */
 /* Special thanks to UE4SS team whose code was   */

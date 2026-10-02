@@ -745,7 +745,7 @@ public unsafe class FStaticConstructObjectParametersUE4_27_2
     public FStaticConstructObjectParametersUE4_27_2(IUnrealFactory factory)
     {
         _factory = factory;
-        _self = (FStaticConstructObjectParameters*)_factory.Memory.MallocZeroed(sizeof(FStaticConstructObjectParameters));
+        _self = (FStaticConstructObjectParameters*)_factory.Memory!.MallocZeroed(sizeof(FStaticConstructObjectParameters));
     }
 
     public void SetParams(IUClass Class, IUObject? Owner, FName Name)
@@ -766,7 +766,7 @@ public unsafe class FStaticConstructObjectParametersUE4_27_2
     protected virtual void Disposing()
     {
         if (Disposed) return;
-        _factory.Memory.Free(Ptr);
+        _factory.Memory!.Free(Ptr);
         Disposed = true;
     }
 
@@ -786,14 +786,14 @@ public unsafe class FActorSpawnParametersUE4_27_2
     public FActorSpawnParametersUE4_27_2(IUnrealFactory factory)
     {
         _factory = factory;
-        _self = (FActorSpawnParameters*)_factory.Memory.MallocZeroed(sizeof(FActorSpawnParameters));
+        _self = (FActorSpawnParameters*)_factory.Memory!.MallocZeroed(sizeof(FActorSpawnParameters));
     }
 
     public void SetParams(EObjectFlags Flags)
     {
         _self->ObjectFlags = Flags;
     }
-    
+
     #region DISPOSE INTERFACE
     
     public void Dispose()
@@ -805,7 +805,7 @@ public unsafe class FActorSpawnParametersUE4_27_2
     protected virtual void Disposing()
     {
         if (Disposed) return;
-        _factory.Memory.Free(Ptr);
+        _factory.Memory!.Free(Ptr);
         Disposed = true;
     }
 
