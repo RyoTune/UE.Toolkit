@@ -793,6 +793,12 @@ public unsafe class FActorSpawnParametersUE4_27_2
     {
         _self->ObjectFlags = Flags;
     }
+    
+    public void SetParams(FName Name, EObjectFlags Flags)
+    {
+        _self->Name = Name;
+        _self->ObjectFlags = Flags;
+    }
 
     #region DISPOSE INTERFACE
     

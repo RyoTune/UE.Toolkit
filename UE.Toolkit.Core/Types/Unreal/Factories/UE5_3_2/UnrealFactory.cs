@@ -1,186 +1,51 @@
+using System.Collections;
+using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
+using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
+using UEngine = UE.Toolkit.Core.Types.Unreal.UE5_3_2.UEngine;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_3_2;
 
-public class UnrealFactory : BaseUnrealFactory
+public class UnrealFactory : UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4.UnrealFactory
 {
-    public override IntPtr SizeOf<T>()
+    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_3_2(ptr, this, Memory);
+    
+    public unsafe class FWorldContextEnumerator(UEngine_UE5_3_2 owner, IUnrealFactory factory) 
+        : IEnumerator<IFWorldContext>, IEnumerable<IFWorldContext>
     {
-        throw new NotImplementedException();
+        private int CurrentIndex = -1;
+    
+        #region impl IEnumerator 
+    
+        public bool MoveNext() => ++CurrentIndex < owner.GetWorldListInner()->ArrayNum;
+
+        public void Reset() => CurrentIndex = -1;
+        object? IEnumerator.Current => Current;
+
+        public IFWorldContext Current => factory.CreateFWorldContext((nint)owner.GetWorldListInner()->AllocatorInstance[CurrentIndex].Value);
+
+
+        public void Dispose() {}
+    
+        #endregion
+    
+        #region impl IEnumerable
+    
+        public IEnumerator<IFWorldContext> GetEnumerator() => this;
+    
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+        #endregion
     }
 
-    public override IFProperty CreateFProperty(IntPtr ptr)
+    public unsafe class UEngine_UE5_3_2(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory) 
+        : UObject_UE5_4_4(ptr, factory, memory), IUEngine
     {
-        throw new NotImplementedException();
-    }
+        private readonly UEngine* _self = (UEngine*)ptr;
 
-    public override IFBoolProperty CreateFBoolProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFByteProperty CreateFByteProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFEnumProperty CreateFEnumProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFObjectProperty CreateFObjectProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFSoftClassProperty CreateFSoftClassProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFClassProperty CreateFClassProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFStructProperty CreateFStructProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFMapProperty CreateFMapProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFInterfaceProperty CreateFInterfaceProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFArrayProperty CreateFArrayProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFSetProperty CreateFSetProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFOptionalProperty CreateFOptionalProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFDelegateProperty CreateFDelegateProperty(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUObjectArray CreateUObjectArray(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUObject CreateUObject(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUClass CreateUClass(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUScriptStruct CreateUScriptStruct(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUEnum CreateUEnum(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUField CreateUField(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUStruct CreateUStruct(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUUserDefinedEnum CreateUUserDefinedEnum(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUFunction CreateUFunction(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IICppStructOps CreateICppStructOps(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFFieldClass CreateFFieldClass(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFField CreateFField(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFFieldVariant CreateFFieldVariant(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFStructParams CreateFStructParams(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFPropertyParams CreateFPropertyParams(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFGenericPropertyParams CreateFGenericPropertyParams(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFWorldContext CreateFWorldContext(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUEngine CreateUEngine(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IUGameInstance CreateUGameInstance(IntPtr ptr)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override IFActorSpawnParameters CreateFActorSpawnParameters()
-    {
-        throw new NotImplementedException();
+        internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
+    
+        public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
     }
 }

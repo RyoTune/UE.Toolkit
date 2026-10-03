@@ -1,5 +1,5 @@
 ﻿using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
-using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
+using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 
 namespace UE.Toolkit.Interfaces;
 

@@ -30,4 +30,13 @@ public class UE4_27_2_P3R : UE5_4_4_ClairObscur
     public override unsafe ISoftObjectPath IntoSoftObjectPath(nint ptr)
         => new UE.Toolkit.Core.Types.Unreal.UE4_27_2.SoftObjectPath(
             new((UE.Toolkit.Core.Types.Unreal.UE4_27_2.FSoftObjectPath*)ptr));
+    
+    public override unsafe ITransform CreateTransform(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FTransform transform)
+    {
+        var pTransform = (UE.Toolkit.Core.Types.Unreal.UE4_27_2.FTransform*)Memory.Malloc(sizeof(UE.Toolkit.Core.Types.Unreal.UE4_27_2.FTransform), 16);
+        pTransform->Position = transform.Position.AsVector4();
+        pTransform->Rotation = transform.Rotation.AsQuaternion();
+        pTransform->Scale3D = transform.Scale3D.AsVector4();
+        return new UE.Toolkit.Core.Types.Unreal.UE4_27_2.Transform(new(pTransform));
+    }
 }

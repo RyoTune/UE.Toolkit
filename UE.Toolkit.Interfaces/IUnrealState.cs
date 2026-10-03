@@ -33,4 +33,11 @@ public interface IUnrealState
     /// <param name="SubsystemObj">The subsystem if it was successfully retrieved.</param>
     /// <returns>Whether a subsystem of the type SubsystemType could be retrieved.</returns>
     public bool GetSubsystem(IUGameInstance? GameInstance, IUClass? SubsystemType, out IUObject? SubsystemObj);
+
+    /// <summary>
+    /// Retrieve the game's UEngine singleton
+    /// </summary>
+    /// <param name="Engine">UEngine singleton</param>
+    /// <returns>True if GEngine is available</returns>
+    public bool GetGEngine(out IUEngine? Engine);
 }

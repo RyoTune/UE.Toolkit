@@ -33,6 +33,8 @@
 | Custom Constructor |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Add Properties |✅|✅|✅|✅|✅|✅|✅|✅|✅
 | Register Struct |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Get Current World |✅|✅|✅|✅|✅|✅|✅|✅|✅
+| Spawn Actors |✅|✅|⚠️|✅|✅|✅|✅|✅|✅
 | Call Blueprint Methods |✅|✅|✅|✅|✅|✅|✅|✅|✅
 
 Features marked with ❔ are currently untested.

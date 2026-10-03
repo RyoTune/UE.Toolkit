@@ -17,7 +17,7 @@ public static class GameConfig
         [GameConfigVersion.UE_5_1] = () => new UE5_2_1(),
         [GameConfigVersion.UE_5_2] = () => new UE5_2_1(),
         [GameConfigVersion.UE_5_3] = () => new UE5_3_2(),
-        [GameConfigVersion.UE_5_5] = () => new UE5_4_4_ClairObscur(),
+        [GameConfigVersion.UE_5_5] = () => new UE5_5_4(),
         [GameConfigVersion.UE_5_6] = () => new UE5_6_1(),
         [GameConfigVersion.UE_5_7] = () => new UE5_7_4(),
     };
@@ -39,6 +39,7 @@ public static class GameConfig
             "++UE5+Release-5.1" => new UE5_1_1(),
             "++UE5+Release-5.2" => new UE5_2_1(),
             "++UE5+Release-5.3" => new UE5_3_2(),
+            "++UE5+Release-5.5" => new UE5_5_4(),
             "++UE5+Release-5.6" => new UE5_6_1(),
             "++UE5+Release-5.7" => new UE5_7_4(),
             _ => new UE5_4_4_ClairObscur()

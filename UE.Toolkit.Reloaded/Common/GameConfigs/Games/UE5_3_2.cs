@@ -1,5 +1,5 @@
 using UE.Toolkit.Core.Types.Unreal.Factories;
-using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
+using UE.Toolkit.Core.Types.Unreal.Factories.UE5_3_2;
 using UE.Toolkit.Interfaces;
 using UE.Toolkit.Reloaded.Reflection;
 using UE.Toolkit.Reloaded.Reflection.UE5_4_4;

@@ -32,13 +32,11 @@ public class UnrealState : IUnrealState
                     NoneWorld = Factory.CreateUObject(WorldContext.GetWorld());
                     break;
             }
+            if (TargetWorld != null) break;
         }
-        // For Persona 3 Reload, there is only one active world containing a list of streamed sublevels.
-        // This may be true for other games as well, I haven't checked
-        if (GameConfig.Instance.Id == "P3R")
-        {
-            TargetWorld = NoneWorld;
-        }
+        // For Persona 3 Reload, there is only one active world containing a list of streamed sublevels (LV_Xrd777)
+        // which is of type WorldType.None
+        TargetWorld ??= NoneWorld;
         return TargetWorld != null;
     }
 
@@ -55,6 +53,12 @@ public class UnrealState : IUnrealState
 
     public bool GetSubsystem(IUGameInstance? GameInstance, IUClass? SubsystemType, out IUObject? SubsystemObj)
         => GameInstance.TryGetSubsystem(SubsystemType, out SubsystemObj);
+
+    public bool GetGEngine(out IUEngine? Engine)
+    {
+        Engine = GEngine != nint.Zero ? Factory.CreateUEngine(GEngine) : null;
+        return Engine != null;
+    }
 
     public UnrealState(IUnrealFactory _Factory, IUnrealClasses _Classes)
     {

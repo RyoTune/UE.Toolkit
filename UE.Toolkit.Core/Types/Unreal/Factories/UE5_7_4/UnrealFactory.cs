@@ -1,5 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+using System.Collections;
 using UE.Toolkit.Core.Types.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
 using UE.Toolkit.Core.Types.Unreal.Factories.UE5_4_4;
@@ -7,6 +6,7 @@ using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using FFieldClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.FFieldClass;
 using UClass = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UClass;
 using ICppStructOps = UE.Toolkit.Core.Types.Unreal.UE5_7_4.ICppStructOps;
+using UEngine = UE.Toolkit.Core.Types.Unreal.UE5_7_4.UEngine;
 
 namespace UE.Toolkit.Core.Types.Unreal.Factories.UE5_7_4;
 
@@ -74,7 +74,7 @@ public class UnrealFactory : BaseUnrealFactory
     public override IFPropertyParams CreateFPropertyParams(nint ptr) => new FPropertyParams_UE5_4_4(ptr, this);
     public override IFGenericPropertyParams CreateFGenericPropertyParams(nint ptr) => new FGenericPropertyParams_UE5_4_4(ptr, this);
     public override IFWorldContext CreateFWorldContext(nint ptr) => new FWorldContext_UE5_4_4(ptr, this);
-    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_4_4(ptr, this, Memory);
+    public override IUEngine CreateUEngine(nint ptr) => new UEngine_UE5_7_4(ptr, this, Memory);
     public override IUGameInstance CreateUGameInstance(nint ptr) => new UGameInstance_UE5_4_4(ptr, this, Memory);
     public override IFStaticConstructObjectParameters CreateFStaticConstructObjectParameters()
         => new FStaticConstructObjectParameters_UE5_4_4(this);
@@ -119,7 +119,8 @@ public unsafe class UObjectArray_UE5_7_4(nint ptr, IUnrealFactory factory) : IUO
     public IUObject? IndexToObject(int idx)
     {
         var objItem = _self->ObjObjects.GetItem(idx);
-        if (objItem == null || objItem->Object == null || objItem->Flags.HasFlag(EInternalObjectFlags.Unreachable)) return null;
+        if (objItem == null || objItem->Object == null || 
+            objItem->Flags.HasFlag(EInternalObjectFlags.Unreachable | EInternalObjectFlags.PendingKill | EInternalObjectFlags.PendingConstruction)) return null;
         
         return factory.CreateUObject((nint)objItem->Object);
     }
@@ -229,4 +230,44 @@ public unsafe class UClass_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemo
     public nint Constructor => _self->ClassConstructor;
     public EClassFlags ClassFlags => _self->ClassFlags;
     public EClassCastFlags ClassCastFlags => _self->ClassCastFlags;
+}
+
+public unsafe class FWorldContextEnumerator(UEngine_UE5_7_4 owner, IUnrealFactory factory) 
+    : IEnumerator<IFWorldContext>, IEnumerable<IFWorldContext>
+{
+    private int CurrentIndex = -1;
+    
+    #region impl IEnumerator 
+    
+    public bool MoveNext() => ++CurrentIndex < owner.GetWorldListInner()->ArrayNum;
+
+    public void Reset() => CurrentIndex = -1;
+
+    object? IEnumerator.Current => Current;
+
+    public IFWorldContext Current => factory.CreateFWorldContext((nint)owner.GetWorldListInner()->AllocatorInstance[CurrentIndex].Value);
+
+
+    public void Dispose() {}
+    
+    #endregion
+    
+    #region impl IEnumerable
+    
+    public IEnumerator<IFWorldContext> GetEnumerator() => this;
+    
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    #endregion
+
+}
+
+public unsafe class UEngine_UE5_7_4(nint ptr, IUnrealFactory factory, IUnrealMemoryInternal memory) 
+    : UObject_UE5_4_4(ptr, factory, memory), IUEngine
+{
+    private readonly UEngine* _self = (UEngine*)ptr;
+
+    internal TArray<Ptr<FWorldContext>>* GetWorldListInner() => &_self->WorldList;
+    
+    public IEnumerable<IFWorldContext> GetWorldList() => new FWorldContextEnumerator(this, factory);
 }

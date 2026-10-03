@@ -1,10 +1,11 @@
 ﻿using System.Numerics;
 using UE.Toolkit.Core.Types.Unreal.Factories;
 using UE.Toolkit.Core.Types.Unreal.Factories.Interfaces;
-using UE.Toolkit.Core.Types.Unreal.UE4_27_2;
 using UE.Toolkit.Core.Types.Unreal.UE5_4_4;
 using UE.Toolkit.Interfaces;
+using UE.Toolkit.Reloaded.Common.GameConfigs;
 // using UE.Toolkit.Reloaded.Common.GameConfigs;
+using FTransform = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FTransform;
 
 namespace UE.Toolkit.Reloaded.Unreal;
 
@@ -55,18 +56,12 @@ public class UnrealSpawning : IUnrealSpawning
 
     public IUObject? SpawnActor(string Name, IUClass Class, IUObject World, FTransform Transform)
     {
-        var SpawnParams = Factory.CreateFActorSpawnParameters();
-        SpawnParams.SetParams(EObjectFlags.RF_Transactional);
-        unsafe
-        {
-            var pTransform = (FTransform*)Factory.Memory!.Malloc(sizeof(FTransform), 16);
-            pTransform->Rotation = Transform.Rotation;
-            pTransform->Position = Transform.Position;
-            pTransform->Scale3D = Transform.Scale3D;
-            var Result = _SpawnActor.Wrapper(World.Ptr, Class.Ptr, (nint)pTransform, SpawnParams.Ptr);
-            Factory.Memory!.Free((nint)pTransform);
-            return Result != nint.Zero ? Factory.CreateUObject(Result) : null;   
-        }
+        var spawnParams = Factory.CreateFActorSpawnParameters();
+        spawnParams.SetParams(new(Name), EObjectFlags.RF_Transactional);
+        var pTransform = GameConfig.Instance.CreateTransform(Transform);
+        var result = _SpawnActor.Wrapper(World.Ptr, Class.Ptr, pTransform.Ptr, spawnParams.Ptr);
+        Factory.Memory!.Free(pTransform.Ptr);
+        return result != nint.Zero ? Factory.CreateUObject(result) : null;   
     }
 
     public UnrealSpawning(IUnrealClasses classes, IUnrealFactory factory, IUnrealState state)

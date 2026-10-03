@@ -719,6 +719,12 @@ public unsafe class FActorSpawnParameters_UE5_4_4
         _self->ObjectFlags = Flags;
     }
     
+    public void SetParams(FName Name, EObjectFlags Flags)
+    {
+        _self->Name = Name;
+        _self->ObjectFlags = Flags;
+    }
+    
     #region DISPOSE INTERFACE
     
     public void Dispose()

@@ -29,4 +29,13 @@ public class UE5_4_4_ClairObscur : IGameConfig
     public virtual unsafe ISoftObjectPath IntoSoftObjectPath(nint ptr)
         => new UE.Toolkit.Core.Types.Unreal.UE5_4_4.SoftObjectPath(
             new((UE.Toolkit.Core.Types.Unreal.UE5_4_4.FSoftObjectPath*)ptr));
+
+    public virtual unsafe ITransform CreateTransform(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FTransform transform)
+    {
+        var pTransform = (UE.Toolkit.Core.Types.Unreal.UE5_4_4.FTransform*)Memory.Malloc(sizeof(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FTransform), 16);
+        pTransform->Position = transform.Position;
+        pTransform->Rotation = transform.Rotation;
+        pTransform->Scale3D = transform.Scale3D;
+        return new UE.Toolkit.Core.Types.Unreal.UE5_4_4.Transform(new(pTransform));
+    }
 }

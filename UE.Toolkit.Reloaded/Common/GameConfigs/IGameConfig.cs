@@ -18,4 +18,5 @@ public interface IGameConfig
     Type GetFText();
     int GetFTextSize();
     ISoftObjectPath IntoSoftObjectPath(nint ptr);
+    ITransform CreateTransform(UE.Toolkit.Core.Types.Unreal.UE5_4_4.FTransform transform);
 }
