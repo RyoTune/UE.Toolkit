@@ -122,6 +122,8 @@ public abstract class ObjectImpl(IUObject inner)
         name = name.Replace(']', '_');
         name = name.Replace("+", "_");
         name = name.Replace("'", "_");
+        name = name.Replace(":", "_");
+        name = name.Replace(".", "_");
         //name = name.Replace('>', '_');
         if (name == "object") name = "_object";
 
@@ -157,6 +159,8 @@ public abstract class ObjectImpl(IUObject inner)
     {
         name = name.Replace(".", "_");
         name = name.Replace(">", "_");
+        name = name.Replace(":", "_");
+        name = name.Replace("=", "_");
         return name;
     }
     
