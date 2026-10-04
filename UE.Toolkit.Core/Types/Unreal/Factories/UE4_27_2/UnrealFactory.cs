@@ -15,6 +15,7 @@ using FName = UE.Toolkit.Core.Types.Unreal.UE5_4_4.FName;
 using EStructFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EStructFlags;
 using EInternalObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EInternalObjectFlags;
 using EObjectFlags = UE.Toolkit.Core.Types.Unreal.UE5_4_4.EObjectFlags;
+using FActorSpawnParameters = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FActorSpawnParameters;
 using FArrayProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FArrayProperty;
 using FBoolProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FBoolProperty;
 using FByteProperty = UE.Toolkit.Core.Types.Unreal.UE4_27_2.FByteProperty;
