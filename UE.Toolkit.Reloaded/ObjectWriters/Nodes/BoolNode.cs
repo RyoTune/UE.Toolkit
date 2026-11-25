@@ -8,6 +8,6 @@ public class BoolNode(IFBoolProperty property, Ptr<byte> value) : ValuePrimitive
     protected override unsafe void SetField(string text)
     {
         var Bool = Convert.ToBoolean(text);
-        *Value.Value |= (byte)(property.FieldMask * *(byte*)&Bool);
+        *Value.Value = (byte)((*Value.Value & ~property.FieldMask) | (Bool ? property.ByteMask : 0));
     }
 }
